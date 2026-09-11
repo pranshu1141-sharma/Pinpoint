@@ -1,0 +1,26 @@
+{
+  "file_bytes": 1073741824,
+  "samples_scanned": 134217728,
+  "all_three_ground_truth_bursts_detected": true,
+  "bursts_at_sample_ranges": [
+    [
+      521888,
+      526688
+    ],
+    [
+      67118864,
+      67123664
+    ],
+    [
+      134205728,
+      134210528
+    ]
+  ],
+  "candidate_count": 3,
+  "peak_backend_working_set_mib": 263.8984375,
+  "wall_seconds": 80.34115620000011,
+  "analysis_ms": 67953.03980000017,
+  "job_id": "23a785dfc6b54c3dbfcc6af50797074e",
+  "spectrogram_verified": true,
+  "tail_layers_verified": true
+}

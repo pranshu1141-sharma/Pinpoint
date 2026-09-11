@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <filter id="pulse-glow" x="-50%" y="-30%" width="200%" height="160%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="#0B0F14"/>
+  <path d="M204 304L248 176L308 304" stroke="#22D3EE" stroke-width="8" stroke-linejoin="miter" opacity="0.3" filter="url(#pulse-glow)"/>
+  <path d="M64 304H204L248 176L308 304H448" stroke="#22D3EE" stroke-width="8" stroke-linecap="butt" stroke-linejoin="miter"/>
+</svg>

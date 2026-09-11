@@ -1,0 +1,518 @@
+{
+  "description": "Measured synthetic validation; no field-performance or probability guarantee.",
+  "sample_rate_hz": 48000,
+  "recall_continuous_fixtures": 1.0,
+  "continuous_fixture_count": 12,
+  "captures": [
+    {
+      "fixture": "bpsk",
+      "snr_db": 20,
+      "ground_truth": [
+        {
+          "kind": "bpsk",
+          "snr_db": 20,
+          "freq_lower_hz": 7100.0,
+          "freq_upper_hz": 8900.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 6867.1875,
+          "freq_upper_hz": 9023.4375,
+          "confidence": 0.9516,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 31.079
+        }
+      ],
+      "noise_floor_db": -46.77853317437239,
+      "elapsed_ms": 40.835699999888675
+    },
+    {
+      "fixture": "bpsk",
+      "snr_db": 10,
+      "ground_truth": [
+        {
+          "kind": "bpsk",
+          "snr_db": 10,
+          "freq_lower_hz": 7100.0,
+          "freq_upper_hz": 8900.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 7054.6875,
+          "freq_upper_hz": 8929.6875,
+          "confidence": 0.9241,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 21.338
+        }
+      ],
+      "noise_floor_db": -46.779627801607006,
+      "elapsed_ms": 37.501600000041435
+    },
+    {
+      "fixture": "bpsk",
+      "snr_db": 0,
+      "ground_truth": [
+        {
+          "kind": "bpsk",
+          "snr_db": 0,
+          "freq_lower_hz": 7100.0,
+          "freq_upper_hz": 8900.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 7148.4375,
+          "freq_upper_hz": 8835.9375,
+          "confidence": 0.8014,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 11.548
+        }
+      ],
+      "noise_floor_db": -46.782974352882356,
+      "elapsed_ms": 44.68199999996614
+    },
+    {
+      "fixture": "bpsk",
+      "snr_db": -5,
+      "ground_truth": [
+        {
+          "kind": "bpsk",
+          "snr_db": -5,
+          "freq_lower_hz": 7100.0,
+          "freq_upper_hz": 8900.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 7570.3125,
+          "freq_upper_hz": 8460.9375,
+          "confidence": 0.7679,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 7.498
+        }
+      ],
+      "noise_floor_db": -46.78450485967395,
+      "elapsed_ms": 40.17410000005839
+    },
+    {
+      "fixture": "qpsk",
+      "snr_db": 20,
+      "ground_truth": [
+        {
+          "kind": "qpsk",
+          "snr_db": 20,
+          "freq_lower_hz": 7100.0,
+          "freq_upper_hz": 8900.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 6960.9375,
+          "freq_upper_hz": 9023.4375,
+          "confidence": 0.956,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 30.98
+        }
+      ],
+      "noise_floor_db": -46.77941066041548,
+      "elapsed_ms": 42.94009999989612
+    },
+    {
+      "fixture": "qpsk",
+      "snr_db": 10,
+      "ground_truth": [
+        {
+          "kind": "qpsk",
+          "snr_db": 10,
+          "freq_lower_hz": 7100.0,
+          "freq_upper_hz": 8900.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 7007.8125,
+          "freq_upper_hz": 8976.5625,
+          "confidence": 0.9183,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 21.062
+        }
+      ],
+      "noise_floor_db": -46.77999700418761,
+      "elapsed_ms": 41.41640000011648
+    },
+    {
+      "fixture": "qpsk",
+      "snr_db": 0,
+      "ground_truth": [
+        {
+          "kind": "qpsk",
+          "snr_db": 0,
+          "freq_lower_hz": 7100.0,
+          "freq_upper_hz": 8900.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 7148.4375,
+          "freq_upper_hz": 8835.9375,
+          "confidence": 0.7997,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 11.448
+        }
+      ],
+      "noise_floor_db": -46.782974729509775,
+      "elapsed_ms": 44.70820000005915
+    },
+    {
+      "fixture": "qpsk",
+      "snr_db": -5,
+      "ground_truth": [
+        {
+          "kind": "qpsk",
+          "snr_db": -5,
+          "freq_lower_hz": 7100.0,
+          "freq_upper_hz": 8900.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 7570.3125,
+          "freq_upper_hz": 8414.0625,
+          "confidence": 0.7777,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 7.68
+        }
+      ],
+      "noise_floor_db": -46.78450975755872,
+      "elapsed_ms": 44.40499999986969
+    },
+    {
+      "fixture": "fm",
+      "snr_db": 20,
+      "ground_truth": [
+        {
+          "kind": "fm",
+          "snr_db": 20,
+          "freq_lower_hz": 6900.0,
+          "freq_upper_hz": 9100.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 6539.0625,
+          "freq_upper_hz": 9445.3125,
+          "confidence": 0.9436,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 27.932
+        }
+      ],
+      "noise_floor_db": -46.77286389260998,
+      "elapsed_ms": 44.099299999970754
+    },
+    {
+      "fixture": "fm",
+      "snr_db": 10,
+      "ground_truth": [
+        {
+          "kind": "fm",
+          "snr_db": 10,
+          "freq_lower_hz": 6900.0,
+          "freq_upper_hz": 9100.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 6773.4375,
+          "freq_upper_hz": 9257.8125,
+          "confidence": 0.9065,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 18.251
+        }
+      ],
+      "noise_floor_db": -46.776228924496735,
+      "elapsed_ms": 43.497000000115804
+    },
+    {
+      "fixture": "fm",
+      "snr_db": 0,
+      "ground_truth": [
+        {
+          "kind": "fm",
+          "snr_db": 0,
+          "freq_lower_hz": 6900.0,
+          "freq_upper_hz": 9100.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 7007.8125,
+          "freq_upper_hz": 8976.5625,
+          "confidence": 0.8128,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 10.075
+        }
+      ],
+      "noise_floor_db": -46.782442587546164,
+      "elapsed_ms": 42.36540000010791
+    },
+    {
+      "fixture": "fm",
+      "snr_db": -5,
+      "ground_truth": [
+        {
+          "kind": "fm",
+          "snr_db": -5,
+          "freq_lower_hz": 6900.0,
+          "freq_upper_hz": 9100.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": null,
+          "pri_samples": null
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "freq_lower_hz": 7242.1875,
+          "freq_upper_hz": 8976.5625,
+          "confidence": 0.7069,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 5.329
+        }
+      ],
+      "noise_floor_db": -46.783665142475215,
+      "elapsed_ms": 45.292499999959546
+    },
+    {
+      "fixture": "pulsed",
+      "snr_db": 10,
+      "ground_truth": [
+        {
+          "kind": "pulsed",
+          "snr_db": 10,
+          "freq_lower_hz": 7750.0,
+          "freq_upper_hz": 8250.0,
+          "start_sample": 0,
+          "end_sample": 96000,
+          "pulse_width_samples": 2400,
+          "pri_samples": 12000
+        }
+      ],
+      "candidate_count": 1,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 4814,
+          "end_sample": 91187,
+          "freq_lower_hz": 7570.3125,
+          "freq_upper_hz": 8460.9375,
+          "confidence": 0.8916,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": true,
+          "pulse_width_samples": 2374,
+          "pri_samples": 12000,
+          "pulse_windows": [
+            {
+              "start_sample": 4814,
+              "end_sample": 7185
+            },
+            {
+              "start_sample": 16814,
+              "end_sample": 19188
+            },
+            {
+              "start_sample": 28812,
+              "end_sample": 31186
+            },
+            {
+              "start_sample": 40812,
+              "end_sample": 43191
+            },
+            {
+              "start_sample": 52813,
+              "end_sample": 55188
+            },
+            {
+              "start_sample": 64809,
+              "end_sample": 67191
+            },
+            {
+              "start_sample": 76814,
+              "end_sample": 79186
+            },
+            {
+              "start_sample": 88812,
+              "end_sample": 91187
+            }
+          ],
+          "needs_review": false,
+          "threshold_excess_db": 23.76
+        }
+      ],
+      "noise_floor_db": -46.76333552202463,
+      "elapsed_ms": 42.07610000003115
+    },
+    {
+      "fixture": "noise",
+      "snr_db": null,
+      "ground_truth": [],
+      "candidate_count": 0,
+      "detections": [],
+      "noise_floor_db": -46.80017580382302,
+      "elapsed_ms": 30.83100000003469
+    }
+  ]
+}

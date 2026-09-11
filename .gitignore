@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+frontend/dist/
+backend/data/generated/
+backend/data/jobs/
+*.log
+.env
+*.tsbuildinfo
+
+# Local tooling and operating-system metadata
+reference-review/plot-packages/
+__MACOSX/
+.DS_Store
+._*
+
+# Local environment overrides
+.env.*
+!.env.example
+!.env.sample

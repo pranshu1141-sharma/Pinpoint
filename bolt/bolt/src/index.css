@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Qt Fusion dark theme palette */
+  --bg-window: #353535;
+  --bg-panel: #3c3c3c;
+  --bg-recessed: #252525;
+  --bg-plot: #1e1e1e;
+  --border-color: #3c3c3c;
+  --border-light: #4a4a4a;
+  --text-primary: #d4d4d4;
+  --text-secondary: #7f7f7f;
+  --accent: #2a82da;
+  --accent-dim: #1c5a9c;
+  --alert: #cc3c34;
+  --alert-dim: #8a2820;
+
+  --radius: 2px;
+}
+
+* {
+  border-color: var(--border-color);
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-window);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Roboto Mono', 'Menlo', 'Consolas', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Qt-style flat scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  background: var(--bg-recessed);
+}
+::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border: 1px solid var(--bg-recessed);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
+}
+::-webkit-scrollbar-corner {
+  background: var(--bg-recessed);
+}
+
+/* Remove default button styling that conflicts with Qt look */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+/* Selection color */
+::selection {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+/* Tabular nums for all numeric displays */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 20.8%;
+    --foreground: 0 0% 83.1%;
+    --card: 0 0% 23.5%;
+    --card-foreground: 0 0% 83.1%;
+    --popover: 0 0% 23.5%;
+    --popover-foreground: 0 0% 83.1%;
+    --primary: 210 70% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 83.1%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 49.8%;
+    --accent: 210 70% 51%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 23.5%;
+    --input: 0 0% 14.9%;
+    --ring: 210 70% 51%;
+    --radius: 2px;
+  }
+}

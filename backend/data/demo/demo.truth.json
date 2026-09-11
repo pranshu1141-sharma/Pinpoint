@@ -1,0 +1,35 @@
+{
+  "sample_rate": 48000,
+  "signals": [
+    {
+      "kind": "bpsk",
+      "snr_db": 10,
+      "freq_lower_hz": -11900.0,
+      "freq_upper_hz": -10100.0,
+      "start_sample": 0,
+      "end_sample": 192000,
+      "pulse_width_samples": null,
+      "pri_samples": null
+    },
+    {
+      "kind": "fm",
+      "snr_db": 3,
+      "freq_lower_hz": 2900.0,
+      "freq_upper_hz": 5100.0,
+      "start_sample": 0,
+      "end_sample": 192000,
+      "pulse_width_samples": null,
+      "pri_samples": null
+    },
+    {
+      "kind": "pulsed",
+      "snr_db": 14,
+      "freq_lower_hz": 13750.0,
+      "freq_upper_hz": 14250.0,
+      "start_sample": 0,
+      "end_sample": 192000,
+      "pulse_width_samples": 2400,
+      "pri_samples": 12000
+    }
+  ]
+}

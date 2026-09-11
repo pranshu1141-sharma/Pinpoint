@@ -1,0 +1,162 @@
+[
+  {
+    "filename": "01-steady-tone.wav",
+    "description": "A steady 1,200 Hz tone with light noise. Expect one continuous candidate band.",
+    "sample_rate_hz": 24000,
+    "duration_seconds": 5,
+    "detections": [
+      {
+        "id": 0,
+        "start_sample": 0,
+        "end_sample": 119808,
+        "freq_lower_hz": 1113.28125,
+        "freq_upper_hz": 1277.34375,
+        "confidence": 0.9709,
+        "detection_method": "adaptive_threshold",
+        "is_pulsed": false,
+        "pulse_width_samples": null,
+        "pri_samples": null,
+        "pulse_windows": [],
+        "needs_review": false,
+        "threshold_excess_db": 37.335
+      }
+    ]
+  },
+  {
+    "filename": "02-two-tones.wav",
+    "description": "Two simultaneous tones at 700 and 3,000 Hz. Expect two separate candidate bands.",
+    "sample_rate_hz": 24000,
+    "duration_seconds": 5,
+    "detections": [
+      {
+        "id": 0,
+        "start_sample": 0,
+        "end_sample": 119808,
+        "freq_lower_hz": 621.09375,
+        "freq_upper_hz": 761.71875,
+        "confidence": 0.9681,
+        "detection_method": "adaptive_threshold",
+        "is_pulsed": false,
+        "pulse_width_samples": null,
+        "pri_samples": null,
+        "pulse_windows": [],
+        "needs_review": false,
+        "threshold_excess_db": 34.641
+      },
+      {
+        "id": 1,
+        "start_sample": 0,
+        "end_sample": 119808,
+        "freq_lower_hz": 2941.40625,
+        "freq_upper_hz": 3058.59375,
+        "confidence": 0.9681,
+        "detection_method": "adaptive_threshold",
+        "is_pulsed": false,
+        "pulse_width_samples": null,
+        "pri_samples": null,
+        "pulse_windows": [],
+        "needs_review": false,
+        "threshold_excess_db": 34.659
+      }
+    ]
+  },
+  {
+    "filename": "03-pulsed-tone.wav",
+    "description": "Ten 1,800 Hz beeps. Pulse width 100 ms (2,400 samples); PRI 500 ms (12,000 samples). Expect a pulsed candidate.",
+    "sample_rate_hz": 24000,
+    "duration_seconds": 5,
+    "detections": [
+      {
+        "id": 0,
+        "start_sample": 6001,
+        "end_sample": 116401,
+        "freq_lower_hz": 0,
+        "freq_upper_hz": 2730.46875,
+        "confidence": 0.7613,
+        "detection_method": "adaptive_threshold",
+        "is_pulsed": true,
+        "pulse_width_samples": 2400,
+        "pri_samples": 12000,
+        "pulse_windows": [
+          {
+            "start_sample": 6001,
+            "end_sample": 8402
+          },
+          {
+            "start_sample": 18000,
+            "end_sample": 20401
+          },
+          {
+            "start_sample": 30001,
+            "end_sample": 32401
+          },
+          {
+            "start_sample": 42000,
+            "end_sample": 44401
+          },
+          {
+            "start_sample": 54004,
+            "end_sample": 56402
+          },
+          {
+            "start_sample": 66001,
+            "end_sample": 68401
+          },
+          {
+            "start_sample": 78004,
+            "end_sample": 80401
+          },
+          {
+            "start_sample": 90001,
+            "end_sample": 92402
+          },
+          {
+            "start_sample": 102001,
+            "end_sample": 104400
+          },
+          {
+            "start_sample": 114001,
+            "end_sample": 116401
+          }
+        ],
+        "needs_review": false,
+        "threshold_excess_db": 10.086
+      }
+    ]
+  },
+  {
+    "filename": "04-short-burst.wav",
+    "description": "One 2,400 Hz beep from 2.000 to 2.150 seconds. Expect a localized burst with no PRI (only one pulse).",
+    "sample_rate_hz": 24000,
+    "duration_seconds": 5,
+    "detections": [
+      {
+        "id": 0,
+        "start_sample": 48002,
+        "end_sample": 51600,
+        "freq_lower_hz": 1464.84375,
+        "freq_upper_hz": 3082.03125,
+        "confidence": 0.8246,
+        "detection_method": "adaptive_threshold",
+        "is_pulsed": true,
+        "pulse_width_samples": 3598,
+        "pri_samples": null,
+        "pulse_windows": [
+          {
+            "start_sample": 48002,
+            "end_sample": 51600
+          }
+        ],
+        "needs_review": false,
+        "threshold_excess_db": 15.019
+      }
+    ]
+  },
+  {
+    "filename": "05-noise-only.wav",
+    "description": "Only Gaussian noise. Expect no candidate at the default 8 dB adaptive margin.",
+    "sample_rate_hz": 24000,
+    "duration_seconds": 5,
+    "detections": []
+  }
+]

@@ -1,0 +1,448 @@
+/* Fonts are bundled locally via @fontsource in main.tsx for offline demos. */
+
+@import "tailwindcss";
+
+/* ============================================================
+   TAILWIND V4 THEME — tokens that generate utility classes
+   ============================================================ */
+@theme {
+  /* Original palette — retained */
+  --color-pink: #b53082;
+  --color-purple: #381b57;
+  --color-orange: #f2963a;
+  --color-teal: #6dc3bb;
+  --color-beige: #c8b99a;
+  --color-navy: #0e1628;
+  --color-void: #07050f;
+
+  /* New palette */
+  --color-green: #00ed3f;
+  --color-amber: #ff8800;
+  --color-amber-light: #ffa238;
+  --color-red: #cc2200;
+  --color-blue: #4466cc;
+  --color-bone: #e0d5be;
+
+  /* Neutral dark backgrounds */
+  --color-bg: #050505;
+  --color-surface: #0d0d0d;
+  --color-surface-raised: #141414;
+
+  /* Typography */
+  --font-mono:
+    "IBM Plex Mono", "Space Mono", ui-monospace, "Courier New", monospace;
+
+  /* Zero radius */
+  --radius: 0px;
+}
+
+/* ============================================================
+   SEMANTIC TOKENS — contextual roles mapped to palette
+   ============================================================ */
+:root {
+  /* Backgrounds — neutral dark, no color tint */
+  --background: #050505;
+  --surface: #0d0d0d;
+  --surface-raised: #141414;
+
+  /* Borders */
+  --border: #252525;
+  --border-active: #00ed3f;
+
+  /* Text */
+  --text-primary: #00ed3f;
+  --text-secondary: #e0d5be;
+  --text-muted: #4a4a40;
+  --text-warning: #ff8800;
+  --text-danger: #cc2200;
+
+  /* Accent shortcuts */
+  --accent-primary: #00ed3f;
+  --accent-secondary: #4466cc;
+  --accent-warning: #ff8800;
+
+  /* Glow — original (kept for backward compat) */
+  --glow-teal: 0 0 8px #6dc3bb66, 0 0 20px #6dc3bb33;
+  --glow-pink: 0 0 8px #b5308266, 0 0 20px #b5308233;
+  --glow-orange: 0 0 8px #f2963a66, 0 0 20px #f2963a33;
+
+  /* Glow — new palette */
+  --glow-green: 0 0 8px #00ed3f66, 0 0 20px #00ed3f33;
+  --glow-amber: 0 0 8px #ff880066, 0 0 20px #ff880033;
+  --glow-red: 0 0 8px #cc220066, 0 0 20px #cc220033;
+  --glow-blue: 0 0 8px #4466cc66, 0 0 20px #4466cc33;
+
+  /* Text glow — original (kept) */
+  --text-glow-teal: 0 0 6px #6dc3bb99, 0 0 14px #6dc3bb55;
+  --text-glow-orange: 0 0 6px #f2963a99, 0 0 14px #f2963a55;
+  --text-glow-pink: 0 0 6px #b5308299, 0 0 14px #b5308255;
+
+  /* Text glow — new palette */
+  --text-glow-green: 0 0 6px #00ed3f99, 0 0 14px #00ed3f55;
+  --text-glow-amber: 0 0 6px #ff880099, 0 0 14px #ff880055;
+  --text-glow-red: 0 0 6px #cc220099, 0 0 14px #cc220055;
+  --text-glow-blue: 0 0 6px #4466cc99, 0 0 14px #4466cc55;
+
+  /* Corner notch clip-paths */
+  --clip-corner-sm: polygon(
+    6px 0%,
+    100% 0%,
+    100% calc(100% - 6px),
+    calc(100% - 6px) 100%,
+    0% 100%,
+    0% 6px
+  );
+  --clip-corner-md: polygon(
+    10px 0%,
+    100% 0%,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    0% 100%,
+    0% 10px
+  );
+  --clip-corner-lg: polygon(
+    16px 0%,
+    100% 0%,
+    100% calc(100% - 16px),
+    calc(100% - 16px) 100%,
+    0% 100%,
+    0% 16px
+  );
+
+  /* Geometry */
+  --border-width: 1px;
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+@keyframes flicker {
+  0%,
+  89%,
+  91%,
+  93%,
+  100% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.4;
+  }
+  92% {
+    opacity: 0.8;
+  }
+  94% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes blink-cursor {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes glitch {
+  0%,
+  100% {
+    transform: translate(0);
+  }
+  10% {
+    transform: translate(-2px, 1px);
+  }
+  20% {
+    transform: translate(2px, -1px);
+  }
+  30% {
+    transform: translate(-1px, 2px);
+  }
+  40% {
+    transform: translate(1px, -1px);
+  }
+  50% {
+    transform: translate(0);
+  }
+}
+
+@keyframes scanline-move {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes data-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+/* ============================================================
+   BASE RESET
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-radius: 0 !important;
+}
+
+html {
+  font-size: 14px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--background);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: var(--font-mono);
+  font-size: inherit;
+  border-radius: 0;
+}
+
+a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-shadow: var(--text-glow-green);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-active);
+  box-shadow: var(--glow-green);
+}
+
+/* Text selection */
+::selection {
+  background: #00ed3f;
+  color: #050505;
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
+/* CRT scanline overlay — apply to panels/containers */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.12) 3px,
+    rgba(0, 0, 0, 0.12) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Phosphor flicker text */
+.flicker {
+  animation: flicker 8s infinite;
+}
+
+/* Glitch on hover */
+.glitch-hover:hover {
+  animation: glitch 0.3s ease-in-out;
+}
+
+/* Pulsing glow */
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Corner notch variants */
+.clip-corner-sm {
+  clip-path: var(--clip-corner-sm);
+}
+.clip-corner-md {
+  clip-path: var(--clip-corner-md);
+}
+.clip-corner-lg {
+  clip-path: var(--clip-corner-lg);
+}
+
+/* ============================================================
+   THEME: STAR WARS
+   Holographic blue primary · bone/gold warnings · teal info
+   Deep blue-black backgrounds
+   ============================================================ */
+[data-theme="star-wars"] {
+  /* Remap color primitives used by components */
+  --color-green: #1a6dff; /* blue hologram = "active" */
+  --color-amber: #e0d5be; /* bone/gold = "warning" */
+  --color-red: #cc0000; /* Sith red = "danger" */
+  --color-blue: #6dc3bb; /* teal = "info" */
+
+  /* Backgrounds — deep blue-black */
+  --background: #020509;
+  --surface: #060e18;
+  --surface-raised: #0c1826;
+
+  /* Borders */
+  --border: #152030;
+  --border-active: #1a6dff;
+
+  /* Text */
+  --text-primary: #1a6dff;
+  --text-secondary: #e0d5be;
+  --text-muted: #2a3a52;
+  --text-warning: #e0d5be;
+  --text-danger: #cc0000;
+
+  /* Accent shortcuts */
+  --accent-primary: #1a6dff;
+  --accent-secondary: #6dc3bb;
+  --accent-warning: #e0d5be;
+
+  /* Glow — remap green→blue, amber→bone, blue→teal */
+  --glow-green:
+    0 0 8px rgba(26, 109, 255, 0.4), 0 0 20px rgba(26, 109, 255, 0.2);
+  --glow-amber:
+    0 0 8px rgba(224, 213, 190, 0.35), 0 0 20px rgba(224, 213, 190, 0.15);
+  --glow-red: 0 0 8px rgba(204, 0, 0, 0.4), 0 0 20px rgba(204, 0, 0, 0.2);
+  --glow-blue:
+    0 0 8px rgba(109, 195, 187, 0.4), 0 0 20px rgba(109, 195, 187, 0.2);
+
+  /* Text glow — remap */
+  --text-glow-green:
+    0 0 6px rgba(26, 109, 255, 0.6), 0 0 14px rgba(26, 109, 255, 0.3);
+  --text-glow-amber:
+    0 0 6px rgba(224, 213, 190, 0.55), 0 0 14px rgba(224, 213, 190, 0.25);
+  --text-glow-red: 0 0 6px rgba(204, 0, 0, 0.6), 0 0 14px rgba(204, 0, 0, 0.3);
+  --text-glow-blue:
+    0 0 6px rgba(109, 195, 187, 0.6), 0 0 14px rgba(109, 195, 187, 0.3);
+}
+
+[data-theme="star-wars"] ::selection {
+  background: #1a6dff;
+  color: #020509;
+}
+
+/* ============================================================
+   THEME: ALIEN
+   Bone/ivory primary · amber warnings · acid green info
+   Warm organic dark backgrounds
+   ============================================================ */
+[data-theme="alien"] {
+  /* Remap color primitives used by components */
+  --color-green: #e0d5be; /* bone = "active" (bleached, eerie) */
+  --color-amber: #ff8800; /* amber = "warning" (Nostromo lights) */
+  --color-red: #cc2200; /* blood red = "danger" */
+  --color-blue: #00ed3f; /* acid green = "info" (bioluminescent) */
+
+  /* Backgrounds — warm organic dark */
+  --background: #040302;
+  --surface: #080604;
+  --surface-raised: #0e0a06;
+
+  /* Borders */
+  --border: #201808;
+  --border-active: #e0d5be;
+
+  /* Text */
+  --text-primary: #e0d5be;
+  --text-secondary: #c8b99a;
+  --text-muted: #403020;
+  --text-warning: #ff8800;
+  --text-danger: #cc2200;
+
+  /* Accent shortcuts */
+  --accent-primary: #e0d5be;
+  --accent-secondary: #00ed3f;
+  --accent-warning: #ff8800;
+
+  /* Glow — remap green→bone, blue→acid-green */
+  --glow-green:
+    0 0 8px rgba(224, 213, 190, 0.35), 0 0 20px rgba(224, 213, 190, 0.15);
+  --glow-amber: 0 0 8px rgba(255, 136, 0, 0.4), 0 0 20px rgba(255, 136, 0, 0.2);
+  --glow-red: 0 0 8px rgba(204, 34, 0, 0.4), 0 0 20px rgba(204, 34, 0, 0.2);
+  --glow-blue: 0 0 8px rgba(0, 237, 63, 0.4), 0 0 20px rgba(0, 237, 63, 0.2);
+
+  /* Text glow — remap */
+  --text-glow-green:
+    0 0 6px rgba(224, 213, 190, 0.55), 0 0 14px rgba(224, 213, 190, 0.25);
+  --text-glow-amber:
+    0 0 6px rgba(255, 136, 0, 0.6), 0 0 14px rgba(255, 136, 0, 0.3);
+  --text-glow-red:
+    0 0 6px rgba(204, 34, 0, 0.6), 0 0 14px rgba(204, 34, 0, 0.3);
+  --text-glow-blue:
+    0 0 6px rgba(0, 237, 63, 0.6), 0 0 14px rgba(0, 237, 63, 0.3);
+}
+
+[data-theme="alien"] ::selection {
+  background: #e0d5be;
+  color: #040302;
+}
