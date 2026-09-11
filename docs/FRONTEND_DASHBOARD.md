@@ -1,6 +1,6 @@
 # Frontend dashboard
 
-The frontend is an operator-facing React dashboard for submitting a capture and inspecting Phase 1 detection evidence. It displays backend results; it does not synthesize detections or decode signal content in the browser.
+The frontend is an operator-facing React dashboard for submitting a capture and inspecting detection evidence. Its detail table also displays Estimate, coarse envelope family and carrier refinement from synchronous analysis. It displays backend results; it does not synthesize detections or decode signal content in the browser.
 
 ## Runtime and libraries
 
@@ -34,7 +34,7 @@ The page is organized as an investigation workspace:
 
 ## Startup and demo behavior
 
-The frontend checks `/api/health` every 15 seconds. Once the backend becomes reachable, it automatically submits the bundled IQ demo unless the current browser tab already has an active job ID in `sessionStorage`.
+The frontend checks `/api/health` every 15 seconds. The welcome screen waits for a file or an explicit **IQ demo** / **Audio demo** selection; reachability alone does not start an analysis.
 
 If a stored large-capture job exists, the page resumes polling it after refresh. Polling occurs approximately every 1.5 seconds and stops on completion or failure. A backend restart invalidates the stored ID; the UI then reports the missing job and lets the operator submit again.
 
@@ -84,6 +84,14 @@ The candidate list exposes:
 - pulse width and PRI when measured.
 
 Confidence is labeled as heuristic evidence. A review badge appears below 0.70. The UI does not translate this score into a probability or modulation class.
+
+## Estimate and Classify detail rows
+
+`bolt/DetectionDetailPanel.tsx` distinguishes **Midpoint (Detect)**, **Width (Detect)** and **Edges (Detect)** from **Center (Estimate)**, **Center (Refined)** and the measured **Bandwidth (3 dB)** / **Bandwidth (99%)**. Center measurements retain two decimal places in Hz, including when tuning metadata produces an RF frequency. Detect edges remain baseband. The frequency-reference row explains the distinction; File Info shows whether RF tuning was supplied.
+
+The table shows the 99% caveat inline, full-band SNR, estimate/refinement status, coarse modulation family and confidence labeled **heuristic**. Fine modulation is **Not reliably estimated** and symbol rate is **Not attempted** at the delivered fallback. Nulls never become blank cells or zeros; a measured zero remains a number. Real-audio results show the backend's complex-IQ requirement. Async/older results without stage fields show **Not attempted (this analysis)** for estimates and coarse family.
+
+`api.ts` owns the optional nullable fields; `bolt/types.ts` derives its Detection interface from it while retaining string selection IDs. The existing adapter preserves all fields. This integration changes only the detail table's display; waterfall, PSD, Signal Breakdown, pipeline log and motion behavior retain their Detect scope. JSON export includes all returned stage fields. See [live verification and limitations](INTEGRATION_VALIDATION.md).
 
 ## Signal Breakdown behavior
 

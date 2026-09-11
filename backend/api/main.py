@@ -12,11 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 from backend.pipeline.ingest import load_capture, AmbiguousCapture
 from backend.pipeline.detect import analyze_capture, db
+from backend.pipeline.classify import analyze_candidate
 from backend.pipeline.layers import build_layers, waveform
 from backend.pipeline.sigmf_io import export_metadata
 from backend.pipeline.large_capture import open_disk_capture, analyze_disk_capture, build_disk_layers, DiskSamples
 
-app = FastAPI(title="SIH26147 · Detect", version="1.0.0", description="Offline candidate detection; no classification or decoding.")
+app = FastAPI(title="SIH26147 · Detect", version="1.0.0", description="Offline detection with synchronous IQ estimates and coarse classification; no decoding.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                    allow_methods=["GET", "POST"], allow_headers=["*"])
 DATA = Path(__file__).resolve().parents[1] / "data"
@@ -68,7 +69,17 @@ def run_analysis(filename, data, sample_rate=None, datatype=None, metadata=None,
         raise HTTPException(429, "Another analysis is running. Try again when it finishes.")
     try:
         c = load_capture(filename, data, sample_rate, datatype, metadata, wav_mode)
+        started = monotonic()
         r = analyze_capture(c, margin_db, mode, fixed_threshold_db)
+        # Preserve the validated Capture/noise-density contract. Passing already
+        # filtered samples would change bandwidth, SNR and carrier estimates.
+        # Block jobs intentionally keep Detect-only candidates: block-local
+        # estimates cannot describe a merged track without further validation.
+        r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor)
+                                    for d in r.response["detections"]]
+        # The existing log still describes Detect. The API timer includes all
+        # downstream processing so the dashboard reports its actual cost.
+        r.response["elapsed_ms"] = (monotonic()-started)*1000
         job_id = uuid4().hex
         r.response["job_id"] = job_id
         r.response["expires_in_seconds"] = TTL_SECONDS

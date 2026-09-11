@@ -4,8 +4,9 @@ The FastAPI service listens on `http://127.0.0.1:8000` in the documented local s
 
 ## Conventions
 
-- Small uploads return a completed result synchronously with HTTP 200.
+- Small uploads (≤1 MiB) return a completed result synchronously with HTTP 200, including Estimate, coarse envelope classification and frequency refinement for usable IQ candidates.
 - Uploads larger than 1 MiB return an asynchronous job with HTTP 202.
+- Async merged candidates remain Detect-only: downstream fields are absent. Both bundled demos use the synchronous path regardless of asset size; real audio returns explicit null IQ measurements and reasons.
 - A job identifier is an opaque 32-character hexadecimal string.
 - Completed jobs expire 30 minutes after completion. The service keeps the newest three finished jobs.
 - Only one analysis may compute at a time.
@@ -16,7 +17,7 @@ The FastAPI service listens on `http://127.0.0.1:8000` in the documented local s
 
 ### `GET /api/health`
 
-Returns backend reachability and upload capacity.
+Returns backend reachability and upload capacity. The existing `stage: "detect"` identifier is retained for compatibility; it is not a downstream capability inventory.
 
 ```json
 {
@@ -103,7 +104,7 @@ The completed result has this top-level shape:
 
 Metadata includes filename, sample rate/count, duration, source kind, datatype, optional center frequency, WAV diagnostic, power unit, and frequency reference.
 
-Candidate shape:
+Candidate Detect fields (present on both synchronous and async results):
 
 ```json
 {
@@ -126,6 +127,31 @@ Candidate shape:
 ```
 
 Numeric examples are illustrative; use the returned values for a particular capture.
+
+### Synchronous candidate additions
+
+Every synchronous candidate also contains the following exact keys. Unknown numeric values are JSON `null`, never zero. These keys are optional for consumers because async and older results omit them. No Pydantic response model filters the returned dictionary.
+
+| Fields | JSON types | Meaning |
+|---|---|---|
+| `center_frequency_hz` | number or null | Noise-subtracted centroid plus tuning frequency if supplied; otherwise baseband offset. Detect bounds stay baseband. |
+| `bandwidth_3db_hz`, `bandwidth_99pct_hz` | number or null | Strongest half-power lobe and shortest 99% in-band power interval. |
+| `bandwidth_99pct_caveat` | string or null | `unshaped-pulse-sidelobes` when the width ratio exceeds five; also possible for FM, not proof of shaping. |
+| `snr_db` | number or null | Full-band occupied-sample excess power relative to Welch noise density × sample rate. Other simultaneous emitters contribute; this is not isolated per-emitter SNR. |
+| `estimate_status` | string | Estimated, partial or explicit unavailable reason, including real-audio input. |
+| `modulation_family` | string or null | `constant-envelope` or `varying-envelope`; no fine modulation claim. |
+| `modulation_confidence`, `envelope_variation` | number or null | Heuristic distance-from-threshold score and envelope coefficient of variation. |
+| `modulation_confidence_kind`, `modulation_status` | string | Explicit heuristic qualification and availability reason. |
+| `center_frequency_refined_hz` | number or null | Mth-power raised-tone peak estimate, separate from the direct centroid. Same frequency reference; not guaranteed to improve FM. |
+| `refinement_order`, `refinement_sharpness` | number or null | Selected power order (2 or 4) and peak/median ratio. |
+| `refinement_status` | string | Refined heuristic or unavailable reason. |
+| `fine_modulation_label`, `fine_modulation_confidence` | null | Always null at DSP fallback rung 2. |
+| `phase_cluster_spread_rad` | number or null | Diagnostic only; does not enable a fine label. |
+| `fine_modulation_status` | string | Explains that fine-classification acceptance was not met. |
+| `symbol_rate_hz` | null | Not attempted. |
+| `symbol_rate_status` | string | `not reliably estimated (not attempted: fallback rung 2)`. |
+
+Synchronous `elapsed_ms` includes Detect and these downstream stages. Ingest and HTTP serialization are excluded. The unchanged pipeline log reports Detect's own duration. See [measurement conventions](ESTIMATE_CLASSIFY.md) and [verified integration results](INTEGRATION_VALIDATION.md).
 
 ## Bundled demos
 
@@ -198,7 +224,7 @@ Returns a pooled waveform, envelope threshold, threshold description, individual
 
 ### `GET /api/export/{job_id}?format=json`
 
-With `json`, returns the candidate array. With `sigmf`, returns validated SigMF metadata containing candidate annotations. It does not return a decoded audio file or a modified capture.
+With `json`, returns the candidate array, preserving every downstream key and null exactly as in that job's response. With `sigmf`, returns validated SigMF metadata containing Detect candidate annotations; downstream measurements are not added to SigMF annotations in this pass. It does not return a decoded audio file or a modified capture.
 
 ## HTTP status behavior
 

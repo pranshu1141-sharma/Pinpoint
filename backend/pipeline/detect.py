@@ -110,6 +110,9 @@ class DetectionResult:
     times: np.ndarray
     power: np.ndarray
     envelopes: dict
+    # Keep the computed density for downstream consumers; a dB round trip can
+    # perturb phase-sensitive diagnostics despite unchanged measurement units.
+    noise_floor: float | None = None
 
 
 def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_threshold_db=None):
@@ -180,4 +183,4 @@ def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_thresh
                 "settings": {"margin_db": margin_db, "mode": mode, "nfft": nfft,
                              "hop_samples": nfft//4, "review_threshold": REVIEW_THRESHOLD},
                 "psd": [{"frequency_hz": float(a), "power_db": float(b)} for a, b in zip(pf, db(psd))]}
-    return DetectionResult(response, f, t, power, envelopes)
+    return DetectionResult(response, f, t, power, envelopes, noise_floor=floor)

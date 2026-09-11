@@ -6,14 +6,14 @@ This is the requirement-by-requirement ledger for the original SIH26147 Phase 1 
 
 | Scope | Status | Evidence and qualification |
 |---|---|---|
-| Hard constraints | Complete | Real API data, honest Detect-only language, explicit ambiguous-input handling, Tier 2 roadmap placeholders. |
+| Hard constraints | Complete | Real API data, qualified stage claims, explicit ambiguous-input handling, Tier 2 roadmap placeholders. |
 | Tier 0 backend | Complete | All six required capabilities are implemented and tested. |
 | Tier 1 backend | Partial | Confidence/review is built; statistical non-Gaussianity and coarse-to-fine scanning are not built. |
-| Downstream IQ analysis | Partial — fallback rung 2 | Opt-in Python Estimate, coarse envelope family and carrier refinement are built. Fine labels are null after failed QPSK validation; symbol rate was not attempted. API/dashboard remain Detect-only. |
+| Downstream IQ analysis | Integrated; DSP partial — fallback rung 2 | Estimate, coarse envelope family and carrier refinement run in synchronous uploads and demos, JSON export and dashboard detail. Fine labels remain null; symbol rate was not attempted. Async large uploads remain Detect-only. |
 | Tier 2 | Correctly excluded | All six prohibited features remain nonfunctional roadmap items. |
 | Synthetic data | Complete | BPSK, QPSK, FM at four SNRs, pulses, noise, mixed demo, separate truth files. |
 | FastAPI layer | Complete | All three required endpoints exist; supporting job, audio, export, demo, envelope, and health endpoints were added. |
-| Dashboard | Complete for specified Detect UI | Required panels, interactions, real-data states, animation, and breakdown layers exist. |
+| Dashboard | Complete for specified Detect UI and synchronous detail integration | Required panels, interactions, real-data states, animation, breakdown layers and Estimate/coarse/refinement detail rows exist. |
 | Deliverable structure | Complete | `backend/`, `frontend/`, tests, bundled demo files, and run documentation exist. |
 | Large-file extension | Complete to stated limit | Up to 2 GiB accepted; a real 1 GiB upload was scanned and measured. |
 | Production deployment | Not delivered | The project runs locally. No production hosting, authentication, durable queue, or persistent database exists. |
@@ -26,7 +26,7 @@ This is the requirement-by-requirement ledger for the original SIH26147 Phase 1 
 | Every displayed result must come from the actual file through the API | Complete | The dashboard starts a real `/api/demo` request and uses `/api/analyze`, `/api/spectrogram`, layer, envelope, and audio endpoints. It has explicit disconnected, pending, error, and empty states. |
 | Do not imply demodulation or decoding | Complete | The breakdown contains the exact Phase 3 note. IQ layers have no audio URL. WAV audio is labeled as filtered/gated original audio. |
 | Ask rather than guess missing sample metadata | Complete in the product flow | Raw IQ without sample rate/datatype receives an input-required error. Ambiguous stereo WAV requires a user choice. Conflicting metadata is rejected. |
-| Build generator → pipeline/tests → API → frontend | Complete as delivered | All four layers exist and the frontend contract matches actual API responses. Repository history is unavailable because this workspace is not a Git repository, so chronological proof is not available. |
+| Build generator → pipeline/tests → API → frontend | Complete as delivered | All four layers exist and the frontend contract matches actual API responses. Git history records the backend stages followed by synchronous API/detail integration. |
 
 ## Backend contract
 
@@ -69,7 +69,7 @@ Tier 2 remains excluded. Later stages now have the following independently quali
 | Frequency-hopping tracking | Intentionally out of scope |
 | Matched filtering | Intentionally out of scope |
 | Real-time streaming detection | Intentionally out of scope |
-| Estimate stage | Complete for the tested standalone IQ contract: center, both bandwidth definitions and full-band SNR; explicit unknown states. Synthetic center/SNR acceptance passes 12/12. No theoretical fixture half-power bandwidth is supplied by the generator. |
+| Estimate stage | Complete for the tested IQ contract and synchronous API/detail integration: center, both bandwidth definitions and full-band SNR; explicit unknown states. Synthetic center/SNR acceptance passes 12/12. No theoretical fixture half-power bandwidth is supplied by the generator. Async integration is not built. |
 | Modulation classification | Partial — coarse family correct on all nine >=0 dB continuous fixtures. Refinement validated separately. Fine classification disabled: QPSK phase rule passes only 2/5 seeds at each of 20/10 dB. Fallback rung 2. |
 | Symbol rate | Not attempted at fallback rung 2; always null with explicit status. Generator truth now records 500 Hz for BPSK/QPSK. No symbol-rate accuracy claim. |
 | FM/AM/PSK demodulation | Planned, not built |
@@ -119,6 +119,9 @@ Supporting endpoints provide job polling, health, demos, audio clips, pulse enve
 
 ## Verification evidence currently stored
 
+- Synchronous integration verification on 2026-09-11: 120 backend tests passed with the same two strict expected failures. New HTTP tests compare all 21 downstream fields across all 12 continuous fixtures to the pre-integration measured JSON, preserve nulls in export, cover IQ/audio demos, pulsed SigMF absolute frequency, and exercise a real two-block 5,376,000-byte async upload. The async result deliberately has no downstream stage fields.
+- Live dashboard IQ demo: all three candidates show measured fields, inline FM caveat and explicit fine/symbol null states. Six frontend adapter/detail-render tests cover signed/zero values, refined RF precision, missing fields and real-audio reasons. See [integration verification](INTEGRATION_VALIDATION.md) for build evidence and the measured latency increase.
+
 - Downstream verification on 2026-09-11: 104 passed, two strict expected failures preserve the unmet exploratory QPSK majority targets. The original 42 tests still pass. Only two upstream Starlette/AnyIO warnings remain. See [downstream methods and measurements](ESTIMATE_CLASSIFY.md) and [reproducible measured JSON](estimate-classify-validation.json).
 - All 12 BPSK/QPSK/FM continuous fixtures were re-run after the approved centroid and band-isolation changes: worst center error 0.2375% against the unchanged 2% target; worst SNR error 0.084 dB against the 3 dB target. Coarse family correct for all nine fixtures at >=0 dB. Bandwidth helper tested against analytical Gaussian half-power width; the generator's nominal detection bands are not theoretical half-power truth.
 - The separate Mth-power/log-parabolic path was re-tested after the centroid change: ten 150 kHz-offset BPSK fixtures at 10 dB, seeds 47–56, 1 MHz sample rate. Mean absolute error 5.6533 Hz before refinement and 0.4041 Hz afterward.
@@ -140,4 +143,4 @@ These measurements describe deterministic synthetic fixtures on one environment.
 2. Add the optional Tier 1 independent statistical “not noise” test if it improves validated precision/recall.
 3. Profile realistic long captures before deciding whether coarse-to-fine scanning is useful.
 4. Add durable jobs, authentication, multi-worker coordination, configurable retention, and deployment hardening if moving beyond a local demonstration.
-5. Extend the validated standalone Estimate/coarse/refinement functions with reliable fine classification and symbol-rate estimation before considering API/UI integration. Report, demodulation and decoding remain separate unimplemented phases.
+5. Extend the integrated Estimate/coarse/refinement functions with reliable fine classification and symbol-rate estimation. Validate aggregation before adding downstream estimates to merged large-capture tracks. Report, demodulation and decoding remain separate unimplemented phases.

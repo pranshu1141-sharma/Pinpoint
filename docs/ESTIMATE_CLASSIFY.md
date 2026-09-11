@@ -1,6 +1,14 @@
-# Standalone Estimate and Classify — fallback rung 2
+# Estimate and Classify — integrated, DSP fallback rung 2
 
-The delivered pipeline is **Estimate + coarse envelope family + carrier refinement**. Fine classification retains measured phase-spread diagnostics but publishes null label/confidence. Symbol-rate estimation was not attempted after fine classification failed its QPSK majority target. These functions are not connected to FastAPI, Pydantic responses, exports or the frontend. Detect is unchanged.
+The delivered pipeline is **Estimate + coarse envelope family + carrier refinement**. Fine classification retains measured phase-spread diagnostics but publishes null label/confidence. Symbol-rate estimation was not attempted after fine classification failed its QPSK majority target. These functions now run in synchronous `POST /api/analyze` (uploads ≤1 MiB) and `POST /api/demo`; their fields are preserved in JSON export and displayed in the dashboard detail table. Async large uploads remain Detect-only. The Detect algorithm and downstream math are unchanged.
+
+## Integration boundary
+
+API `run_analysis` calls `analyze_candidate` after Detect, passing the original `Capture`, each completed candidate and the exact already-computed Welch noise density. `DetectionResult.noise_floor` carries this internal scalar without a dB round trip; it is not a new response field. Preserving the raw occupied samples and `floor * sample_rate` reference preserves the validated full-band SNR and bandwidth contract. Pre-isolating the input and substituting `floor * detected_bandwidth` would change that contract (the BPSK 10 dB fixture would report about 24 dB instead of 9.97 dB). Downstream classification continues to use its existing band-isolation helper.
+
+Large-file analysis shares `analyze_capture` for each overlapping block, then clips and merges candidates into full tracks. Those block estimates have no validated merge rule. Integration therefore happens only in synchronous API orchestration, and all 21 downstream fields remain absent from async results. A real 5,376,000-byte, 672,000-sample upload exercised two processing blocks, completion polling and JSON export in the API tests; its merged candidates remain Detect-only.
+
+`elapsed_ms` on synchronous API results now includes Detect plus all downstream work, excluding ingest and response serialization. The unchanged pipeline log describes Detect's own timing and operations. The integration reaches its requested full API/UI rung; the separate DSP fallback remains rung 2. See [integration verification](INTEGRATION_VALIDATION.md) for live measurements and timing.
 
 ## Calling the functions
 

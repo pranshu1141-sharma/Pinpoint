@@ -37,7 +37,7 @@ The UI labels these capabilities as planned, and the backend contains no hidden 
 - matched filtering;
 - real-time streaming.
 
-Standalone downstream IQ Estimate, coarse envelope classification, and Mth-power carrier refinement now exist as plain Python functions. They are opt-in and are not wired into the API or dashboard. **The delivered result is fallback rung 2.** Fine classification is diagnostic-only with null labels; symbol-rate estimation was not attempted. There is no demodulator, symbol recovery, decoder, content extractor, or report-generation workflow.
+Downstream IQ Estimate, coarse envelope classification, and Mth-power carrier refinement now run in synchronous uploads (≤1 MiB) and demos, with detail-table display and JSON export. Async large uploads remain Detect-only because full-track estimate aggregation has not been validated. **The delivered DSP result is fallback rung 2.** Fine classification is diagnostic-only with null labels; symbol-rate estimation was not attempted. There is no demodulator, symbol recovery, decoder, content extractor, or report-generation workflow.
 
 ### Downstream validation boundary
 
@@ -114,7 +114,7 @@ Frequency hopping and co-channel separation need their own data models, evaluati
 
 ### 7. Extend Estimate and Classify beyond fallback rung 2
 
-Keep the standalone Estimate/coarse/refinement contract and its null states. Investigate residual-frequency accumulation before enabling fine labels, then validate a symbol-rate estimator against the newly recorded 500 Hz BPSK/QPSK truth at 10/5 dB, with explicit unknowns below the reliable range. No symbol-rate algorithm has shipped in this pass. Add held-out and real-capture evidence before expanding claims or wiring results into the product.
+Keep the integrated Estimate/coarse/refinement contract and its null states. Investigate residual-frequency accumulation before enabling fine labels, then validate a symbol-rate estimator against the newly recorded 500 Hz BPSK/QPSK truth at 10/5 dB, with explicit unknowns below the reliable range. No symbol-rate algorithm has shipped in this pass. Add held-out and real-capture evidence before expanding claims, and validate full-track aggregation before extending the async path.
 
 ### 8. Add demodulation/decoding only for declared waveforms
 

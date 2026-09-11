@@ -1,16 +1,7 @@
-export interface Detection {
+import type { Detection as ApiDetection } from '../api';
+
+export interface Detection extends Omit<ApiDetection, 'id'> {
   id: string;
-  start_sample: number;
-  end_sample: number;
-  freq_lower_hz: number;
-  freq_upper_hz: number;
-  confidence: number;
-  detection_method: string;
-  is_pulsed: boolean;
-  pulse_width_samples: number | null;
-  pri_samples: number | null;
-  needs_review: boolean;
-  pulse_windows: { start_sample: number; end_sample: number }[];
 }
 
 export interface AnalyzeResponse {

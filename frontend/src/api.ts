@@ -12,6 +12,28 @@ export type Detection = {
   needs_review: boolean;
   pulse_windows: { start_sample: number; end_sample: number }[];
   threshold_excess_db: number;
+  // Synchronous analysis fields; absent on Detect-only async/older results.
+  center_frequency_hz?: number | null;
+  bandwidth_3db_hz?: number | null;
+  bandwidth_99pct_hz?: number | null;
+  bandwidth_99pct_caveat?: string | null;
+  snr_db?: number | null;
+  estimate_status?: string | null;
+  modulation_family?: string | null;
+  modulation_confidence?: number | null;
+  modulation_confidence_kind?: string | null;
+  modulation_status?: string | null;
+  envelope_variation?: number | null;
+  center_frequency_refined_hz?: number | null;
+  refinement_order?: number | null;
+  refinement_sharpness?: number | null;
+  refinement_status?: string | null;
+  fine_modulation_label?: string | null;
+  fine_modulation_confidence?: number | null;
+  fine_modulation_status?: string | null;
+  phase_cluster_spread_rad?: number | null;
+  symbol_rate_hz?: number | null;
+  symbol_rate_status?: string | null;
 };
 export type Analysis = {
   job_id: string;
