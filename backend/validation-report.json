@@ -15,6 +15,7 @@
           "freq_upper_hz": 8900.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": 500.0,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -38,7 +39,7 @@
         }
       ],
       "noise_floor_db": -46.77853317437239,
-      "elapsed_ms": 40.835699999888675
+      "elapsed_ms": 41.823300009127706
     },
     {
       "fixture": "bpsk",
@@ -51,6 +52,7 @@
           "freq_upper_hz": 8900.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": 500.0,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -74,7 +76,7 @@
         }
       ],
       "noise_floor_db": -46.779627801607006,
-      "elapsed_ms": 37.501600000041435
+      "elapsed_ms": 41.29110000212677
     },
     {
       "fixture": "bpsk",
@@ -87,6 +89,7 @@
           "freq_upper_hz": 8900.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": 500.0,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -110,7 +113,7 @@
         }
       ],
       "noise_floor_db": -46.782974352882356,
-      "elapsed_ms": 44.68199999996614
+      "elapsed_ms": 41.59939999226481
     },
     {
       "fixture": "bpsk",
@@ -123,6 +126,7 @@
           "freq_upper_hz": 8900.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": 500.0,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -146,7 +150,7 @@
         }
       ],
       "noise_floor_db": -46.78450485967395,
-      "elapsed_ms": 40.17410000005839
+      "elapsed_ms": 44.42939998989459
     },
     {
       "fixture": "qpsk",
@@ -159,6 +163,7 @@
           "freq_upper_hz": 8900.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": 500.0,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -182,7 +187,7 @@
         }
       ],
       "noise_floor_db": -46.77941066041548,
-      "elapsed_ms": 42.94009999989612
+      "elapsed_ms": 43.68400000385009
     },
     {
       "fixture": "qpsk",
@@ -195,6 +200,7 @@
           "freq_upper_hz": 8900.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": 500.0,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -218,7 +224,7 @@
         }
       ],
       "noise_floor_db": -46.77999700418761,
-      "elapsed_ms": 41.41640000011648
+      "elapsed_ms": 42.69279999425635
     },
     {
       "fixture": "qpsk",
@@ -231,6 +237,7 @@
           "freq_upper_hz": 8900.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": 500.0,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -254,7 +261,7 @@
         }
       ],
       "noise_floor_db": -46.782974729509775,
-      "elapsed_ms": 44.70820000005915
+      "elapsed_ms": 41.82230000151321
     },
     {
       "fixture": "qpsk",
@@ -267,6 +274,7 @@
           "freq_upper_hz": 8900.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": 500.0,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -290,7 +298,7 @@
         }
       ],
       "noise_floor_db": -46.78450975755872,
-      "elapsed_ms": 44.40499999986969
+      "elapsed_ms": 42.710199995781295
     },
     {
       "fixture": "fm",
@@ -303,6 +311,7 @@
           "freq_upper_hz": 9100.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": null,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -326,7 +335,7 @@
         }
       ],
       "noise_floor_db": -46.77286389260998,
-      "elapsed_ms": 44.099299999970754
+      "elapsed_ms": 43.550299989874475
     },
     {
       "fixture": "fm",
@@ -339,6 +348,7 @@
           "freq_upper_hz": 9100.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": null,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -362,7 +372,7 @@
         }
       ],
       "noise_floor_db": -46.776228924496735,
-      "elapsed_ms": 43.497000000115804
+      "elapsed_ms": 43.888300002436154
     },
     {
       "fixture": "fm",
@@ -375,6 +385,7 @@
           "freq_upper_hz": 9100.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": null,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -398,7 +409,7 @@
         }
       ],
       "noise_floor_db": -46.782442587546164,
-      "elapsed_ms": 42.36540000010791
+      "elapsed_ms": 39.81709999789018
     },
     {
       "fixture": "fm",
@@ -411,6 +422,7 @@
           "freq_upper_hz": 9100.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": null,
           "pulse_width_samples": null,
           "pri_samples": null
         }
@@ -434,7 +446,7 @@
         }
       ],
       "noise_floor_db": -46.783665142475215,
-      "elapsed_ms": 45.292499999959546
+      "elapsed_ms": 46.121399995172396
     },
     {
       "fixture": "pulsed",
@@ -447,6 +459,7 @@
           "freq_upper_hz": 8250.0,
           "start_sample": 0,
           "end_sample": 96000,
+          "symbol_rate_hz": null,
           "pulse_width_samples": 2400,
           "pri_samples": 12000
         }
@@ -503,7 +516,7 @@
         }
       ],
       "noise_floor_db": -46.76333552202463,
-      "elapsed_ms": 42.07610000003115
+      "elapsed_ms": 41.565799998352304
     },
     {
       "fixture": "noise",
@@ -512,7 +525,7 @@
       "candidate_count": 0,
       "detections": [],
       "noise_floor_db": -46.80017580382302,
-      "elapsed_ms": 30.83100000003469
+      "elapsed_ms": 28.88179999717977
     }
   ]
 }

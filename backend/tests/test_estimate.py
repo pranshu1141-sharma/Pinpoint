@@ -101,3 +101,13 @@ def test_invalid_windows_are_rejected():
     d["end_sample"] = len(c.iq)+1
     with pytest.raises(ValueError, match="sample"):
         estimate.estimate_candidate(c, d)
+
+
+def test_generator_records_symbol_rate_in_truth_files(tmp_path):
+    import json
+    from backend.pipeline.synth_gen import save_capture
+    for kind in ("bpsk", "qpsk", "fm"):
+        x, truth = make_signal(kind, 5)
+        save_capture(tmp_path/kind, x, truth)
+        saved = json.loads((tmp_path/f"{kind}.truth.json").read_text())
+        assert saved["signals"][0]["symbol_rate_hz"] == (500 if kind != "fm" else None)

@@ -8,11 +8,11 @@
 
 **Spec:** User's attached SIH26147 request and approved centroid/band-isolation amendment. Frequency tolerance remains 2%; coarse family must be correct at >=0 dB.
 
-- [ ] Stage 1: test all 12 generated continuous captures, metadata offset, pulse averaging/union, bandwidth definitions, scale invariance and unknown cases; implement Estimate; run full suite and commit.
-- [ ] Stage 2: test isolated-envelope family and heuristic confidence across all 12 captures, varying-envelope and invalid cases; implement coarse classification; record every measured row; run full suite and commit.
-- [ ] Stage 3: retain separate Welch peak/log-parabolic interpolation; test M=2/4 refinement including independent BPSK 150 kHz offset at 10 dB across seeds, absolute-frequency handling and nulls; run full suite and commit only if validated.
-- [ ] Stage 4: test circular-spread labels on BPSK/QPSK at >=10 dB and FM rejection. If reliability fails, ship null fine outputs and explicitly stop at fallback rung 2.
-- [ ] Stage 5 (only if Stage 4 validates): test 500 Hz symbol truth at 10/5 dB and null behavior at 0/-5 dB, use lowest significant harmonic and bandwidth/SNR gates; run full suite and commit.
-- [ ] Re-run `backend.validate`; update status/limitations with measured evidence, public function usage, limitations and exact fallback rung; verify scope and commit documentation.
+- [x] Stage 1: all 12 center/SNR checks pass; bandwidth, pulse/union, offset, scale and unknown checks pass. Full suite 61 passed; commit `5b2ed83`.
+- [x] Stage 2: all nine >=0 dB coarse family checks pass; measured all 12 rows. Full suite 76 passed; commit `fb14f1f`.
+- [x] Stage 3: separate peak/log-parabolic path validated; ten-seed 150 kHz BPSK mean absolute error 0.4041 Hz. Full suite 80 passed; commit `4304f09`.
+- [x] Stage 4 explored: BPSK 5/5, QPSK 2/5 at each 20/10 dB. Stop at fallback rung 2, emit null fine labels with measured spread. Preserve failing QPSK majority targets as strict expected failures.
+- [x] Stage 5 decision: not attempted because Stage 4 did not validate. Null/status behavior tested at 20/10/5/0/-5 dB. Generator truth records 500 Hz; no symbol-rate accuracy claim.
+- [x] Re-run `backend.validate` (12/12 continuous recall); author reproducible measurement report, usage, limitations and status updates. Final review, scope verification and documentation commit follow.
 
 The current checkout is clean and already a Git repository. Work proceeds inline here with explicitly scoped commits. The original 42-test suite passed before implementation.

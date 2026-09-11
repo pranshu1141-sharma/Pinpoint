@@ -9,6 +9,7 @@ This is the requirement-by-requirement ledger for the original SIH26147 Phase 1 
 | Hard constraints | Complete | Real API data, honest Detect-only language, explicit ambiguous-input handling, Tier 2 roadmap placeholders. |
 | Tier 0 backend | Complete | All six required capabilities are implemented and tested. |
 | Tier 1 backend | Partial | Confidence/review is built; statistical non-Gaussianity and coarse-to-fine scanning are not built. |
+| Downstream IQ analysis | Partial — fallback rung 2 | Opt-in Python Estimate, coarse envelope family and carrier refinement are built. Fine labels are null after failed QPSK validation; symbol rate was not attempted. API/dashboard remain Detect-only. |
 | Tier 2 | Correctly excluded | All six prohibited features remain nonfunctional roadmap items. |
 | Synthetic data | Complete | BPSK, QPSK, FM at four SNRs, pulses, noise, mixed demo, separate truth files. |
 | FastAPI layer | Complete | All three required endpoints exist; supporting job, audio, export, demo, envelope, and health endpoints were added. |
@@ -58,7 +59,7 @@ This is the requirement-by-requirement ledger for the original SIH26147 Phase 1 
 
 ## Tier 2 and later phases
 
-Every entry below is intentionally nonfunctional:
+Tier 2 remains excluded. Later stages now have the following independently qualified status:
 
 | Feature | Status |
 |---|---|
@@ -68,8 +69,9 @@ Every entry below is intentionally nonfunctional:
 | Frequency-hopping tracking | Intentionally out of scope |
 | Matched filtering | Intentionally out of scope |
 | Real-time streaming detection | Intentionally out of scope |
-| Estimate stage | Planned, not built |
-| Modulation classification | Planned, not built |
+| Estimate stage | Complete for the tested standalone IQ contract: center, both bandwidth definitions and full-band SNR; explicit unknown states. Synthetic center/SNR acceptance passes 12/12. No theoretical fixture half-power bandwidth is supplied by the generator. |
+| Modulation classification | Partial — coarse family correct on all nine >=0 dB continuous fixtures. Refinement validated separately. Fine classification disabled: QPSK phase rule passes only 2/5 seeds at each of 20/10 dB. Fallback rung 2. |
+| Symbol rate | Not attempted at fallback rung 2; always null with explicit status. Generator truth now records 500 Hz for BPSK/QPSK. No symbol-rate accuracy claim. |
 | FM/AM/PSK demodulation | Planned, not built |
 | Decoded audio/data output | Planned, not built |
 | Report stage | Planned, not built |
@@ -117,6 +119,10 @@ Supporting endpoints provide job polling, health, demos, audio clips, pulse enve
 
 ## Verification evidence currently stored
 
+- Downstream verification on 2026-09-11: 104 passed, two strict expected failures preserve the unmet exploratory QPSK majority targets. The original 42 tests still pass. Only two upstream Starlette/AnyIO warnings remain. See [downstream methods and measurements](ESTIMATE_CLASSIFY.md) and [reproducible measured JSON](estimate-classify-validation.json).
+- All 12 BPSK/QPSK/FM continuous fixtures were re-run after the approved centroid and band-isolation changes: worst center error 0.2375% against the unchanged 2% target; worst SNR error 0.084 dB against the 3 dB target. Coarse family correct for all nine fixtures at >=0 dB. Bandwidth helper tested against analytical Gaussian half-power width; the generator's nominal detection bands are not theoretical half-power truth.
+- The separate Mth-power/log-parabolic path was re-tested after the centroid change: ten 150 kHz-offset BPSK fixtures at 10 dB, seeds 47–56, 1 MHz sample rate. Mean absolute error 5.6533 Hz before refinement and 0.4041 Hz afterward.
+- Exploratory phase rule: BPSK 5/5 at both 20/10 dB; QPSK 2/5 at both levels. All published fine labels/confidences remain null, including on BPSK, to keep the delivered contract at fallback rung 2. Symbol rate is not attempted; null behavior is tested at 20/10/5/0/-5 dB.
 - Fresh documentation-audit verification on 2026-09-10: 42 backend tests passed in 26.90 seconds; the only output was two upstream Starlette/AnyIO deprecation warnings.
 - Fresh frontend verification on 2026-09-10: TypeScript and the Vite production build completed successfully; Vite reported a non-failing JavaScript chunk-size advisory for the 905.77 kB main bundle.
 - Fresh synthetic validation on 2026-09-10: the report regenerated successfully with continuous-fixture recall 12/12.
@@ -134,4 +140,4 @@ These measurements describe deterministic synthetic fixtures on one environment.
 2. Add the optional Tier 1 independent statistical “not noise” test if it improves validated precision/recall.
 3. Profile realistic long captures before deciding whether coarse-to-fine scanning is useful.
 4. Add durable jobs, authentication, multi-worker coordination, configurable retention, and deployment hardening if moving beyond a local demonstration.
-5. Implement Estimate/Classify/Report as separately specified phases. Any demodulator or decoder belongs there and must not be presented as existing Detect behavior.
+5. Extend the validated standalone Estimate/coarse/refinement functions with reliable fine classification and symbol-rate estimation before considering API/UI integration. Report, demodulation and decoding remain separate unimplemented phases.

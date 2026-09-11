@@ -37,7 +37,19 @@ The UI labels these capabilities as planned, and the backend contains no hidden 
 - matched filtering;
 - real-time streaming.
 
-The wider Estimate, Classify, and Report stages are also absent. There is no modulation classifier, demodulator, symbol recovery, decoder, content extractor, or report-generation workflow.
+Standalone downstream IQ Estimate, coarse envelope classification, and Mth-power carrier refinement now exist as plain Python functions. They are opt-in and are not wired into the API or dashboard. **The delivered result is fallback rung 2.** Fine classification is diagnostic-only with null labels; symbol-rate estimation was not attempted. There is no demodulator, symbol recovery, decoder, content extractor, or report-generation workflow.
+
+### Downstream validation boundary
+
+The approved noise-subtracted centroid replaces the direct PSD peak only in Stage 1. Stage 3 retains its own raised-tone peak plus three-bin log-parabolic interpolation. All 12 continuous fixtures pass the unchanged 2% frequency and 3 dB SNR targets; all nine >=0 dB fixtures pass coarse family classification after the existing band-isolation helper. Ten 150 kHz BPSK fixtures at 10 dB have refined mean absolute frequency error 0.4041 Hz. These are synthetic checks, not field-performance guarantees. Per-fixture numbers and usage are in [Estimate and Classify](ESTIMATE_CLASSIFY.md).
+
+The requested fine phase-spread rule succeeds on only 2/5 QPSK seeds at each of 20 and 10 dB. Those two acceptance checks remain strict expected failures, rather than relaxed thresholds. BPSK succeeds 5/5 at both levels, but the delivered fine label and confidence stay null for every candidate. Phase spread remains available for diagnostics. Symbol rate stays null with `not reliably estimated (not attempted: fallback rung 2)` at every SNR; the 5 dB gate and 5% symbol-rate target have not been implemented or validated.
+
+These functions support in-memory complex IQ only. Real audio returns explicit unknown fields; no Q channel is invented. Every pulse must contain at least 1,024 samples for Estimate. Classification needs 1,024 samples after trimming 128 FIR edge samples at each end. One short pulse makes the aggregate Estimate unknown rather than silently excluding that pulse. Overlapping pulse windows form a union; separate pulse PSDs are equally weighted, while SNR weights occupied samples by duration.
+
+Bandwidths describe the measured PSD inside the Detect band. Half-power width is the connected lobe around the strongest peak; for FM it can describe one spectral line, not total modulation width. The 99% width integrates whole Welch bins and has one-bin resolution; threshold-truncated candidate bounds can understate full-signal occupied bandwidth. The generator provides nominal detection bands, not theoretical half-power widths; the 15% theoretical-width check is exercised on an analytical spectrum, with no claim of that accuracy on absent fixture truth. The required `unshaped-pulse-sidelobes` caveat is a ratio-triggered heuristic (>5 times the half-power width), not proof of rectangular pulse shaping; it also triggers on these FM spectra.
+
+SNR uses raw occupied-sample power and the existing capture-level median noise density times sample rate. Other simultaneous emitters contaminate that power, and colored noise or wide occupancy can bias the floor. Centroid accuracy depends on candidate bounds and spectral symmetry. Envelope families and refinement sharpness are heuristics, not calibrated probabilities or proof of digital modulation. Mth-power refinement can lock to an FM spectral line; only the BPSK carrier-refinement accuracy is validated. No automatic source separation, phase tracking or synchronization loop is implied.
 
 ## Algorithm limits
 
@@ -100,9 +112,9 @@ Profile large real captures first. A coarse stage should preserve short events a
 
 Frequency hopping and co-channel separation need their own data models, evaluation criteria, and operator displays. Do not overload the present candidate-band association with source-identity claims.
 
-### 7. Add Estimate and Classify
+### 7. Extend Estimate and Classify beyond fallback rung 2
 
-Create explicit downstream contracts that consume Detect candidates. Potential Estimate outputs include center frequency, occupied bandwidth, SNR under a declared measurement method, symbol rate, and timing stability. Classification should support unknown/review states and be evaluated on held-out data.
+Keep the standalone Estimate/coarse/refinement contract and its null states. Investigate residual-frequency accumulation before enabling fine labels, then validate a symbol-rate estimator against the newly recorded 500 Hz BPSK/QPSK truth at 10/5 dB, with explicit unknowns below the reliable range. No symbol-rate algorithm has shipped in this pass. Add held-out and real-capture evidence before expanding claims or wiring results into the product.
 
 ### 8. Add demodulation/decoding only for declared waveforms
 

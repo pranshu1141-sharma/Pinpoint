@@ -82,3 +82,69 @@ def test_refinement_varying_envelope_is_unknown():
     out = classify.refine_frequency(c, d)
     assert out["center_frequency_refined_hz"] is None
     assert out["refinement_order"] is None
+
+
+@pytest.mark.parametrize("kind,order", [
+    ("bpsk", 2),
+    pytest.param("qpsk", 4, marks=pytest.mark.xfail(
+        strict=True, reason="Fallback rung 2: QPSK phase rule passes only 2/5 seeds; target retained")),
+])
+@pytest.mark.parametrize("snr", [20, 10])
+def test_exploratory_fine_rule_majority_acceptance(kind, order, snr):
+    matches = 0
+    rows = []
+    for seed in range(47, 52):
+        c, d, _ = fixture(kind, snr, seed=seed)
+        e = classify.refine_frequency(c, classify.classify_coarse(c, estimate_candidate(c, d)))
+        out = classify.classify_fine(c, e)
+        rows.append((seed, out["refinement_order"], out["phase_cluster_spread_rad"]))
+        matches += (out["refinement_order"] == order
+                    and out["phase_cluster_spread_rad"] is not None
+                    and out["phase_cluster_spread_rad"] < .8)
+    assert matches > len(rows)/2, rows
+
+
+@pytest.mark.parametrize("snr", [20, 10, 0, -5])
+def test_fm_fine_falls_back_to_family(snr):
+    c, d, _ = fixture("fm", snr)
+    e = classify.refine_frequency(c, classify.classify_coarse(c, estimate_candidate(c, d)))
+    out = classify.classify_fine(c, e)
+    assert out["fine_modulation_label"] is None
+    assert out["fine_modulation_confidence"] is None
+    assert out["phase_cluster_spread_rad"] >= .8
+    assert out["modulation_family"] == "constant-envelope"
+
+
+def test_fine_unavailable_refinement_returns_nulls():
+    c, d, _ = fixture("bpsk", 10)
+    out = classify.classify_fine(c, d)
+    assert out["fine_modulation_label"] is None
+    assert out["fine_modulation_confidence"] is None
+    assert out["phase_cluster_spread_rad"] is None
+
+
+@pytest.mark.parametrize("kind", ["bpsk", "qpsk", "fm"])
+@pytest.mark.parametrize("snr", [20, 10, 5, 0, -5])
+def test_end_to_end_fallback_never_publishes_unvalidated_values(kind, snr):
+    c, d, _ = fixture(kind, snr)
+    # Previously supplied values must not leak through the enriched copy.
+    d.update(fine_modulation_label="guessed", symbol_rate_hz=12345)
+    out = classify.analyze_candidate(c, d)
+    assert out["fine_modulation_label"] is None
+    assert out["fine_modulation_confidence"] is None
+    assert out["symbol_rate_hz"] is None
+    assert "fallback rung 2" in out["symbol_rate_status"]
+    assert d["fine_modulation_label"] == "guessed"
+
+
+def test_end_to_end_audio_and_short_samples_are_unknown():
+    c, d, _ = fixture("bpsk", 10)
+    c.metadata["source_kind"] = "audio"
+    out = classify.analyze_candidate(c, d)
+    assert out["modulation_family"] is None
+    assert out["center_frequency_refined_hz"] is None
+    c.metadata["source_kind"] = "iq"
+    d["end_sample"] = d["start_sample"]+1024
+    out = classify.analyze_candidate(c, d)
+    assert out["modulation_family"] is None
+    assert out["center_frequency_refined_hz"] is None

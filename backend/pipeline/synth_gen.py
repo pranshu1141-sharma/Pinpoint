@@ -42,6 +42,7 @@ def make_signal(kind, snr_db=10, duration=2.0, seed=47, frequency=8000):
     iq = base * np.exp(2j * np.pi * frequency * t) + noise
     truth.append(dict(kind=kind, snr_db=snr_db, freq_lower_hz=frequency-bandwidth/2,
                       freq_upper_hz=frequency+bandwidth/2, start_sample=0, end_sample=n,
+                      symbol_rate_hz=FS/96 if kind in ("bpsk", "qpsk") else None,
                       pulse_width_samples=2400 if kind == "pulsed" else None,
                       pri_samples=12000 if kind == "pulsed" else None))
     return iq.astype(np.complex64), truth

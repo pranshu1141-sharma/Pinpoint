@@ -2,7 +2,7 @@
 import numpy as np
 
 from .detect import EPS, estimate_noise_floor, isolate_band
-from .estimate import NFFT, interpolated_peak, occupied_windows, tuning_frequency
+from .estimate import NFFT, estimate_candidate, interpolated_peak, occupied_windows, tuning_frequency
 from .ingest import Capture
 
 
@@ -90,4 +90,47 @@ def refine_frequency(capture: Capture, candidate: dict) -> dict:
     sharpness, order, residual = max(hypotheses)
     out.update(center_frequency_refined_hz=float(center+residual), refinement_order=order,
                refinement_sharpness=sharpness, refinement_status="refined (Mth-power peak heuristic)")
+    return out
+
+
+def classify_fine(capture: Capture, candidate: dict) -> dict:
+    """Fallback rung 2: expose phase diagnostics but never publish a fine label.
+
+    The requested spread <0.8 rule failed the QPSK majority acceptance check
+    at both 20 and 10 dB (2/5 seeds each). BPSK success alone is insufficient
+    to claim Stage 4. Retain this diagnostic to make the limitation measurable.
+    """
+    out = {**candidate, "fine_modulation_label": None, "fine_modulation_confidence": None,
+           "phase_cluster_spread_rad": None,
+           "fine_modulation_status": "not reliably classified (no phase refinement)"}
+    order = candidate.get("refinement_order")
+    if candidate.get("modulation_family") != "constant-envelope" or order not in (2, 4):
+        return out
+    x = corrected_segment(capture, candidate, candidate.get("center_frequency_refined_hz"))
+    if x is None or not np.any(np.abs(x) > 0):
+        return out
+    phase = np.angle(x).astype(np.float64)
+    concentration = float(abs(np.mean(np.exp(1j*order*phase))))
+    if concentration <= 0:
+        out["fine_modulation_status"] = "not reliably classified (no phase concentration)"
+        return out
+    spread = float(np.sqrt(max(0., -2*np.log(min(1., concentration)))))
+    out["phase_cluster_spread_rad"] = spread
+    out["fine_modulation_status"] = "not reliably classified (fallback rung 2: fine acceptance not met)"
+    return out
+
+
+def analyze_candidate(capture: Capture, candidate: dict, *, noise_floor=None) -> dict:
+    """Run the validated downstream stages on a copy of one Detect candidate.
+
+    Fine classification is diagnostic-only and symbol-rate estimation was not
+    attempted after the Stage 4 acceptance failure. Neither field can accidentally
+    retain an earlier guessed value from the input candidate.
+    """
+    out = estimate_candidate(capture, candidate, noise_floor=noise_floor)
+    out = classify_coarse(capture, out)
+    out = refine_frequency(capture, out)
+    out = classify_fine(capture, out)
+    out.update(symbol_rate_hz=None,
+               symbol_rate_status="not reliably estimated (not attempted: fallback rung 2)")
     return out
