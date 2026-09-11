@@ -1,4 +1,4 @@
-# SIH26147 — Detect
+# SIH26147 — PinPoint
 
 An offline RF capture detector and dashboard for the Smart India Hackathon NTRO software track. It locates candidate time/frequency regions, measures pulse timing, and exposes inspectable isolation layers. **It does not classify modulation, demodulate, or decode content.**
 
