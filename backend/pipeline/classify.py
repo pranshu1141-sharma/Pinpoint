@@ -1,8 +1,8 @@
 """Opt-in, explicitly heuristic IQ modulation measurements."""
 import numpy as np
 
-from .detect import isolate_band
-from .estimate import NFFT, occupied_windows, tuning_frequency
+from .detect import EPS, estimate_noise_floor, isolate_band
+from .estimate import NFFT, interpolated_peak, occupied_windows, tuning_frequency
 from .ingest import Capture
 
 
@@ -52,4 +52,42 @@ def classify_coarse(capture: Capture, candidate: dict) -> dict:
                modulation_family="constant-envelope" if variation < .3 else "varying-envelope",
                modulation_confidence=min(1., abs(variation-.3)/.3),
                modulation_status="classified (isolated-envelope heuristic)")
+    return out
+
+
+def refine_frequency(capture: Capture, candidate: dict) -> dict:
+    """Choose the sharper M=2/4 raised tone; retain Stage 1's direct estimate.
+
+    This is a PSK synchronization hypothesis, not proof of modulation. FM can
+    also have sharp spectral lines. Fine classification must independently test
+    phase concentration. A peak at the Nyquist boundary is left unresolved.
+    """
+    out = {**candidate, "center_frequency_refined_hz": None, "refinement_order": None,
+           "refinement_sharpness": None,
+           "refinement_status": "not reliably refined (requires constant-envelope evidence)"}
+    if candidate.get("modulation_family") != "constant-envelope":
+        return out
+    center = candidate.get("center_frequency_hz")
+    x = corrected_segment(capture, candidate, center)
+    if x is None:
+        return out
+    scale = float(np.max(np.abs(x)))
+    if scale <= 0 or not np.isfinite(scale):
+        return out
+    # Normalization preserves frequency/sharpness and avoids Mth-power overflow.
+    x = (x/scale).astype(np.complex64)
+    hypotheses = []
+    for order in (2, 4):
+        f, p, _ = estimate_noise_floor(x**order, capture.sample_rate)
+        peak = interpolated_peak(f, p)
+        if peak is None:
+            continue
+        sharpness = float(np.max(p)/max(float(np.median(p)), EPS))
+        hypotheses.append((sharpness, order, peak/order))
+    if not hypotheses:
+        out["refinement_status"] = "not reliably refined (unresolved raised tone)"
+        return out
+    sharpness, order, residual = max(hypotheses)
+    out.update(center_frequency_refined_hz=float(center+residual), refinement_order=order,
+               refinement_sharpness=sharpness, refinement_status="refined (Mth-power peak heuristic)")
     return out

@@ -45,3 +45,40 @@ def test_representative_uses_longest_pulse_not_gap():
     segment = classify.corrected_segment(c, e, e["center_frequency_hz"])
     w = d["pulse_windows"][1]
     assert len(segment) == w["end_sample"]-w["start_sample"]-256
+
+
+@pytest.mark.parametrize("kind", ["bpsk", "qpsk"])
+def test_refinement_preserves_direct_estimate_and_absolute_reference(kind):
+    c, d, _ = fixture(kind, 10, offset=100e6)
+    coarse = classify.classify_coarse(c, estimate_candidate(c, d))
+    refined = classify.refine_frequency(c, coarse)
+    assert refined["center_frequency_hz"] == coarse["center_frequency_hz"]
+    assert refined["center_frequency_refined_hz"] == pytest.approx(100e6+8000, abs=30)
+    assert refined["refinement_order"] in (2, 4)
+
+
+def test_refinement_150khz_bpsk_10db_mean_error():
+    from backend.pipeline.ingest import Capture
+    from backend.pipeline.detect import analyze_capture
+    from backend.pipeline.synth_gen import make_signal
+    errors = []
+    # Preserve the generator waveform and noise; reinterpret its sample rate
+    # at 1 MHz with the carrier set to 7200/48000 cycles/sample = 150 kHz.
+    for seed in range(47, 57):
+        x, _ = make_signal("bpsk", 10, seed=seed, frequency=7200)
+        c = Capture(x, 1e6, {"source_kind": "iq", "filename": "150khz-bpsk",
+                            "wav_disambiguation": {"result": "declared_iq"}})
+        ds = analyze_capture(c).response["detections"]
+        d = next(d for d in ds if d["freq_lower_hz"] < 150000 < d["freq_upper_hz"])
+        out = classify.refine_frequency(c, classify.classify_coarse(c, estimate_candidate(c, d)))
+        assert out["center_frequency_refined_hz"] is not None
+        errors.append(abs(out["center_frequency_refined_hz"]-150000))
+    assert np.mean(errors) < 50, errors
+
+
+def test_refinement_varying_envelope_is_unknown():
+    c, d, _ = fixture("bpsk", 10)
+    d.update(modulation_family="varying-envelope")
+    out = classify.refine_frequency(c, d)
+    assert out["center_frequency_refined_hz"] is None
+    assert out["refinement_order"] is None
