@@ -12,14 +12,24 @@ const { outputFiles } = await build({
   bundle: true, write: false, platform: 'node', format: 'cjs', jsx: 'automatic', packages: 'external',
 });
 const compiled = { exports: {} };
-new Function('require', 'module', 'exports', outputFiles[0].text)(createRequire(import.meta.url), compiled, compiled.exports);
+const cjsRequire = createRequire(import.meta.url);
+new Function('require', 'module', 'exports', outputFiles[0].text)(cjsRequire, compiled, compiled.exports);
 const { DetectionDetailPanel } = compiled.exports;
+// Same require() the compiled bundle used, so the QueryClientContext instance
+// matches instead of diverging across an ESM/CJS dual-package boundary.
+const { QueryClient, QueryClientProvider } = cjsRequire('@tanstack/react-query');
 const base = {
   id: '0', start_sample: 0, end_sample: 48000, freq_lower_hz: -1000, freq_upper_hz: 1000,
   confidence: .8, detection_method: 'adaptive_threshold', needs_review: false,
   is_pulsed: false, pulse_width_samples: null, pri_samples: null, pulse_windows: [], threshold_excess_db: 8,
 };
-const render = (fields = {}) => renderToStaticMarkup(createElement(DetectionDetailPanel, { detection: { ...base, ...fields }, sampleRate: 48000 }));
+// The symbol-rate reveal panel fetches on demand via useQuery, so a real
+// QueryClient must be present even though the reveal starts collapsed.
+const render = (fields = {}) => {
+  const client = new QueryClient();
+  return renderToStaticMarkup(createElement(QueryClientProvider, { client },
+    createElement(DetectionDetailPanel, { detection: { ...base, ...fields }, sampleRate: 48000 })));
+};
 
 test('measured values retain zero, signs and refined RF precision; caveats are inline', () => {
   const html = render({ estimate_status: 'estimated', center_frequency_hz: -1234.56,

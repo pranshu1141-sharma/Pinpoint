@@ -213,6 +213,36 @@ def estimate_symbol_rate(capture: Capture, candidate: dict) -> dict:
     return out
 
 
+def symbol_rate_diagnostic(capture: Capture, candidate: dict) -> dict:
+    """The Welch PSD behind estimate_symbol_rate's harmonic pick, recomputed
+    on demand for evidence-trail display only; never used for the published
+    symbol_rate_hz itself, so this cannot drift from the validated pipeline."""
+    if candidate.get("symbol_rate_hz") is None:
+        return {"applicable": False, "reason": candidate.get("symbol_rate_status") or "not reliably estimated"}
+    frequency_hz = candidate.get("center_frequency_refined_hz") or candidate.get("center_frequency_hz")
+    x = corrected_segment(capture, candidate, frequency_hz)
+    if x is None:
+        return {"applicable": False, "reason": "insufficient occupied samples"}
+    nonlin = np.diff(np.real(x).astype(np.float64))**2
+    nperseg = min(len(nonlin), 1 << 20)
+    f, p = scipy_signal.welch(nonlin, fs=capture.sample_rate, window="hann", nperseg=nperseg,
+                              noverlap=nperseg//2, detrend=False, scaling="density")
+    skip = 4
+    peak_power = float(np.max(p[skip:]))
+    threshold = peak_power/10**.3
+    # Downsample for transport only; selection already happened upstream.
+    step = max(1, len(f)//800)
+    return {
+        "applicable": True,
+        "frequencies_hz": f[::step].tolist(),
+        "power_db": (10*np.log10(np.maximum(p[::step], 1e-300))).tolist(),
+        "skip_frequency_hz": float(f[skip]),
+        "selected_frequency_hz": candidate["symbol_rate_hz"],
+        "peak_power_db": float(10*np.log10(peak_power)),
+        "threshold_power_db": float(10*np.log10(threshold)),
+    }
+
+
 def analyze_candidate(capture: Capture, candidate: dict, *, noise_floor=None) -> dict:
     """Run the validated downstream stages on a copy of one Detect candidate.
 

@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 from backend.pipeline.ingest import load_capture, AmbiguousCapture
 from backend.pipeline.detect import analyze_capture, db
-from backend.pipeline.classify import analyze_candidate
+from backend.pipeline.classify import analyze_candidate, symbol_rate_diagnostic
 from backend.pipeline.layers import build_layers, waveform
 from backend.pipeline.sigmf_io import export_metadata
 from backend.pipeline.large_capture import open_disk_capture, analyze_disk_capture, build_disk_layers, DiskSamples
@@ -313,6 +313,15 @@ def envelope(job_id: str, detection_id: int):
     return {"waveform": env["waveform"] if "waveform" in env else waveform(env["values"], job["capture"].sample_rate), "threshold": env["threshold"],
             "threshold_description": "Maximum block envelope threshold (summary)" if "waveform" in env else "Envelope threshold",
             "pulse_windows": d["pulse_windows"], "pulse_width_samples": d["pulse_width_samples"], "pri_samples": d["pri_samples"]}
+
+
+@app.get("/api/detections/{job_id}/{detection_id}/symbol-rate-diagnostic")
+def symbol_rate_diagnostic_endpoint(job_id: str, detection_id: int):
+    job = get_job(job_id)
+    ds = job["result"].response["detections"]
+    if detection_id < 0 or detection_id >= len(ds):
+        raise HTTPException(404, "Candidate not found.")
+    return symbol_rate_diagnostic(job["capture"], ds[detection_id])
 
 
 @app.get("/api/export/{job_id}")

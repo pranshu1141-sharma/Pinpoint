@@ -114,6 +114,17 @@ export type AccuracyCurve = {
   measure: string;
   curve: AccuracyCurvePoint[];
 };
+export type SymbolRateDiagnostic =
+  | { applicable: false; reason: string }
+  | {
+      applicable: true;
+      frequencies_hz: number[];
+      power_db: number[];
+      skip_frequency_hz: number;
+      selected_frequency_hz: number;
+      peak_power_db: number;
+      threshold_power_db: number;
+    };
 export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {

@@ -221,3 +221,32 @@ def test_fine_classification_accuracy_curve_reflects_recorded_validation_evidenc
         assert row["trials"] > 0
         assert 0 <= row["passed"] <= row["trials"]
         assert row["accuracy"] == pytest.approx(row["passed"] / row["trials"])
+
+
+def test_symbol_rate_diagnostic_marks_the_published_harmonic():
+    x, _ = make_signal("bpsk", 20)
+    r = client.post("/api/analyze", files={"file": ("bpsk.iq", x.tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    d = next(d for d in body["detections"] if d["freq_lower_hz"] < 8000 < d["freq_upper_hz"])
+    idx = body["detections"].index(d)
+    diag = client.get(f"/api/detections/{body['job_id']}/{idx}/symbol-rate-diagnostic").json()
+    assert d["symbol_rate_hz"] is not None
+    assert diag["applicable"] is True
+    assert diag["selected_frequency_hz"] == pytest.approx(d["symbol_rate_hz"])
+    assert len(diag["frequencies_hz"]) == len(diag["power_db"]) > 10
+    assert diag["peak_power_db"] > diag["threshold_power_db"]
+
+
+def test_symbol_rate_diagnostic_not_applicable_when_unestimated():
+    x, _ = make_signal("fm", 10)
+    r = client.post("/api/analyze", files={"file": ("fm.iq", x.tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    d = next(d for d in body["detections"] if d["freq_lower_hz"] < 8000 < d["freq_upper_hz"])
+    idx = body["detections"].index(d)
+    assert d["symbol_rate_hz"] is None
+    diag = client.get(f"/api/detections/{body['job_id']}/{idx}/symbol-rate-diagnostic").json()
+    assert diag == {"applicable": False, "reason": d["symbol_rate_status"]}
