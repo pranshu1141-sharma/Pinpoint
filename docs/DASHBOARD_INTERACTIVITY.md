@@ -21,7 +21,7 @@ how the rest of [FRONTEND_DASHBOARD.md](FRONTEND_DASHBOARD.md) is built.
 - [ ] Zoom/pan controls on the spectrogram
 - [ ] Detection rows clickable → jump spectrogram viewport to that detection
 - [ ] Sortable/filterable detection table (confidence, frequency, needs_review)
-- [ ] Confidence-threshold slider live-filtering the detection list + spectrogram
+- [x] Confidence-threshold slider live-filtering the detection list + spectrogram
 - [x] Adjustable CFAR margin control with live re-run
 - [ ] Interactive accuracy-vs-SNR curve (hover for trial counts)
 - [ ] Symbol-rate panel: reveal the FFT plot with the chosen harmonic marked

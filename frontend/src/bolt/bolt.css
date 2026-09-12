@@ -90,6 +90,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .bolt-sidebar .detections-dock td { padding:6px 4px; }
 .bolt-sidebar .detections-dock td:first-child { white-space:normal; }
 .evidence-note { margin:0; padding:6px 8px; font-size:9px; color:#aaa; border-top:1px solid #353535; }
+.confidence-filter { display:flex; align-items:center; gap:5px; font-size:9px; color:#a0a0a0; font-family:var(--font-mono); white-space:nowrap; }
+.confidence-filter input[type="range"] { width:64px; accent-color:#2a82da; height:12px; cursor:pointer; }
+.confidence-filter-value { min-width:2.4em; text-align:right; color:#d4d4d4; }
 .bolt-breakdown { flex-shrink:0; border-top:1px solid #4a4a4a; background:#252525; }
 .dock-toggle { height:28px; width:100%; display:flex; align-items:center; gap:6px; padding:0 10px; background:#3c3c3c; color:#d4d4d4; border:0; border-bottom:1px solid #353535; text-transform:uppercase; font-size:11px; }
 .dock-toggle span { color:#aaa; font:10px var(--font-mono); margin-left:6px; }
