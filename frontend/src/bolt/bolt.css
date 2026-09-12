@@ -117,6 +117,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .detail-unreliable span { border-bottom:1px dashed #5a5a5a; }
 .detail-explain-toggle { display:inline-flex; align-items:center; justify-content:center; margin-left:5px; padding:0; background:none; border:none; color:#7f7f7f; vertical-align:middle; }
 .detail-explain-toggle:hover { color:#69aff5; border:none; }
+.detail-notes { margin-top:10px; border-top:1px solid #353535; padding-top:8px; display:flex; flex-direction:column; gap:4px; }
+.detail-notes label { font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:#a0a0a0; }
+.detail-notes textarea { min-height:56px; resize:vertical; background:#252525; border:1px solid #3c3c3c; border-radius:2px; padding:6px 8px; color:#d4d4d4; font:11px/1.5 var(--font-mono); }
+.detail-notes textarea:focus { outline:1px solid #2a82da; border-color:#2a82da; }
+.detail-notes textarea:disabled { opacity:.5; }
 .detail-reveal { margin-top:10px; border-top:1px solid #353535; padding-top:8px; }
 .detail-reveal-toggle { display:flex; align-items:center; gap:5px; width:100%; background:none; border:none; padding:2px 0; font-size:10px; color:#a0a0a0; text-align:left; }
 .detail-reveal-toggle:hover { color:#d4d4d4; border:none; }

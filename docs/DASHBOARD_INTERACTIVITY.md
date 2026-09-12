@@ -32,7 +32,7 @@ how the rest of [FRONTEND_DASHBOARD.md](FRONTEND_DASHBOARD.md) is built.
 - [x] Synced playhead — audio scrub position mirrored on the spectrogram
 - [x] SigMF export preview panel + copy-to-clipboard before download
 - [x] Session history panel — reload previously analyzed files
-- [ ] Per-detection analyst notes field
+- [x] Per-detection analyst notes field
 - [x] Distinct styling for "not reliably estimated" states
 - [ ] Keyboard shortcuts + discoverable shortcuts overlay
 

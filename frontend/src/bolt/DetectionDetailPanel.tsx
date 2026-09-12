@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronRight, Info } from 'lucide-react';
 import type { Detection } from './types';
@@ -25,10 +25,27 @@ function isUnreliable(text: string) {
   return UNRELIABLE_PATTERN.test(text);
 }
 
+const NOTES_KEY = 'detect-analyst-notes';
+
+function loadNotes(): Record<string, string> {
+  try { return JSON.parse(localStorage.getItem(NOTES_KEY) ?? '{}'); } catch { return {}; }
+}
+
+function saveNote(key: string, value: string) {
+  try {
+    const all = loadNotes();
+    if (value.trim()) all[key] = value; else delete all[key];
+    localStorage.setItem(NOTES_KEY, JSON.stringify(all));
+  } catch { /* storage unavailable */ }
+}
+
 export function DetectionDetailPanel({ detection, sampleRate, jobId }: DetectionDetailPanelProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [symbolRateOpen, setSymbolRateOpen] = useState(false);
   const [modulationOpen, setModulationOpen] = useState(false);
+  const noteKey = jobId && detection ? `${jobId}:${detection.id}` : null;
+  const [note, setNote] = useState('');
+  useEffect(() => { setNote(noteKey ? (loadNotes()[noteKey] ?? '') : ''); }, [noteKey]);
 
   const symbolRate = useQuery({
     queryKey: ['symbol-rate-diagnostic', jobId, detection?.id],
@@ -149,6 +166,17 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
           })}
         </tbody>
       </table>
+
+      <div className="detail-notes">
+        <label htmlFor="analyst-note">Analyst notes</label>
+        <textarea
+          id="analyst-note"
+          placeholder="Notes for this candidate, saved in this browser…"
+          value={note}
+          disabled={!noteKey}
+          onChange={(e) => { setNote(e.target.value); if (noteKey) saveNote(noteKey, e.target.value); }}
+        />
+      </div>
 
       <div className="detail-reveal">
         <button className="detail-reveal-toggle" aria-expanded={modulationOpen} onClick={() => setModulationOpen((v) => !v)}>
