@@ -17,7 +17,7 @@ how the rest of [FRONTEND_DASHBOARD.md](FRONTEND_DASHBOARD.md) is built.
 
 ## Core (build this pass)
 
-- [ ] Click-to-inspect readout on the spectrogram (live freq/power/time at cursor)
+- [x] Click-to-inspect readout on the spectrogram (live freq/power/time at cursor)
 - [ ] Zoom/pan controls on the spectrogram
 - [ ] Detection rows clickable → jump spectrogram viewport to that detection
 - [ ] Sortable/filterable detection table (confidence, frequency, needs_review)

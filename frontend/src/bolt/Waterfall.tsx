@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import type { Detection, SpectrogramResponse } from './types';
 import { buildColormapLUT } from './colormap';
-import { formatFreqShort, formatTime } from './format';
+import { formatFreq, formatFreqShort, formatTime, formatDb } from './format';
 
 interface WaterfallProps {
   spectrogram: SpectrogramResponse | null;
@@ -10,10 +10,12 @@ interface WaterfallProps {
   onSelectDetection: (id: string) => void;
   freqMin: number;
   freqMax: number;
-  onCursorMove: (freqHz: number | null, timeS: number | null) => void;
+  onCursorMove: (freqHz: number | null, timeS: number | null, powerDb: number | null) => void;
   sampleRate: number;
   totalSamples: number;
 }
+
+type Pin = { x: number; y: number; freq: number; time: number; power: number | null };
 
 const LUT = buildColormapLUT();
 
@@ -34,6 +36,7 @@ export function Waterfall({
   const [height, setHeight] = useState(400);
   const [cursorX, setCursorX] = useState<number | null>(null);
   const [cursorY, setCursorY] = useState<number | null>(null);
+  const [pin, setPin] = useState<Pin | null>(null);
 
   const PAD_LEFT = 48;
   const PAD_RIGHT = 8;
@@ -65,6 +68,30 @@ export function Waterfall({
     (x: number) => freqMin + ((x - PAD_LEFT) / plotWidth) * (freqMax - freqMin),
     [freqMin, freqMax, plotWidth],
   );
+
+  // Nearest measured cell under the cursor; bins are irregular viewport
+  // pooling, so this is a linear scan of the edge arrays, not an index formula.
+  const powerAt = useCallback(
+    (freqHz: number, timeS: number): number | null => {
+      if (!spectrogram) return null;
+      const fe = spectrogram.frequency_edges_hz, te = spectrogram.time_edges_seconds;
+      let f = fe.findIndex((edge, i) => i < fe.length - 1 && freqHz >= edge && freqHz <= fe[i + 1]);
+      let t = te.findIndex((edge, i) => i < te.length - 1 && timeS >= edge && timeS <= te[i + 1]);
+      if (f === -1) f = freqHz < fe[0] ? 0 : fe.length - 2;
+      if (t === -1) t = timeS < te[0] ? 0 : te.length - 2;
+      return spectrogram.magnitude_2d[t]?.[f] ?? null;
+    },
+    [spectrogram],
+  );
+
+  useEffect(() => { setPin(null); }, [spectrogram]);
+
+  useEffect(() => {
+    if (!pin) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setPin(null); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [pin]);
 
   // Draw waterfall
   useEffect(() => {
@@ -226,10 +253,23 @@ export function Waterfall({
       ctx.stroke();
       ctx.setLineDash([]);
     }
+
+    // Pinned inspection point, independent of the transient hover crosshair.
+    if (pin) {
+      ctx.strokeStyle = '#2a82da';
+      ctx.fillStyle = '#2a82da';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(pin.x, pin.y, 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(pin.x, pin.y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }, [
     width, height, spectrogram, detections, selectedDetectionId,
     freqToX, freqMin, freqMax, plotWidth, plotHeight, cursorX, cursorY,
-    sampleRate, totalSamples,
+    sampleRate, totalSamples, pin,
   ]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -244,9 +284,9 @@ export function Waterfall({
       const freq = xToFreq(x);
       const timeProgress = (y - PAD_TOP) / plotHeight;
       const timeS = timeProgress * (totalSamples / sampleRate);
-      onCursorMove(freq, timeS);
+      onCursorMove(freq, timeS, powerAt(freq, timeS));
     } else {
-      onCursorMove(null, null);
+      onCursorMove(null, null, null);
     }
   };
 
@@ -266,12 +306,19 @@ export function Waterfall({
         return;
       }
     }
+
+    if (x >= PAD_LEFT && x <= width - PAD_RIGHT && y >= PAD_TOP && y <= height - PAD_BOTTOM) {
+      const freq = xToFreq(x);
+      const timeS = ((y - PAD_TOP) / plotHeight) * (totalSamples / sampleRate);
+      setPin(prev => prev && Math.abs(prev.x - x) < 4 && Math.abs(prev.y - y) < 4
+        ? null : { x, y, freq, time: timeS, power: powerAt(freq, timeS) });
+    }
   };
 
   const handleMouseLeave = () => {
     setCursorX(null);
     setCursorY(null);
-    onCursorMove(null, null);
+    onCursorMove(null, null, null);
   };
 
   return (
@@ -284,6 +331,20 @@ export function Waterfall({
         onClick={handleClick}
         style={{ cursor: 'crosshair' }}
       />
+      {pin && (
+        <div
+          className="waterfall-pin-readout"
+          style={{
+            left: Math.min(pin.x + 10, width - 150),
+            top: Math.min(pin.y + 10, height - 70),
+          }}
+        >
+          <button onClick={() => setPin(null)} aria-label="Dismiss inspection readout">×</button>
+          <div><span>Freq</span><strong>{formatFreq(pin.freq)}</strong></div>
+          <div><span>Time</span><strong>{formatTime(pin.time)}</strong></div>
+          <div><span>Power</span><strong>{pin.power !== null ? formatDb(pin.power) : '—'}</strong></div>
+        </div>
+      )}
     </div>
   );
 }

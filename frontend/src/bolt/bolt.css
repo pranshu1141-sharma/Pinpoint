@@ -93,6 +93,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .confidence-filter { display:flex; align-items:center; gap:5px; font-size:9px; color:#a0a0a0; font-family:var(--font-mono); white-space:nowrap; }
 .confidence-filter input[type="range"] { width:64px; accent-color:#2a82da; height:12px; cursor:pointer; }
 .confidence-filter-value { min-width:2.4em; text-align:right; color:#d4d4d4; }
+.waterfall-pin-readout { position:absolute; z-index:2; display:flex; flex-direction:column; gap:2px; min-width:130px; padding:6px 8px; background:rgba(37,37,37,.95); border:1px solid #2a82da; border-radius:3px; font-family:var(--font-mono); font-size:10px; color:#d4d4d4; pointer-events:auto; box-shadow:0 2px 6px rgba(0,0,0,.4); }
+.waterfall-pin-readout div { display:flex; justify-content:space-between; gap:10px; }
+.waterfall-pin-readout span { color:#a0a0a0; }
+.waterfall-pin-readout strong { font-weight:400; color:#69aff5; font-variant-numeric:tabular-nums; }
+.waterfall-pin-readout button { position:absolute; top:2px; right:4px; background:none; border:none; padding:0; color:#a0a0a0; font-size:12px; line-height:1; cursor:pointer; }
+.waterfall-pin-readout button:hover { color:#ed776c; border:none; }
 .bolt-breakdown { flex-shrink:0; border-top:1px solid #4a4a4a; background:#252525; }
 .dock-toggle { height:28px; width:100%; display:flex; align-items:center; gap:6px; padding:0 10px; background:#3c3c3c; color:#d4d4d4; border:0; border-bottom:1px solid #353535; text-transform:uppercase; font-size:11px; }
 .dock-toggle span { color:#aaa; font:10px var(--font-mono); margin-left:6px; }
