@@ -137,6 +137,30 @@ Supporting endpoints provide job polling, health, demos, audio clips, pulse enve
 
 These measurements describe deterministic synthetic fixtures on one environment. They do not establish receiver operating characteristics, field recall, calibrated confidence, or a guaranteed false-alarm rate.
 
+## Dashboard interactivity
+
+Scope record: [DASHBOARD_INTERACTIVITY.md](DASHBOARD_INTERACTIVITY.md). Core
+checklist, tracked as it ships:
+
+- [ ] Click-to-inspect readout on the spectrogram (live freq/power/time at cursor)
+- [ ] Zoom/pan controls on the spectrogram
+- [ ] Detection rows clickable → jump spectrogram viewport to that detection
+- [ ] Sortable/filterable detection table (confidence, frequency, needs_review)
+- [ ] Confidence-threshold slider live-filtering the detection list + spectrogram
+- [ ] Adjustable CFAR margin control with live re-run
+- [ ] Interactive accuracy-vs-SNR curve (hover for trial counts)
+- [ ] Symbol-rate panel: reveal the FFT plot with the chosen harmonic marked
+- [ ] Modulation panel: reveal cumulant features + decision-tree path
+- [ ] "Explain this number" affordance on every estimated value
+- [ ] Signal Breakdown: adjustable auto-play speed
+- [ ] Signal Breakdown: per-layer download (waveform image + audio clip)
+- [ ] Synced playhead — audio scrub position mirrored on the spectrogram
+- [ ] SigMF export preview panel + copy-to-clipboard before download
+- [ ] Session history panel — reload previously analyzed files
+- [ ] Per-detection analyst notes field
+- [ ] Distinct styling for "not reliably estimated" states
+- [ ] Keyboard shortcuts + discoverable shortcuts overlay
+
 ## Remaining work by priority
 
 1. Collect representative real RF captures with trustworthy annotations and define field metrics before tuning detector thresholds.
