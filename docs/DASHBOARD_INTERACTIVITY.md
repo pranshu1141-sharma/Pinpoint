@@ -23,7 +23,7 @@ how the rest of [FRONTEND_DASHBOARD.md](FRONTEND_DASHBOARD.md) is built.
 - [x] Sortable/filterable detection table (confidence, frequency, needs_review)
 - [x] Confidence-threshold slider live-filtering the detection list + spectrogram
 - [x] Adjustable CFAR margin control with live re-run
-- [ ] Interactive accuracy-vs-SNR curve (hover for trial counts)
+- [x] Interactive accuracy-vs-SNR curve (hover for trial counts)
 - [ ] Symbol-rate panel: reveal the FFT plot with the chosen harmonic marked
 - [ ] Modulation panel: reveal cumulant features + decision-tree path
 - [ ] "Explain this number" affordance on every estimated value

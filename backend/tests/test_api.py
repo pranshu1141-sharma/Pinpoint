@@ -208,3 +208,16 @@ def test_real_large_upload_keeps_estimates_absent_after_block_merge(tmp_path, mo
         assert client.get(f"/api/export/{job}?format=json").json() == body["detections"]
     finally:
         main.discard_job(job)
+
+
+def test_fine_classification_accuracy_curve_reflects_recorded_validation_evidence():
+    r = client.get("/api/validation/fine-classification-accuracy")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["curve"], "expected at least one aggregated bucket"
+    kinds = {row["kind"] for row in body["curve"]}
+    assert kinds <= {"bpsk", "qpsk"}
+    for row in body["curve"]:
+        assert row["trials"] > 0
+        assert 0 <= row["passed"] <= row["trials"]
+        assert row["accuracy"] == pytest.approx(row["passed"] / row["trials"])

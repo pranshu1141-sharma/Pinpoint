@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Activity, FolderOpen, Loader2, Radio, Upload, Settings2, ChevronDown, ChevronRight, Download, Copy, Check } from 'lucide-react';
-import { request, rerunJob, uploadCapture, waitForAnalysis, type Analysis, type AnalysisProgress, type Spectrogram } from './api';
+import { request, rerunJob, uploadCapture, waitForAnalysis, type Analysis, type AnalysisProgress, type Spectrogram, type AccuracyCurve as AccuracyCurveData } from './api';
+import { AccuracyCurve } from './bolt/AccuracyCurve';
 import { adaptDetections, adaptSpectrogram, describeFile } from './bolt/adapter';
 import { FftPlot } from './bolt/FftPlot';
 import { Waterfall } from './bolt/Waterfall';
@@ -31,6 +32,7 @@ export default function App() {
   const [confidenceFilter, setConfidenceFilter] = useState(0);
   const health = useQuery({ queryKey: ['health'], queryFn: () => request<{status: string; max_upload_bytes: number}>('/api/health'), refetchInterval: 15000, retry: false });
   const connected = health.isSuccess && !health.isError;
+  const accuracy = useQuery({ queryKey: ['fine-classification-accuracy'], queryFn: () => request<AccuracyCurveData>('/api/validation/fine-classification-accuracy'), enabled: connected, staleTime: Infinity, retry: false });
   const mutation = useMutation({
     mutationFn: async (run: Run) => {
       if (run.resume) return waitForAnalysis(run.resume, setProgress);
@@ -141,6 +143,7 @@ export default function App() {
       <DockPanel title="File Info" className="file-dock"><FileInfoPanel fileInfo={fileInfo} /><p className="evidence-note">{shown.metadata.wav_disambiguation.reason}</p></DockPanel>
       <DockPanel title="Pipeline Log" className="log-dock" defaultOpen={false}><PipelineLogPanel logLines={shown.pipeline_log} /></DockPanel>
       <DockPanel title="Export / JSON" defaultOpen={false}><div className="export-actions"><button onClick={async () => {try {await navigator.clipboard.writeText(JSON.stringify(shown.detections,null,2));setCopied(true);setTimeout(()=>setCopied(false),1500);}catch {setError('Clipboard unavailable. Use JSON download.');}}}>{copied ? <Check size={12}/> : <Copy size={12}/>}Copy</button><button onClick={() => save(shown.detections,'detections.json')}><Download size={12}/>JSON</button><button onClick={exportSigmf}>SigMF</button></div><pre>{JSON.stringify(shown.detections,null,2)}</pre></DockPanel>
+      <DockPanel title="Fine Classification Accuracy" defaultOpen={false}><AccuracyCurve data={accuracy.data ?? null} loading={accuracy.isPending} /></DockPanel>
       <DockPanel title="Pipeline / Roadmap" defaultOpen={false}><div className="roadmap"><p><b>Detect · Estimate · Classify · built</b> → Report</p><p>Classify now includes coarse envelope family, Mth-power carrier refinement, fine PSK classification (BPSK/QPSK only) and symbol-rate estimation, each gated to its validated SNR range with an explicit unknown status otherwise. FM and pulsed candidates never receive a fine label or symbol rate.</p><p>Planned, not built: cyclostationary analysis, deep-learning detection, co-channel separation, frequency-hopping tracking, matched filtering, real-time streaming, and the Report stage.</p><p>Demodulation into decoded audio/data remains planned, not built in this version.</p></div></DockPanel>
       <div className="sidebar-demos"><button disabled={pending} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending} onClick={() => startDemo('audio')}>Audio demo</button><a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">API contract ↗</a></div>
     </aside></main>}

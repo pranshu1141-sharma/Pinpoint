@@ -103,6 +103,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .waterfall-zoom-controls button { display:flex; align-items:center; justify-content:center; width:20px; height:20px; padding:0; background:rgba(37,37,37,.85); border:1px solid #4a4a4a; border-radius:2px; color:#d4d4d4; }
 .waterfall-zoom-controls button:hover:not(:disabled) { border-color:#2a82da; color:#69aff5; }
 .waterfall-zoom-controls button:disabled { opacity:.35; cursor:default; }
+.accuracy-curve { padding:8px; font-family:var(--font-mono); }
+.accuracy-curve-empty { padding:12px 8px; font-size:10px; color:#a0a0a0; }
+.accuracy-curve-svg { width:100%; height:auto; }
+.accuracy-curve-axis { fill:#7f7f7f; font-size:8px; font-family:var(--font-mono); }
+.accuracy-curve-legend { display:flex; gap:10px; margin-top:2px; font-size:9px; color:#a0a0a0; }
+.accuracy-curve-legend span { display:flex; align-items:center; gap:4px; }
+.accuracy-curve-legend i { display:inline-block; width:8px; height:8px; border-radius:50%; }
+.accuracy-curve-readout { margin-top:4px; font-size:10px; color:#69aff5; min-height:1.2em; }
+.accuracy-curve-note { margin:4px 0 0; font-size:9px; color:#7f7f7f; }
 .bolt-breakdown { flex-shrink:0; border-top:1px solid #4a4a4a; background:#252525; }
 .dock-toggle { height:28px; width:100%; display:flex; align-items:center; gap:6px; padding:0 10px; background:#3c3c3c; color:#d4d4d4; border:0; border-bottom:1px solid #353535; text-transform:uppercase; font-size:11px; }
 .dock-toggle span { color:#aaa; font:10px var(--font-mono); margin-left:6px; }

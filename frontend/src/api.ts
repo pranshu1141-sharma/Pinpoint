@@ -102,6 +102,18 @@ export type Envelope = {
   pulse_width_samples: number | null;
   pri_samples: number | null;
 };
+export type AccuracyCurvePoint = {
+  kind: string;
+  snr_db: number;
+  trials: number;
+  passed: number;
+  accuracy: number;
+};
+export type AccuracyCurve = {
+  source: string;
+  measure: string;
+  curve: AccuracyCurvePoint[];
+};
 export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {

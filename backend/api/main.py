@@ -1,4 +1,5 @@
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
+import json
 from pathlib import Path
 from threading import RLock, BoundedSemaphore
 from time import monotonic
@@ -22,6 +23,7 @@ app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http
                    allow_methods=["GET", "POST"], allow_headers=["*"])
 DATA = Path(__file__).resolve().parents[1] / "data"
 DEMO = DATA / "demo"
+DOCS = Path(__file__).resolve().parents[2] / "docs"
 MAX_BYTES = 2*1024*1024*1024
 LARGE_FILE_BYTES = 1024*1024
 UPLOADS = DATA / "jobs"
@@ -320,3 +322,24 @@ def export(job_id: str, format: str = Query("json", pattern="^(json|sigmf)$")):
     if format == "sigmf":
         return export_metadata(r["metadata"], r["detections"])
     return r["detections"]
+
+
+@app.get("/api/validation/fine-classification-accuracy")
+def fine_classification_accuracy():
+    """Real measured pass/fail trials from the recorded downstream validation
+    run, aggregated by modulation kind and SNR. Not derived from live capture
+    data; it's the same evidence documented in ESTIMATE_CLASSIFY.md."""
+    path = DOCS / "estimate-classify-validation.json"
+    if not path.exists():
+        raise HTTPException(503, "Validation evidence file is missing.")
+    trials = json.loads(path.read_text())["fine_rule"]
+    buckets = defaultdict(lambda: {"trials": 0, "passed": 0})
+    for t in trials:
+        b = buckets[(t["kind"], t["snr_db"])]
+        b["trials"] += 1
+        b["passed"] += bool(t["would_pass_requested_rule"])
+    curve = [{"kind": kind, "snr_db": snr, "trials": b["trials"], "passed": b["passed"],
+              "accuracy": b["passed"] / b["trials"]}
+             for (kind, snr), b in sorted(buckets.items())]
+    return {"source": "docs/estimate-classify-validation.json", "measure": "fine-classification phase-cluster rule pass rate",
+            "curve": curve}
