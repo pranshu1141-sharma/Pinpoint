@@ -1,7 +1,17 @@
+import { useMemo, useState } from 'react';
 import type { Detection } from './types';
 import { formatFreq, formatConfidence, formatSamples } from './format';
 import { cn } from '@/lib/utils';
-import { Download } from 'lucide-react';
+import { Download, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+
+type SortKey = 'freq' | 'time' | 'confidence' | 'pulsed' | 'review';
+const SORT_ACCESSORS: Record<SortKey, (d: Detection) => number> = {
+  freq: (d) => d.freq_lower_hz,
+  time: (d) => d.start_sample,
+  confidence: (d) => d.confidence,
+  pulsed: (d) => (d.is_pulsed ? 1 : 0),
+  review: (d) => (d.needs_review ? 1 : 0),
+};
 
 interface DetectionsPanelProps {
   detections: Detection[];
@@ -40,6 +50,24 @@ function exportCsv(detections: Detection[], sampleRate: number) {
   URL.revokeObjectURL(url);
 }
 
+function SortHeader({ active, dir, label, className, onClick }: { active: boolean; dir: 1 | -1; label: string; className?: string; onClick: () => void }) {
+  const Icon = active ? (dir === 1 ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <th className={className}>
+      <button
+        onClick={onClick}
+        className={cn(
+          'flex items-center gap-1 font-medium uppercase tracking-wide text-[10px] hover:text-rf-text-primary',
+          active ? 'text-rf-accent' : 'text-rf-text-secondary',
+        )}
+      >
+        {label}
+        <Icon className={cn('w-2.5 h-2.5', !active && 'opacity-40')} />
+      </button>
+    </th>
+  );
+}
+
 export function DetectionsPanel({
   detections,
   selectedDetectionId,
@@ -53,6 +81,23 @@ export function DetectionsPanel({
     ? (detections.reduce((s, d) => s + d.confidence, 0) / total * 100).toFixed(0)
     : '0';
 
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<1 | -1>(1);
+  const [reviewOnly, setReviewOnly] = useState(false);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey !== key) { setSortKey(key); setSortDir(1); }
+    else if (sortDir === 1) setSortDir(-1);
+    else { setSortKey(null); setSortDir(1); }
+  };
+
+  const rows = useMemo(() => {
+    const filtered = reviewOnly ? detections.filter((d) => d.needs_review) : detections;
+    if (!sortKey) return filtered;
+    const accessor = SORT_ACCESSORS[sortKey];
+    return [...filtered].sort((a, b) => (accessor(a) - accessor(b)) * sortDir);
+  }, [detections, reviewOnly, sortKey, sortDir]);
+
   return (
     <div className="flex flex-col h-full">
       {/* Stats header */}
@@ -63,8 +108,20 @@ export function DetectionsPanel({
           <span className="text-rf-text-secondary">Review: <span className="text-rf-alert tabular-nums">{review}</span></span>
           <span className="text-rf-text-secondary">Avg Conf: <span className="text-rf-text-primary tabular-nums">{avgConf}%</span></span>
           <button
-            onClick={() => exportCsv(detections, sampleRate)}
-            className="ml-auto flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-rf-text-secondary hover:text-rf-text-primary border border-rf-border-light hover:border-rf-accent transition-colors"
+            onClick={() => setReviewOnly((v) => !v)}
+            aria-pressed={reviewOnly}
+            className={cn(
+              'ml-auto flex items-center gap-1 px-1.5 py-0.5 text-[10px] border transition-colors',
+              reviewOnly ? 'text-rf-alert border-rf-alert' : 'text-rf-text-secondary border-rf-border-light hover:border-rf-accent hover:text-rf-text-primary',
+            )}
+            style={{ borderRadius: '2px' }}
+            title="Show only candidates flagged for review"
+          >
+            Review only
+          </button>
+          <button
+            onClick={() => exportCsv(rows, sampleRate)}
+            className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-rf-text-secondary hover:text-rf-text-primary border border-rf-border-light hover:border-rf-accent transition-colors"
             style={{ borderRadius: '2px' }}
             title="Export detections as CSV"
           >
@@ -83,15 +140,18 @@ export function DetectionsPanel({
           <table className="w-full text-[11px] border-collapse">
             <thead>
               <tr className="sticky top-0 bg-rf-panel border-b border-rf-border">
-                <th className="text-left px-2 py-1.5 font-medium text-rf-text-secondary uppercase tracking-wide text-[10px]">Freq Range</th>
-                <th className="text-left px-2 py-1.5 font-medium text-rf-text-secondary uppercase tracking-wide text-[10px]">Time Range</th>
-                <th className="text-right px-2 py-1.5 font-medium text-rf-text-secondary uppercase tracking-wide text-[10px]">Conf</th>
-                <th className="text-center px-2 py-1.5 font-medium text-rf-text-secondary uppercase tracking-wide text-[10px]">Pulsed</th>
-                <th className="text-center px-2 py-1.5 font-medium text-rf-text-secondary uppercase tracking-wide text-[10px] w-6">!</th>
+                <SortHeader label="Freq Range" active={sortKey === 'freq'} dir={sortDir} onClick={() => toggleSort('freq')} className="text-left px-2 py-1.5" />
+                <SortHeader label="Time Range" active={sortKey === 'time'} dir={sortDir} onClick={() => toggleSort('time')} className="text-left px-2 py-1.5" />
+                <SortHeader label="Conf" active={sortKey === 'confidence'} dir={sortDir} onClick={() => toggleSort('confidence')} className="text-right px-2 py-1.5" />
+                <SortHeader label="Pulsed" active={sortKey === 'pulsed'} dir={sortDir} onClick={() => toggleSort('pulsed')} className="text-center px-2 py-1.5" />
+                <SortHeader label="!" active={sortKey === 'review'} dir={sortDir} onClick={() => toggleSort('review')} className="text-center px-2 py-1.5 w-6" />
               </tr>
             </thead>
             <tbody>
-              {detections.map((det) => {
+              {rows.length === 0 && (
+                <tr><td colSpan={5} className="px-2 py-4 text-center text-rf-text-secondary">No candidates flagged for review.</td></tr>
+              )}
+              {rows.map((det) => {
                 const isSelected = det.id === selectedDetectionId;
                 const startTime = det.start_sample / sampleRate;
                 const endTime = det.end_sample / sampleRate;
