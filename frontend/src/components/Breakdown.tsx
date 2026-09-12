@@ -12,6 +12,7 @@ import {
   X,
   AudioLines,
   LockKeyhole,
+  Download,
 } from "lucide-react";
 import { request, contactName } from "../api";
 import type { Analysis, Detection, Envelope, Layer } from "../api";
@@ -21,10 +22,12 @@ export function AudioPlayer({
   layer,
   detection,
   rate,
+  onPlayheadChange,
 }: {
   layer: Layer;
   detection: Detection;
   rate: number;
+  onPlayheadChange?: (absoluteSeconds: number | null) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null),
     spectrum = useRef<HTMLDivElement>(null),
@@ -57,13 +60,13 @@ export function AudioPlayer({
       ],
     });
     player.current = ws;
+    const offset =
+      layer.audio_start_seconds ??
+      (layer.name === "Detected Region Only"
+        ? detection.start_sample / rate
+        : 0);
     ws.on("ready", () => {
       setReady(true);
-      const offset =
-        layer.audio_start_seconds ??
-        (layer.name === "Detected Region Only"
-          ? detection.start_sample / rate
-          : 0);
       const start = Math.max(0, detection.start_sample / rate - offset),
         end = Math.min(ws.getDuration(), detection.end_sample / rate - offset);
       if (end > start)
@@ -78,6 +81,8 @@ export function AudioPlayer({
     ws.on("play", () => setPlaying(true));
     ws.on("pause", () => setPlaying(false));
     ws.on("finish", () => setPlaying(false));
+    ws.on("timeupdate", (t) => onPlayheadChange?.(t + offset));
+    ws.on("interaction", () => onPlayheadChange?.(ws.getCurrentTime() + offset));
     ws.on("error", (e) => {
       if (e.name !== "AbortError") setError(e.message);
     });
@@ -90,7 +95,9 @@ export function AudioPlayer({
     return () => {
       ws.destroy();
       player.current = null;
+      onPlayheadChange?.(null);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layer, detection, rate]);
   return (
     <div className="audio-player">
@@ -108,6 +115,15 @@ export function AudioPlayer({
           {playing ? <Pause size={13} /> : <Play size={13} />}{" "}
           {playing ? "Pause" : "Play clip"}
         </button>
+        <a
+          className="audio-download"
+          href={layer.audio_url ?? undefined}
+          download={`${layer.name.toLowerCase().replace(/\s+/g, "-")}.wav`}
+          aria-label="Download this layer's audio clip"
+          title="Download audio clip"
+        >
+          <Download size={13} /> Audio
+        </a>
       </div>
       <div ref={ref} />
       <div ref={spectrum} />

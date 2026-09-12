@@ -150,6 +150,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .layer-tabs button { flex-shrink:0; font-size:11px; color:#aaa; background:transparent; border:0; border-bottom:2px solid transparent; padding:7px 10px; }
 .layer-tabs button[aria-selected=true] { color:#eee; background:#252525; border-bottom-color:#2a82da; }
 .layer-tabs button.auto-step { margin-left:auto; font-size:10px; }
+.auto-step-speed { display:flex; align-items:center; gap:5px; padding:0 8px; font:9px var(--font-mono); color:#a0a0a0; white-space:nowrap; }
+.auto-step-speed input[type="range"] { width:46px; accent-color:#2a82da; height:12px; cursor:pointer; }
+.auto-step-speed-value { min-width:2.4em; }
+.layer-download { margin-left:6px; display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; padding:0; background:transparent; border:1px solid #4a4a4a; border-radius:2px; color:#aaa; }
+.layer-download:hover { border-color:#2a82da; color:#69aff5; }
 .layer-content { padding:10px; display:flex; flex-direction:column; gap:10px; animation:layer-in .15s ease-out; }
 .layer-content p { color:#aaa; font-size:11px; margin:0; }
 .wave-panel { background:#1e1e1e; border:1px solid #3c3c3c; min-width:0; }
@@ -158,6 +163,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .audio-player { background:#1e1e1e; border:1px solid #3c3c3c; padding:8px; }
 .audio-label { display:flex; align-items:center; gap:8px; border-bottom:1px solid #3c3c3c; padding-bottom:6px; color:#aaa; font-size:10px; }
 .audio-label button { margin-left:auto; display:flex; align-items:center; gap:5px; background:#3c3c3c; border:1px solid #555; padding:3px 8px; color:#ddd; font-size:10px; }
+.audio-download { display:flex; align-items:center; gap:5px; background:#3c3c3c; border:1px solid #555; padding:3px 8px; color:#ddd; font-size:10px; text-decoration:none; border-radius:2px; }
+.audio-download:hover { border-color:#2a82da; color:#69aff5; }
 .audio-player .fineprint { padding-top:5px; font-size:10px; }
 .error-text { color:#ed776c!important; }
 .export-actions,.sidebar-demos { display:flex; gap:7px; padding:8px; }

@@ -15,6 +15,7 @@ interface WaterfallProps {
   sampleRate: number;
   totalSamples: number;
   jumpTo?: { id: string; token: number } | null;
+  playheadTime?: number | null;
 }
 
 type Pin = { x: number; y: number; freq: number; time: number; power: number | null };
@@ -34,6 +35,7 @@ export function Waterfall({
   sampleRate,
   totalSamples,
   jumpTo,
+  playheadTime,
 }: WaterfallProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -323,6 +325,18 @@ export function Waterfall({
       ctx.setLineDash([]);
     }
 
+    // Synced audio playhead: the Signal Breakdown clip's scrub position,
+    // converted to absolute capture time, mirrored on the full spectrogram.
+    if (playheadTime != null && playheadTime >= view.timeLo && playheadTime <= view.timeHi) {
+      const py = timeToY(playheadTime);
+      ctx.strokeStyle = '#5cb85c';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(PAD_LEFT, py);
+      ctx.lineTo(width - PAD_RIGHT, py);
+      ctx.stroke();
+    }
+
     // Pinned inspection point, independent of the transient hover crosshair.
     if (pin) {
       ctx.strokeStyle = '#2a82da';
@@ -338,7 +352,7 @@ export function Waterfall({
   }, [
     width, height, spectrogram, detections, selectedDetectionId,
     freqToX, timeToY, view, plotWidth, plotHeight, cursorX, cursorY,
-    sampleRate, pin,
+    sampleRate, pin, playheadTime,
   ]);
 
   // Non-passive so the wheel can zoom the viewport instead of scrolling the page.

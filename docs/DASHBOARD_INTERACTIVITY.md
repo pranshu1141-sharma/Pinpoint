@@ -27,9 +27,9 @@ how the rest of [FRONTEND_DASHBOARD.md](FRONTEND_DASHBOARD.md) is built.
 - [x] Symbol-rate panel: reveal the FFT plot with the chosen harmonic marked
 - [x] Modulation panel: reveal cumulant features + decision-tree path
 - [x] "Explain this number" affordance on every estimated value
-- [ ] Signal Breakdown: adjustable auto-play speed
-- [ ] Signal Breakdown: per-layer download (waveform image + audio clip)
-- [ ] Synced playhead — audio scrub position mirrored on the spectrogram
+- [x] Signal Breakdown: adjustable auto-play speed
+- [x] Signal Breakdown: per-layer download (waveform image + audio clip)
+- [x] Synced playhead — audio scrub position mirrored on the spectrogram
 - [ ] SigMF export preview panel + copy-to-clipboard before download
 - [ ] Session history panel — reload previously analyzed files
 - [ ] Per-detection analyst notes field
