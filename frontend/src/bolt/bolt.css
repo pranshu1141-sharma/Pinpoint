@@ -167,6 +167,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .audio-download:hover { border-color:#2a82da; color:#69aff5; }
 .audio-player .fineprint { padding-top:5px; font-size:10px; }
 .error-text { color:#ed776c!important; }
+.export-tabs { display:flex; gap:2px; padding:6px 8px 0; }
+.export-tabs button { font-size:10px; color:#aaa; background:#252525; border:1px solid #3c3c3c; border-bottom:0; padding:4px 10px; border-radius:2px 2px 0 0; }
+.export-tabs button[aria-selected=true] { color:#eee; background:#1e1e1e; border-color:#2a82da; }
+.export-loading { padding:16px 8px; font-size:10px; color:#999; }
 .export-actions,.sidebar-demos { display:flex; gap:7px; padding:8px; }
 .sidebar-demos { margin-top:auto; align-items:center; }
 .sidebar-demos a { margin-left:auto; color:#aaa; font-size:10px; }

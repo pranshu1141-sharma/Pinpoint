@@ -27,6 +27,9 @@ export default function App() {
   const [settings, setSettings] = useState(false), [breakdownOpen, setBreakdownOpen] = useState(true), [dragging, setDragging] = useState(false);
   const [progress, setProgress] = useState<AnalysisProgress | null>(null);
   const [error, setError] = useState(''), [copied, setCopied] = useState(false);
+  const [exportView, setExportView] = useState<'json' | 'sigmf'>('json');
+  const [sigmfPreview, setSigmfPreview] = useState<unknown>(null);
+  const [sigmfLoading, setSigmfLoading] = useState(false);
   const [cursor, setCursor] = useState<{ frequency: number | null; power: number | null; time: number | null }>({ frequency: null, power: null, time: null });
   const [playheadTime, setPlayheadTime] = useState<number | null>(null);
   const [lastSource, setLastSource] = useState<Run>({});
@@ -51,14 +54,14 @@ export default function App() {
       if (fixed) body.append('fixed_threshold_db', fixed);
       return uploadCapture(body, setProgress);
     },
-    onMutate: () => { setError(''); setProgress(null); setResult(null); setSelected(null); setCursor({frequency:null,power:null,time:null}); setConfidenceFilter(0); },
+    onMutate: () => { setError(''); setProgress(null); setResult(null); setSelected(null); setCursor({frequency:null,power:null,time:null}); setConfidenceFilter(0); setExportView('json'); setSigmfPreview(null); },
     onSuccess: (data, run) => { setResult(data); setMargin(String(data.settings.margin_db)); setMode(data.settings.mode); setFixed(data.settings.mode === 'fixed_debug' ? String(data.threshold_db) : ''); setSelected(data.detections.length ? String(data.detections[0].id) : null); setLastSource(run.demo ? { demo: run.demo } : {}); setProgress(null); setBreakdownOpen(true); },
     onError: (e) => { setError(e.message); setProgress(null); setSettings(true); },
   });
   const rerun = useMutation({
     mutationFn: (jobId: string) => rerunJob(jobId, { marginDb: Number(margin), mode, fixedThresholdDb: fixed }),
     onMutate: () => setError(''),
-    onSuccess: (data) => { setResult(data); setSelected(data.detections.length ? String(data.detections[0].id) : null); queryClient.invalidateQueries({ queryKey: ['spectrogram', data.job_id] }); },
+    onSuccess: (data) => { setResult(data); setSelected(data.detections.length ? String(data.detections[0].id) : null); setSigmfPreview(null); setExportView('json'); queryClient.invalidateQueries({ queryKey: ['spectrogram', data.job_id] }); },
     onError: (e) => setError(e.message),
   });
   useEffect(() => {
@@ -109,7 +112,13 @@ export default function App() {
     const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], {type:'application/json'}));
     const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
   }
-  async function exportSigmf() { if (!shown) return; try { save(await request(`/api/export/${shown.job_id}?format=sigmf`), 'detections.sigmf-meta'); } catch (e) { setError((e as Error).message); } }
+  async function loadSigmfPreview() {
+    if (!shown) return;
+    setExportView('sigmf'); setSigmfPreview(null); setSigmfLoading(true);
+    try { setSigmfPreview(await request(`/api/export/${shown.job_id}?format=sigmf`)); }
+    catch (e) { setError((e as Error).message); setExportView('json'); }
+    finally { setSigmfLoading(false); }
+  }
   const startDemo = (demo: 'iq' | 'audio') => { setFiles([]); setMode('adaptive'); setFixed(''); mutation.mutate({demo}); };
   return <div className="bolt-app">
     <input ref={input} type="file" multiple accept=".iq,.wav,.sigmf-data,.sigmf-meta" hidden onChange={e => { assign(Array.from(e.target.files ?? [])); e.target.value = ''; }} />
@@ -143,7 +152,17 @@ export default function App() {
       <DockPanel title="Detection Detail" className="detail-dock"><DetectionDetailPanel detection={viewDetection} sampleRate={sampleRate} jobId={shown?.job_id} /></DockPanel>
       <DockPanel title="File Info" className="file-dock"><FileInfoPanel fileInfo={fileInfo} /><p className="evidence-note">{shown.metadata.wav_disambiguation.reason}</p></DockPanel>
       <DockPanel title="Pipeline Log" className="log-dock" defaultOpen={false}><PipelineLogPanel logLines={shown.pipeline_log} /></DockPanel>
-      <DockPanel title="Export / JSON" defaultOpen={false}><div className="export-actions"><button onClick={async () => {try {await navigator.clipboard.writeText(JSON.stringify(shown.detections,null,2));setCopied(true);setTimeout(()=>setCopied(false),1500);}catch {setError('Clipboard unavailable. Use JSON download.');}}}>{copied ? <Check size={12}/> : <Copy size={12}/>}Copy</button><button onClick={() => save(shown.detections,'detections.json')}><Download size={12}/>JSON</button><button onClick={exportSigmf}>SigMF</button></div><pre>{JSON.stringify(shown.detections,null,2)}</pre></DockPanel>
+      <DockPanel title="Export" defaultOpen={false}>
+        <div className="export-tabs" role="tablist" aria-label="Export format preview">
+          <button role="tab" aria-selected={exportView === 'json'} onClick={() => setExportView('json')}>JSON</button>
+          <button role="tab" aria-selected={exportView === 'sigmf'} onClick={loadSigmfPreview}>SigMF</button>
+        </div>
+        <div className="export-actions">
+          <button onClick={async () => {try {await navigator.clipboard.writeText(JSON.stringify(exportView === 'sigmf' ? sigmfPreview : shown.detections,null,2));setCopied(true);setTimeout(()=>setCopied(false),1500);}catch {setError('Clipboard unavailable. Use download instead.');}}} disabled={exportView === 'sigmf' && !sigmfPreview}>{copied ? <Check size={12}/> : <Copy size={12}/>}Copy</button>
+          <button onClick={() => exportView === 'sigmf' ? save(sigmfPreview, 'detections.sigmf-meta') : save(shown.detections,'detections.json')} disabled={exportView === 'sigmf' && !sigmfPreview}><Download size={12}/>Download {exportView === 'sigmf' ? '.sigmf-meta' : '.json'}</button>
+        </div>
+        {exportView === 'sigmf' && sigmfLoading ? <p className="export-loading">Fetching SigMF metadata…</p> : <pre>{JSON.stringify(exportView === 'sigmf' ? sigmfPreview : shown.detections,null,2)}</pre>}
+      </DockPanel>
       <DockPanel title="Fine Classification Accuracy" defaultOpen={false}><AccuracyCurve data={accuracy.data ?? null} loading={accuracy.isPending} /></DockPanel>
       <DockPanel title="Pipeline / Roadmap" defaultOpen={false}><div className="roadmap"><p><b>Detect · Estimate · Classify · built</b> → Report</p><p>Classify now includes coarse envelope family, Mth-power carrier refinement, fine PSK classification (BPSK/QPSK only) and symbol-rate estimation, each gated to its validated SNR range with an explicit unknown status otherwise. FM and pulsed candidates never receive a fine label or symbol rate.</p><p>Planned, not built: cyclostationary analysis, deep-learning detection, co-channel separation, frequency-hopping tracking, matched filtering, real-time streaming, and the Report stage.</p><p>Demodulation into decoded audio/data remains planned, not built in this version.</p></div></DockPanel>
       <div className="sidebar-demos"><button disabled={pending} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending} onClick={() => startDemo('audio')}>Audio demo</button><a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">API contract ↗</a></div>

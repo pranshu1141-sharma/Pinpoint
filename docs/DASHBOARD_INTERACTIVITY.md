@@ -30,7 +30,7 @@ how the rest of [FRONTEND_DASHBOARD.md](FRONTEND_DASHBOARD.md) is built.
 - [x] Signal Breakdown: adjustable auto-play speed
 - [x] Signal Breakdown: per-layer download (waveform image + audio clip)
 - [x] Synced playhead — audio scrub position mirrored on the spectrogram
-- [ ] SigMF export preview panel + copy-to-clipboard before download
+- [x] SigMF export preview panel + copy-to-clipboard before download
 - [ ] Session history panel — reload previously analyzed files
 - [ ] Per-detection analyst notes field
 - [x] Distinct styling for "not reliably estimated" states
