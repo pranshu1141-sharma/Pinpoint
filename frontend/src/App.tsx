@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, FolderOpen, Loader2, Radio, Upload, Settings2, ChevronDown, ChevronRight, Download, Copy, Check } from 'lucide-react';
+import { Activity, FolderOpen, Loader2, Radio, Upload, Settings2, ChevronDown, ChevronRight, Download, Copy, Check, HelpCircle, X } from 'lucide-react';
 import { request, rerunJob, uploadCapture, waitForAnalysis, type Analysis, type AnalysisProgress, type Spectrogram, type AccuracyCurve as AccuracyCurveData } from './api';
 import { AccuracyCurve } from './bolt/AccuracyCurve';
 import { adaptDetections, adaptSpectrogram, describeFile } from './bolt/adapter';
@@ -105,11 +105,15 @@ export default function App() {
   const select = (id: string) => { setSelected(id); setBreakdownOpen(true); };
   const [jumpTo, setJumpTo] = useState<{ id: string; token: number } | null>(null);
   const selectAndJump = (id: string) => { select(id); setJumpTo({ id, token: Date.now() }); };
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('input, select, textarea, button, [contenteditable="true"]') || !shown) return;
-      if (e.key === 'Escape') setSelected(null);
+      const target = e.target instanceof Element ? e.target : null;
+      const inField = target?.closest('input, select, textarea, [contenteditable="true"]');
+      if (e.key === 'Escape') { if (shortcutsOpen) { setShortcutsOpen(false); return; } if (!inField) setSelected(null); return; }
+      if (inField || target?.closest('button')) return;
+      if (e.key === '?') { e.preventDefault(); setShortcutsOpen(v => !v); return; }
+      if (!shown) return;
       if (e.key === ' ') { e.preventDefault(); setBreakdownOpen(v => !v); }
       if (['ArrowDown','ArrowRight','ArrowUp','ArrowLeft'].includes(e.key) && visibleDetections.length) {
         e.preventDefault(); const index = visibleDetections.findIndex(d => d.id === selected), step = ['ArrowDown','ArrowRight'].includes(e.key) ? 1 : -1;
@@ -117,7 +121,7 @@ export default function App() {
       }
     };
     window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler);
-  }, [shown, selected, visibleDetections]);
+  }, [shown, selected, visibleDetections, shortcutsOpen]);
   function assign(incoming: File[]) {
     if (pending) return;
     setFiles(incoming); setResult(null); setSelected(null); setError(''); setRate(''); setDatatype(''); setWavMode('auto'); setLastSource({});
@@ -140,7 +144,7 @@ export default function App() {
     <header className="bolt-toolbar">
       <button disabled={pending} onClick={() => input.current?.click()}><FolderOpen size={14} />Open File</button><span className="toolbar-divider" />
       <div className="toolbar-file"><span>File:</span> <strong>{files.length ? files.map(f => f.name).join(' + ') : shown?.metadata.filename ?? 'No capture loaded'}</strong>{shown && <><span>Rate:</span><strong>{sampleRate.toLocaleString()} samples/s</strong><span>Duration:</span><strong>{shown.metadata.duration_seconds.toFixed(3)} s</strong></>}</div>
-      <div className="toolbar-actions"><span className={`api-status ${connected ? 'connected' : ''}`}><i />{health.isPending ? 'Connecting' : connected ? 'API connected' : 'Not connected'}</span><button disabled={pending} aria-expanded={settings} onClick={() => setSettings(v => !v)} title="Capture and detector settings"><Settings2 size={14} /><span>Settings</span></button><button className="primary" disabled={pending || !connected || (!files.length && !lastSource.demo)} onClick={() => mutation.mutate(lastSource.demo ? lastSource : {})}>{pending ? <Loader2 size={14} className="animate-spin" /> : <Activity size={14} />}{pending ? 'Analyzing…' : shown ? 'Reanalyze' : 'Analyze'}</button></div>
+      <div className="toolbar-actions"><span className={`api-status ${connected ? 'connected' : ''}`}><i />{health.isPending ? 'Connecting' : connected ? 'API connected' : 'Not connected'}</span><button aria-expanded={shortcutsOpen} onClick={() => setShortcutsOpen(v => !v)} title="Keyboard shortcuts (?)"><HelpCircle size={14} /></button><button disabled={pending} aria-expanded={settings} onClick={() => setSettings(v => !v)} title="Capture and detector settings"><Settings2 size={14} /><span>Settings</span></button><button className="primary" disabled={pending || !connected || (!files.length && !lastSource.demo)} onClick={() => mutation.mutate(lastSource.demo ? lastSource : {})}>{pending ? <Loader2 size={14} className="animate-spin" /> : <Activity size={14} />}{pending ? 'Analyzing…' : shown ? 'Reanalyze' : 'Analyze'}</button></div>
     </header>
     {settings && <section className="capture-settings" aria-label="Capture settings">
       <label>Adaptive margin <input type="number" min="3" max="30" step="0.1" value={margin} onChange={e => setMargin(e.target.value)} disabled={pending} /> dB</label>
@@ -198,5 +202,21 @@ export default function App() {
       <div className="sidebar-demos"><button disabled={pending} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending} onClick={() => startDemo('audio')}>Audio demo</button><a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">API contract ↗</a></div>
     </aside></main>}
     {shown ? <StatusBar sampleRate={sampleRate} durationSeconds={shown.metadata.duration_seconds} cursorFreq={cursor.frequency} cursorPower={cursor.power} cursorTime={cursor.time} detectionCount={shown.detections.length} thresholdDb={shown.threshold_db} noiseFloorDb={shown.noise_floor_db} selectedDetectionId={selected} /> : <footer className="welcome-status"><span>SIH26147 · Detect Stage</span><span>{pending ? 'Processing capture' : 'Ready to open a capture'} · Offline analysis · No decoding</span></footer>}
+    {shortcutsOpen && <div className="shortcuts-overlay" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" onClick={() => setShortcutsOpen(false)}>
+      <div className="shortcuts-panel" onClick={e => e.stopPropagation()}>
+        <div className="shortcuts-header"><h2>Keyboard shortcuts</h2><button aria-label="Close" onClick={() => setShortcutsOpen(false)}><X size={16} /></button></div>
+        <dl>
+          <div><dt>?</dt><dd>Toggle this shortcuts overlay</dd></div>
+          <div><dt>↑ ↓ ← →</dt><dd>Step through detections, jumping the waterfall to frame each one</dd></div>
+          <div><dt>Space</dt><dd>Toggle Signal Breakdown open/closed</dd></div>
+          <div><dt>Esc</dt><dd>Close this overlay, or deselect the current detection</dd></div>
+          <div><dt>Scroll on waterfall</dt><dd>Zoom, centered on the cursor</dd></div>
+          <div><dt>Drag on waterfall</dt><dd>Pan the spectrogram viewport</dd></div>
+          <div><dt>Click on waterfall</dt><dd>Pin a freq/time/power readout at that point</dd></div>
+          <div><dt>Double-click waterfall</dt><dd>Reset zoom to the full capture</dd></div>
+        </dl>
+        <p className="shortcuts-footnote">Shortcuts are inactive while typing in a text field.</p>
+      </div>
+    </div>}
   </div>;
 }

@@ -194,6 +194,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .roadmap p { margin:0 0 8px; }
 .roadmap b { color:#65aff5; }
 .bolt-app>div:last-child:not(.bolt-progress):not(.bolt-error) { flex-shrink:0; }
+.shortcuts-overlay { position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.55); }
+.shortcuts-panel { width:min(420px,90vw); max-height:80vh; overflow:auto; background:#3c3c3c; border:1px solid #505050; border-radius:4px; box-shadow:0 8px 32px rgba(0,0,0,.5); }
+.shortcuts-header { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid #353535; }
+.shortcuts-header h2 { margin:0; font-size:13px; font-weight:500; color:#eee; }
+.shortcuts-header button { background:none; border:0; padding:2px; color:#aaa; }
+.shortcuts-header button:hover { color:#eee; border:none; }
+.shortcuts-panel dl { margin:0; padding:10px 14px; display:flex; flex-direction:column; gap:8px; }
+.shortcuts-panel dl>div { display:flex; align-items:baseline; gap:12px; }
+.shortcuts-panel dt { flex-shrink:0; min-width:9em; font:11px var(--font-mono); color:#69aff5; background:#252525; border:1px solid #4a4a4a; border-radius:3px; padding:2px 7px; text-align:center; }
+.shortcuts-panel dd { margin:0; font-size:11px; color:#ccc; }
+.shortcuts-footnote { margin:0; padding:8px 14px 12px; font-size:9px; color:#888; border-top:1px solid #353535; }
+.toolbar-actions button[title^="Keyboard"] { padding:6px; }
 @keyframes layer-in { from {opacity:0} to {opacity:1} }
 @media (max-width:1100px) { .bolt-sidebar{width:320px} .toolbar-file>span:not(:first-child),.toolbar-file>strong:not(:first-of-type){display:none} }
 @media (max-width:760px) { body{overflow:auto} .bolt-app{height:auto;min-height:100dvh;overflow:visible} .bolt-toolbar{flex-wrap:wrap;gap:8px} .toolbar-file{flex:1} .toolbar-actions{width:100%}.api-status{margin-right:auto} .bolt-workspace{display:block;overflow:visible}.bolt-center{overflow:visible}.waterfall-section{height:330px}.bolt-sidebar{width:100%;border-left:0;overflow:visible}.bolt-sidebar .detections-dock table{min-width:460px}.bolt-welcome{min-height:65vh;padding:20px}.welcome-drop{padding:24px 18px}.welcome-status{font-size:9px;gap:8px;height:auto;min-height:30px}.signal-breakdown-content{height:360px}.capture-settings{gap:8px}.bolt-app>.font-mono{height:auto;min-height:30px;flex-wrap:wrap;gap:6px 14px;padding:6px 10px}.dock-toggle small{display:none} }

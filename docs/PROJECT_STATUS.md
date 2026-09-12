@@ -159,7 +159,7 @@ checklist, tracked as it ships:
 - [x] Session history panel — reload previously analyzed files
 - [x] Per-detection analyst notes field
 - [x] Distinct styling for "not reliably estimated" states
-- [ ] Keyboard shortcuts + discoverable shortcuts overlay
+- [x] Keyboard shortcuts + discoverable shortcuts overlay
 
 ## Remaining work by priority
 

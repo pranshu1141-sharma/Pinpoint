@@ -34,7 +34,7 @@ how the rest of [FRONTEND_DASHBOARD.md](FRONTEND_DASHBOARD.md) is built.
 - [x] Session history panel — reload previously analyzed files
 - [x] Per-detection analyst notes field
 - [x] Distinct styling for "not reliably estimated" states
-- [ ] Keyboard shortcuts + discoverable shortcuts overlay
+- [x] Keyboard shortcuts + discoverable shortcuts overlay
 
 ## Nice-to-have (documented, not built this pass)
 
