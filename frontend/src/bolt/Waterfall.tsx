@@ -14,6 +14,7 @@ interface WaterfallProps {
   onCursorMove: (freqHz: number | null, timeS: number | null, powerDb: number | null) => void;
   sampleRate: number;
   totalSamples: number;
+  jumpTo?: { id: string; token: number } | null;
 }
 
 type Pin = { x: number; y: number; freq: number; time: number; power: number | null };
@@ -32,6 +33,7 @@ export function Waterfall({
   onCursorMove,
   sampleRate,
   totalSamples,
+  jumpTo,
 }: WaterfallProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -83,6 +85,22 @@ export function Waterfall({
       });
     });
   }, [clampView]);
+
+  // A row/keyboard "jump" frames the candidate with generous padding, distinct
+  // from clicking directly on the waterfall (which already shows where it is).
+  useEffect(() => {
+    if (!jumpTo) return;
+    const det = detections.find(d => d.id === jumpTo.id);
+    if (!det) return;
+    const freqSpan = Math.max(det.freq_upper_hz - det.freq_lower_hz, (freqMax - freqMin) * 0.02);
+    const timeLoSample = det.start_sample / sampleRate, timeHiSample = det.end_sample / sampleRate;
+    const timeSpan = Math.max(timeHiSample - timeLoSample, fullDuration * 0.02);
+    setView(clampView({
+      freqLo: det.freq_lower_hz - freqSpan * 0.6, freqHi: det.freq_upper_hz + freqSpan * 0.6,
+      timeLo: timeLoSample - timeSpan * 0.6, timeHi: timeHiSample + timeSpan * 0.6,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jumpTo]);
 
   useEffect(() => {
     const container = containerRef.current;
