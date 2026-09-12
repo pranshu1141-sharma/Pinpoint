@@ -145,11 +145,11 @@ Every synchronous candidate also contains the following exact keys. Unknown nume
 | `center_frequency_refined_hz` | number or null | Mth-power raised-tone peak estimate, separate from the direct centroid. Same frequency reference; not guaranteed to improve FM. |
 | `refinement_order`, `refinement_sharpness` | number or null | Selected power order (2 or 4) and peak/median ratio. |
 | `refinement_status` | string | Refined heuristic or unavailable reason. |
-| `fine_modulation_label`, `fine_modulation_confidence` | null | Always null at DSP fallback rung 2. |
-| `phase_cluster_spread_rad` | number or null | Diagnostic only; does not enable a fine label. |
-| `fine_modulation_status` | string | Explains that fine-classification acceptance was not met. |
-| `symbol_rate_hz` | null | Not attempted. |
-| `symbol_rate_status` | string | `not reliably estimated (not attempted: fallback rung 2)`. |
+| `fine_modulation_label`, `fine_modulation_confidence` | string/number or null | `bpsk`/`qpsk` with a heuristic confidence when the measured phase-cluster spread clears the 0.8 rad threshold on a continuous (non-pulsed) constant-envelope candidate; otherwise null. |
+| `phase_cluster_spread_rad` | number or null | The measured circular spread; also populated when it fails the threshold. |
+| `fine_modulation_status` | string | Explains a published label, a spread above threshold, or why classification was not attempted (pulsed candidate, no refinement, etc.). |
+| `symbol_rate_hz` | number or null | Estimated rate when a fine PSK label is confirmed and measured SNR is >=4.5 dB; otherwise null. |
+| `symbol_rate_status` | string | `estimated (...)` or an explicit `not reliably estimated (...)` reason (below the validated SNR range, no confirmed PSK label, etc.). |
 
 Synchronous `elapsed_ms` includes Detect and these downstream stages. Ingest and HTTP serialization are excluded. The unchanged pipeline log reports Detect's own duration. See [measurement conventions](ESTIMATE_CLASSIFY.md) and [verified integration results](INTEGRATION_VALIDATION.md).
 

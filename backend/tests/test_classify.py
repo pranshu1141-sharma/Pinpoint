@@ -84,24 +84,25 @@ def test_refinement_varying_envelope_is_unknown():
     assert out["refinement_order"] is None
 
 
-@pytest.mark.parametrize("kind,order", [
-    ("bpsk", 2),
-    pytest.param("qpsk", 4, marks=pytest.mark.xfail(
-        strict=True, reason="Fallback rung 2: QPSK phase rule passes only 2/5 seeds; target retained")),
-])
+@pytest.mark.parametrize("kind,order,label", [("bpsk", 2, "bpsk"), ("qpsk", 4, "qpsk")])
 @pytest.mark.parametrize("snr", [20, 10])
-def test_exploratory_fine_rule_majority_acceptance(kind, order, snr):
+def test_fine_rule_majority_acceptance(kind, order, label, snr):
+    """Matching the Mth-power search's resolution to the segment length (see
+    refine_frequency) removed the residual-frequency phase drift that used to
+    fail QPSK's majority acceptance; both now pass 5/5 seeds at 20 and 10 dB.
+    """
     matches = 0
     rows = []
     for seed in range(47, 52):
         c, d, _ = fixture(kind, snr, seed=seed)
         e = classify.refine_frequency(c, classify.classify_coarse(c, estimate_candidate(c, d)))
         out = classify.classify_fine(c, e)
-        rows.append((seed, out["refinement_order"], out["phase_cluster_spread_rad"]))
+        rows.append((seed, out["refinement_order"], out["phase_cluster_spread_rad"], out["fine_modulation_label"]))
         matches += (out["refinement_order"] == order
                     and out["phase_cluster_spread_rad"] is not None
-                    and out["phase_cluster_spread_rad"] < .8)
-    assert matches > len(rows)/2, rows
+                    and out["phase_cluster_spread_rad"] < .8
+                    and out["fine_modulation_label"] == label)
+    assert matches == len(rows), rows
 
 
 @pytest.mark.parametrize("snr", [20, 10, 0, -5])
@@ -125,16 +126,62 @@ def test_fine_unavailable_refinement_returns_nulls():
 
 @pytest.mark.parametrize("kind", ["bpsk", "qpsk", "fm"])
 @pytest.mark.parametrize("snr", [20, 10, 5, 0, -5])
-def test_end_to_end_fallback_never_publishes_unvalidated_values(kind, snr):
-    c, d, _ = fixture(kind, snr)
+def test_end_to_end_never_leaks_stale_input_values(kind, snr):
+    c, d, truth = fixture(kind, snr)
     # Previously supplied values must not leak through the enriched copy.
     d.update(fine_modulation_label="guessed", symbol_rate_hz=12345)
     out = classify.analyze_candidate(c, d)
-    assert out["fine_modulation_label"] is None
-    assert out["fine_modulation_confidence"] is None
-    assert out["symbol_rate_hz"] is None
-    assert "fallback rung 2" in out["symbol_rate_status"]
+    assert out["fine_modulation_label"] != "guessed"
+    assert out["symbol_rate_hz"] != 12345
     assert d["fine_modulation_label"] == "guessed"
+    # PSK at >=0 dB now resolves a real fine label; the symbol-rate SNR gate is
+    # tighter (validated 5-20 dB only). FM never resolves either.
+    if kind in ("bpsk", "qpsk") and snr >= 0:
+        assert out["fine_modulation_label"] == kind
+        assert out["fine_modulation_confidence"] is not None
+    else:
+        assert out["fine_modulation_label"] is None
+        assert out["fine_modulation_confidence"] is None
+    if kind in ("bpsk", "qpsk") and snr >= 5:
+        assert out["symbol_rate_hz"] == pytest.approx(truth["symbol_rate_hz"], rel=.05)
+    else:
+        assert out["symbol_rate_hz"] is None
+
+
+@pytest.mark.parametrize("kind", ["bpsk", "qpsk"])
+@pytest.mark.parametrize("snr", [20, 10, 5])
+def test_symbol_rate_majority_acceptance(kind, snr):
+    """Validated range per the master-context Stage 5 study: reliable at 5-20 dB."""
+    matches = 0
+    rows = []
+    for seed in range(47, 52):
+        c, d, truth = fixture(kind, snr, seed=seed)
+        out = classify.analyze_candidate(c, d)
+        rows.append((seed, out["symbol_rate_hz"]))
+        matches += (out["symbol_rate_hz"] is not None
+                    and out["symbol_rate_hz"] == pytest.approx(truth["symbol_rate_hz"], rel=.05))
+    assert matches > len(rows)/2, rows
+
+
+@pytest.mark.parametrize("kind", ["bpsk", "qpsk"])
+@pytest.mark.parametrize("snr", [0, -5])
+def test_symbol_rate_below_validated_range_is_explicit_unknown(kind, snr):
+    c, d, _ = fixture(kind, snr)
+    out = classify.analyze_candidate(c, d)
+    assert out["symbol_rate_hz"] is None
+    assert "not reliably estimated" in out["symbol_rate_status"]
+
+
+def test_pulsed_candidate_never_gets_a_fine_label_or_symbol_rate():
+    """An unmodulated gated carrier has trivially perfect phase concentration;
+    fine classification/symbol rate are validated on continuous signals only."""
+    c, d, _ = fixture("pulsed", 10)
+    e = classify.refine_frequency(c, classify.classify_coarse(c, estimate_candidate(c, d)))
+    out = classify.analyze_candidate(c, d)
+    assert e["modulation_family"] == "constant-envelope"
+    assert out["fine_modulation_label"] is None
+    assert out["symbol_rate_hz"] is None
+    assert "pulsed" in out["fine_modulation_status"]
 
 
 def test_end_to_end_audio_and_short_samples_are_unknown():

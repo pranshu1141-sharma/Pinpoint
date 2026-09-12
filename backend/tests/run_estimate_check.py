@@ -56,27 +56,32 @@ def main():
                              "would_pass_requested_rule": bool(out["refinement_order"] == order
                                                                 and spread is not None and spread < .8),
                              "published_fine_label": out["fine_modulation_label"]})
-    rate_fallback = []
+    symbol_rate = []
     for kind in ("bpsk", "qpsk"):
-        for snr in (10, 5, 0, -5):
+        for snr in (20, 10, 5, 0, -5):
             c, d, truth = fixture(kind, snr)
             out = analyze_candidate(c, d)
-            rate_fallback.append({"kind": kind, "truth_snr_db": snr,
-                                  "measured_snr_db": out["snr_db"],
-                                  "truth_symbol_rate_hz": truth["symbol_rate_hz"],
-                                  "symbol_rate_hz": out["symbol_rate_hz"],
-                                  "symbol_rate_status": out["symbol_rate_status"]})
+            symbol_rate.append({"kind": kind, "truth_snr_db": snr,
+                                "measured_snr_db": out["snr_db"],
+                                "truth_symbol_rate_hz": truth["symbol_rate_hz"],
+                                "symbol_rate_hz": out["symbol_rate_hz"],
+                                "symbol_rate_status": out["symbol_rate_status"]})
     report = {
-        "scope": "Fallback rung 2: Estimate + coarse family + refinement; fine diagnostics only; symbol rate not attempted",
+        "scope": ("Estimate + coarse family + Mth-power refinement + fine PSK "
+                  "classification (bpsk/qpsk) + symbol-rate estimation, gated to "
+                  "continuous candidates within their validated SNR ranges."),
         "methods": {"direct_center": "noise-subtracted in-band centroid",
-                    "refinement": "separate 1024-point Hann Welch Mth-power peak with log-parabolic interpolation",
+                    "refinement": "separate full-segment-length Hann periodogram Mth-power peak with log-parabolic interpolation",
                     "coarse": "existing 257-tap band isolation; 128-sample edge trim; envelope coefficient of variation",
-                    "bandwidth": "raw averaged in-band PSD; connected interpolated half-power lobe; shortest whole-bin 99% power band"},
+                    "bandwidth": "raw averaged in-band PSD; connected interpolated half-power lobe; shortest whole-bin 99% power band",
+                    "fine": "Mth-power phase-cluster circular spread < 0.8 rad on continuous candidates only; excludes pulsed bursts",
+                    "symbol_rate": "differentiate+square nonlinearity, Welch PSD, lowest bin within 3 dB of peak "
+                                   "excluding the first 4 DC-leakage bins; gated to a confirmed fine PSK label and >=4.5 dB SNR"},
         "continuous": continuous, "refinement_150khz_bpsk_10db": refinement,
         "refinement_direct_mae_hz": float(np.mean([abs(r["direct_error_hz"]) for r in refinement])),
         "refinement_refined_mae_hz": float(np.mean([abs(r["refined_error_hz"]) for r in refinement])),
-        "exploratory_fine_rule": fine, "symbol_rate_fallback": rate_fallback,
-        "qualification": "Deterministic synthetic evidence only. No theoretical half-power truth exists in generator; nominal detection bands are not that truth. No symbol-rate accuracy claim.",
+        "fine_rule": fine, "symbol_rate": symbol_rate,
+        "qualification": "Deterministic synthetic evidence only. No theoretical half-power truth exists in generator; nominal detection bands are not that truth. No field-performance guarantee.",
     }
     path = Path(__file__).resolve().parents[2]/"docs"/"estimate-classify-validation.json"
     path.write_text(json.dumps(report, indent=2, allow_nan=False)+"\n", encoding="utf-8")

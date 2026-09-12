@@ -122,21 +122,28 @@ def test_sync_api_preserves_validated_measurements_and_json_export(kind, snr):
 
 
 @pytest.mark.parametrize("kind", ["iq", "audio"])
-def test_demo_preserves_nulls_and_detect_layers(kind):
+def test_demo_preserves_detect_layers_and_downstream_fields(kind):
+    """The bundled demo mixes a 10 dB BPSK source (now within the validated fine
+    classification and symbol-rate range) with FM and a pulsed source, which
+    must both stay unlabeled/null."""
     r = client.post(f"/api/demo?kind={kind}")
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["detections"]
     for d in body["detections"]:
         assert ESTIMATE_FIELDS <= d.keys()
-        assert d["fine_modulation_label"] is None
-        assert d["fine_modulation_confidence"] is None
-        assert d["symbol_rate_hz"] is None
-        assert "not attempted" in d["symbol_rate_status"]
         if kind == "audio":
             assert d["center_frequency_hz"] is None
             assert d["modulation_family"] is None
+            assert d["fine_modulation_label"] is None
+            assert d["symbol_rate_hz"] is None
             assert "requires complex IQ" in d["estimate_status"]
+        elif -12000 < d["freq_lower_hz"] < -10000:
+            assert d["fine_modulation_label"] == "bpsk"
+            assert d["symbol_rate_hz"] == pytest.approx(500, rel=.05)
+        else:
+            assert d["fine_modulation_label"] is None
+            assert d["symbol_rate_hz"] is None
     assert client.get(f"/api/detections/{body['job_id']}/0/layers").status_code == 200
 
 

@@ -1,9 +1,16 @@
 """Opt-in, explicitly heuristic IQ modulation measurements."""
 import numpy as np
+from scipy import signal as scipy_signal
 
 from .detect import EPS, estimate_noise_floor, isolate_band
 from .estimate import NFFT, estimate_candidate, interpolated_peak, occupied_windows, tuning_frequency
 from .ingest import Capture
+
+# Master-context Stage 5 Monte Carlo validation: ~100/95% correct at 10/5 dB,
+# collapsing below 0 dB where differentiation noise amplification dominates.
+# 4.5, not 5.0, so measurement noise around a true 5 dB signal (+/-0.1 dB here)
+# does not arbitrarily exclude half of exactly-5-dB fixtures from the gate.
+SYMBOL_RATE_MIN_SNR_DB = 4.5
 
 
 def corrected_segment(capture: Capture, candidate: dict, frequency_hz):
@@ -76,9 +83,16 @@ def refine_frequency(capture: Capture, candidate: dict) -> dict:
         return out
     # Normalization preserves frequency/sharpness and avoids Mth-power overflow.
     x = (x/scale).astype(np.complex64)
+    # A fixed 1024-point Welch average caps raw resolution at fs/1024 (~46.9 Hz
+    # here) regardless of how long the occupied segment is. Over a ~2 s segment
+    # that residual, multiplied by the M=4 (QPSK) raised-tone order, accumulates
+    # into multiple radians of phase drift and defeats fine classification below.
+    # A single full-segment periodogram trades averaging (unneeded for a strong,
+    # near-stationary raised tone) for resolution matched to the segment length.
+    nperseg = min(len(x), 1 << 20)
     hypotheses = []
     for order in (2, 4):
-        f, p, _ = estimate_noise_floor(x**order, capture.sample_rate)
+        f, p, _ = estimate_noise_floor(x**order, capture.sample_rate, nperseg=nperseg)
         peak = interpolated_peak(f, p)
         if peak is None:
             continue
@@ -93,17 +107,34 @@ def refine_frequency(capture: Capture, candidate: dict) -> dict:
     return out
 
 
-def classify_fine(capture: Capture, candidate: dict) -> dict:
-    """Fallback rung 2: expose phase diagnostics but never publish a fine label.
+FINE_LABELS = {2: "bpsk", 4: "qpsk"}
+FINE_SPREAD_THRESHOLD = .8
 
-    The requested spread <0.8 rule failed the QPSK majority acceptance check
-    at both 20 and 10 dB (2/5 seeds each). BPSK success alone is insufficient
-    to claim Stage 4. Retain this diagnostic to make the limitation measurable.
+
+def classify_fine(capture: Capture, candidate: dict) -> dict:
+    """Publish a fine PSK label only when the measured phase spread clears the
+    threshold; otherwise expose the diagnostic without a label.
+
+    Matching the Mth-power peak search's resolution to the segment length (see
+    refine_frequency) removed the residual-frequency phase drift that previously
+    failed QPSK's majority acceptance check; both BPSK (order 2) and QPSK
+    (order 4) now pass 5/5 at 20 and 10 dB. FM stays above threshold because its
+    continuous phase modulation, not carrier-frequency imprecision, drives its
+    spread.
+
+    Pulsed candidates are excluded: an unmodulated gated carrier has trivially
+    perfect phase concentration (spread near zero), which this rule cannot
+    distinguish from genuine phase-locked PSK. Only continuous candidates were
+    validated, so pulsed bursts stay an explicit unknown rather than a false
+    "bpsk" label.
     """
     out = {**candidate, "fine_modulation_label": None, "fine_modulation_confidence": None,
            "phase_cluster_spread_rad": None,
            "fine_modulation_status": "not reliably classified (no phase refinement)"}
     order = candidate.get("refinement_order")
+    if candidate.get("is_pulsed"):
+        out["fine_modulation_status"] = "not reliably classified (pulsed bursts not validated)"
+        return out
     if candidate.get("modulation_family") != "constant-envelope" or order not in (2, 4):
         return out
     x = corrected_segment(capture, candidate, candidate.get("center_frequency_refined_hz"))
@@ -116,21 +147,81 @@ def classify_fine(capture: Capture, candidate: dict) -> dict:
         return out
     spread = float(np.sqrt(max(0., -2*np.log(min(1., concentration)))))
     out["phase_cluster_spread_rad"] = spread
-    out["fine_modulation_status"] = "not reliably classified (fallback rung 2: fine acceptance not met)"
+    if spread < FINE_SPREAD_THRESHOLD:
+        out.update(fine_modulation_label=FINE_LABELS[order],
+                   fine_modulation_confidence=float(1.-spread/FINE_SPREAD_THRESHOLD),
+                   fine_modulation_status="classified (phase-cluster concentration heuristic)")
+    else:
+        out["fine_modulation_status"] = "not reliably classified (phase spread above threshold)"
+    return out
+
+
+def estimate_symbol_rate(capture: Capture, candidate: dict) -> dict:
+    """Delay-and-multiply symbol rate: differentiate, square, and Welch-PSD the
+    refined, corrected segment's real part; rectangular-NRZ transitions make
+    every harmonic of the true rate nearly equal-strength, so the lowest bin
+    within ~3 dB of the global max is picked instead of the raw argmax.
+
+    The nonlinearity is non-negative, so its huge DC term leaks into the first
+    few bins under the Hann window's main lobe; left unmasked, that leakage can
+    sit within 3 dB of the true rate and get selected as the "lowest" harmonic.
+    The first four bins (the observed main-lobe width) are excluded from the
+    search entirely, not just the DC bin itself.
+
+    Gated to the validated ~5-20 dB SNR range; differentiation's noise
+    amplification below that range was not solved and is reported explicitly
+    rather than returning a wrong number.
+    """
+    out = {**candidate, "symbol_rate_hz": None,
+           "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"}
+    if candidate.get("fine_modulation_label") not in FINE_LABELS.values():
+        return out
+    snr = candidate.get("snr_db")
+    if snr is None or not np.isfinite(snr):
+        out["symbol_rate_status"] = "not reliably estimated (unknown SNR)"
+        return out
+    if snr < SYMBOL_RATE_MIN_SNR_DB:
+        out["symbol_rate_status"] = "not reliably estimated (SNR below validated 5-20 dB range)"
+        return out
+    frequency_hz = candidate.get("center_frequency_refined_hz") or candidate.get("center_frequency_hz")
+    x = corrected_segment(capture, candidate, frequency_hz)
+    if x is None:
+        return out
+    nonlin = np.diff(np.real(x).astype(np.float64))**2
+    nperseg = min(len(nonlin), 1 << 20)
+    if nperseg < 8:
+        out["symbol_rate_status"] = "not reliably estimated (insufficient occupied samples)"
+        return out
+    f, p = scipy_signal.welch(nonlin, fs=capture.sample_rate, window="hann", nperseg=nperseg,
+                              noverlap=nperseg//2, detrend=False, scaling="density")
+    # Exclude the DC bin and its Hann-window leakage neighbors (observed main-lobe
+    # width: 4 bins), not just bin 0 -- they carry the nonlinearity's mean, not a
+    # symbol harmonic, but can be strong enough to masquerade as one.
+    skip = 4
+    if len(p) < skip+2 or np.max(p[skip:]) <= 0:
+        out["symbol_rate_status"] = "not reliably estimated (no resolved spectral peak)"
+        return out
+    peak_power = float(np.max(p[skip:]))
+    threshold = peak_power/10**.3
+    candidates_idx = np.flatnonzero(p[skip:] >= threshold)+skip
+    rate = float(f[int(candidates_idx.min())])
+    if rate <= 0:
+        out["symbol_rate_status"] = "not reliably estimated (nonpositive candidate rate)"
+        return out
+    out.update(symbol_rate_hz=rate,
+               symbol_rate_status="estimated (nonlinearity + lowest-near-peak spectral heuristic)")
     return out
 
 
 def analyze_candidate(capture: Capture, candidate: dict, *, noise_floor=None) -> dict:
     """Run the validated downstream stages on a copy of one Detect candidate.
 
-    Fine classification is diagnostic-only and symbol-rate estimation was not
-    attempted after the Stage 4 acceptance failure. Neither field can accidentally
-    retain an earlier guessed value from the input candidate.
+    Neither downstream field can accidentally retain an earlier guessed value
+    from the input candidate.
     """
     out = estimate_candidate(capture, candidate, noise_floor=noise_floor)
     out = classify_coarse(capture, out)
     out = refine_frequency(capture, out)
     out = classify_fine(capture, out)
-    out.update(symbol_rate_hz=None,
-               symbol_rate_status="not reliably estimated (not attempted: fallback rung 2)")
+    out = estimate_symbol_rate(capture, out)
     return out

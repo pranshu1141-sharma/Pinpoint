@@ -1,10 +1,12 @@
 {
-  "scope": "Fallback rung 2: Estimate + coarse family + refinement; fine diagnostics only; symbol rate not attempted",
+  "scope": "Estimate + coarse family + Mth-power refinement + fine PSK classification (bpsk/qpsk) + symbol-rate estimation, gated to continuous candidates within their validated SNR ranges.",
   "methods": {
     "direct_center": "noise-subtracted in-band centroid",
-    "refinement": "separate 1024-point Hann Welch Mth-power peak with log-parabolic interpolation",
+    "refinement": "separate full-segment-length Hann periodogram Mth-power peak with log-parabolic interpolation",
     "coarse": "existing 257-tap band isolation; 128-sample edge trim; envelope coefficient of variation",
-    "bandwidth": "raw averaged in-band PSD; connected interpolated half-power lobe; shortest whole-bin 99% power band"
+    "bandwidth": "raw averaged in-band PSD; connected interpolated half-power lobe; shortest whole-bin 99% power band",
+    "fine": "Mth-power phase-cluster circular spread < 0.8 rad on continuous candidates only; excludes pulsed bursts",
+    "symbol_rate": "differentiate+square nonlinearity, Welch PSD, lowest bin within 3 dB of peak excluding the first 4 DC-leakage bins; gated to a confirmed fine PSK label and >=4.5 dB SNR"
   },
   "continuous": [
     {
@@ -39,16 +41,16 @@
         "envelope_variation": 0.23637017362634458,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 7999.987349171781,
+        "center_frequency_refined_hz": 7999.995931379128,
         "refinement_order": 2,
-        "refinement_sharpness": 957761126400.0,
+        "refinement_sharpness": 93621411905536.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
-        "fine_modulation_label": null,
-        "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 0.1284187136832835,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
-        "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "fine_modulation_label": "bpsk",
+        "fine_modulation_confidence": 0.8818103455709105,
+        "phase_cluster_spread_rad": 0.09455172354327158,
+        "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
+        "symbol_rate_hz": 499.8381082690118,
+        "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
       }
     },
     {
@@ -83,16 +85,16 @@
         "envelope_variation": 0.2432036158180692,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 7999.961649279853,
+        "center_frequency_refined_hz": 7999.999040384945,
         "refinement_order": 2,
-        "refinement_sharpness": 5513378529280.0,
+        "refinement_sharpness": 657742297563136.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
-        "fine_modulation_label": null,
-        "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 0.3359601039481358,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
-        "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "fine_modulation_label": "bpsk",
+        "fine_modulation_confidence": 0.765603082727412,
+        "phase_cluster_spread_rad": 0.18751753381807046,
+        "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
+        "symbol_rate_hz": 499.8381082690118,
+        "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
       }
     },
     {
@@ -127,16 +129,16 @@
         "envelope_variation": 0.2679736870228606,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 7999.911765974541,
+        "center_frequency_refined_hz": 7999.996647295757,
         "refinement_order": 2,
-        "refinement_sharpness": 4136879616.0,
+        "refinement_sharpness": 436783284224.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
-        "fine_modulation_label": null,
-        "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 0.7553598209881016,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
+        "fine_modulation_label": "bpsk",
+        "fine_modulation_confidence": 0.5249440992688447,
+        "phase_cluster_spread_rad": 0.3800447205849243,
+        "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "symbol_rate_status": "not reliably estimated (SNR below validated 5-20 dB range)"
       }
     },
     {
@@ -180,7 +182,7 @@
         "phase_cluster_spread_rad": null,
         "fine_modulation_status": "not reliably classified (no phase refinement)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
       }
     },
     {
@@ -215,16 +217,16 @@
         "envelope_variation": 0.1903086408374533,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 8000.084560797673,
+        "center_frequency_refined_hz": 7999.999856970748,
         "refinement_order": 4,
-        "refinement_sharpness": 90511499264.0,
+        "refinement_sharpness": 9884228648960.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
-        "fine_modulation_label": null,
-        "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 1.4457297091996308,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
-        "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "fine_modulation_label": "qpsk",
+        "fine_modulation_confidence": 0.3242540270773627,
+        "phase_cluster_spread_rad": 0.5405967783381098,
+        "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
+        "symbol_rate_hz": 499.8381082690118,
+        "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
       }
     },
     {
@@ -259,16 +261,16 @@
         "envelope_variation": 0.19437101112488717,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 8000.075327022374,
+        "center_frequency_refined_hz": 8000.001268203305,
         "refinement_order": 4,
-        "refinement_sharpness": 15508636672.0,
+        "refinement_sharpness": 1413895421952.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
-        "fine_modulation_label": null,
-        "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 1.3049583746300577,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
-        "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "fine_modulation_label": "qpsk",
+        "fine_modulation_confidence": 0.26795655474898894,
+        "phase_cluster_spread_rad": 0.5856347562008088,
+        "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
+        "symbol_rate_hz": 499.8381082690118,
+        "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
       }
     },
     {
@@ -303,16 +305,16 @@
         "envelope_variation": 0.22593738817038558,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 8000.0018615845875,
+        "center_frequency_refined_hz": 7999.999115055485,
         "refinement_order": 4,
-        "refinement_sharpness": 709811392.0,
+        "refinement_sharpness": 75141660672.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
-        "fine_modulation_label": null,
-        "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 0.7993092719736157,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
+        "fine_modulation_label": "qpsk",
+        "fine_modulation_confidence": 0.001331126430289764,
+        "phase_cluster_spread_rad": 0.7989350988557682,
+        "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "symbol_rate_status": "not reliably estimated (SNR below validated 5-20 dB range)"
       }
     },
     {
@@ -347,16 +349,16 @@
         "envelope_variation": 0.2870801262003213,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 7986.447694809295,
-        "refinement_order": 2,
-        "refinement_sharpness": 388323872.0,
+        "center_frequency_refined_hz": 7999.995681288565,
+        "refinement_order": 4,
+        "refinement_sharpness": 32931536896.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 2.4913547970963696,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
+        "phase_cluster_spread_rad": 1.0681136267947997,
+        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
       }
     },
     {
@@ -391,16 +393,16 @@
         "envelope_variation": 0.017459861026714537,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 7425.123314269362,
+        "center_frequency_refined_hz": 7425.000962780865,
         "refinement_order": 2,
-        "refinement_sharpness": 104951857152.0,
+        "refinement_sharpness": 14915065610240.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 1.6979865239784884,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
+        "phase_cluster_spread_rad": 1.4191996954559865,
+        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
       }
     },
     {
@@ -435,16 +437,16 @@
         "envelope_variation": 0.05211621900681789,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 7425.119321828301,
+        "center_frequency_refined_hz": 7424.996492134298,
         "refinement_order": 2,
-        "refinement_sharpness": 5888750080.0,
+        "refinement_sharpness": 784022896640.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 1.6687425064575752,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
+        "phase_cluster_spread_rad": 1.40655808733564,
+        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
       }
     },
     {
@@ -479,16 +481,16 @@
         "envelope_variation": 0.14669517545503585,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 7540.077097773411,
+        "center_frequency_refined_hz": 8459.99879184906,
         "refinement_order": 2,
-        "refinement_sharpness": 968934272.0,
+        "refinement_sharpness": 112591585280.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 1.5046373150704664,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
+        "phase_cluster_spread_rad": 1.39339010667814,
+        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
       }
     },
     {
@@ -523,16 +525,16 @@
         "envelope_variation": 0.2598552369451209,
         "modulation_confidence_kind": "heuristic, not a calibrated probability",
         "modulation_status": "classified (isolated-envelope heuristic)",
-        "center_frequency_refined_hz": 8460.124598347455,
+        "center_frequency_refined_hz": 8575.00041438408,
         "refinement_order": 2,
-        "refinement_sharpness": 257445120.0,
+        "refinement_sharpness": 24390313984.0,
         "refinement_status": "refined (Mth-power peak heuristic)",
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
-        "phase_cluster_spread_rad": 1.748606077219848,
-        "fine_modulation_status": "not reliably classified (fallback rung 2: fine acceptance not met)",
+        "phase_cluster_spread_rad": 1.4577988501298962,
+        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
       }
     }
   ],
@@ -541,313 +543,321 @@
       "seed": 47,
       "truth_frequency_hz": 150000,
       "direct_error_hz": -7.68992642784724,
-      "refined_error_hz": 0.4542575660161674,
+      "refined_error_hz": 0.02914525373489596,
       "order": 2
     },
     {
       "seed": 48,
       "truth_frequency_hz": 150000,
       "direct_error_hz": 6.355264752812218,
-      "refined_error_hz": 0.11187375395093113,
+      "refined_error_hz": -0.07015901830163784,
       "order": 2
     },
     {
       "seed": 49,
       "truth_frequency_hz": 150000,
       "direct_error_hz": -4.624475622898899,
-      "refined_error_hz": -0.021821706235641614,
+      "refined_error_hz": -0.0553786683594808,
       "order": 2
     },
     {
       "seed": 50,
       "truth_frequency_hz": 150000,
       "direct_error_hz": -8.893072605744237,
-      "refined_error_hz": 0.6068569412746001,
+      "refined_error_hz": -0.09443822258617729,
       "order": 2
     },
     {
       "seed": 51,
       "truth_frequency_hz": 150000,
       "direct_error_hz": -4.04050586692756,
-      "refined_error_hz": -0.13459537766175345,
+      "refined_error_hz": -0.07711152863339521,
       "order": 2
     },
     {
       "seed": 52,
       "truth_frequency_hz": 150000,
       "direct_error_hz": 8.683134879451245,
-      "refined_error_hz": -0.8331173689803109,
+      "refined_error_hz": 0.07987808977486566,
       "order": 2
     },
     {
       "seed": 53,
       "truth_frequency_hz": 150000,
       "direct_error_hz": -1.6857832345122006,
-      "refined_error_hz": -0.08853318673209287,
+      "refined_error_hz": 0.08466985105769709,
       "order": 2
     },
     {
       "seed": 54,
       "truth_frequency_hz": 150000,
       "direct_error_hz": -6.2043489740171935,
-      "refined_error_hz": 0.017797592852730304,
+      "refined_error_hz": 0.06001046410528943,
       "order": 2
     },
     {
       "seed": 55,
       "truth_frequency_hz": 150000,
       "direct_error_hz": -5.211230235378025,
-      "refined_error_hz": 1.1414183620072436,
+      "refined_error_hz": 0.005107438773848116,
       "order": 2
     },
     {
       "seed": 56,
       "truth_frequency_hz": 150000,
       "direct_error_hz": 3.144808152836049,
-      "refined_error_hz": -0.6311494133551605,
+      "refined_error_hz": 0.07118343413458206,
       "order": 2
     }
   ],
   "refinement_direct_mae_hz": 5.653255075242487,
-  "refinement_refined_mae_hz": 0.4041421269066632,
-  "exploratory_fine_rule": [
+  "refinement_refined_mae_hz": 0.06270819694618694,
+  "fine_rule": [
     {
       "kind": "bpsk",
       "snr_db": 20,
       "seed": 47,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.1284187136832835,
-      "refined_error_hz": -0.0126508282191935,
-      "oracle_frequency_spread_rad": 0.08976931228508903,
+      "phase_cluster_spread_rad": 0.09455172354327158,
+      "refined_error_hz": -0.00406862087220361,
+      "oracle_frequency_spread_rad": 0.08976931216048369,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 20,
       "seed": 48,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.12664871344128736,
-      "refined_error_hz": -0.012684334808909625,
-      "oracle_frequency_spread_rad": 0.08710407462208258,
+      "phase_cluster_spread_rad": 0.09032376836937452,
+      "refined_error_hz": 0.0033195594705830445,
+      "oracle_frequency_spread_rad": 0.08710407448705708,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 20,
       "seed": 49,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.11593316617527674,
-      "refined_error_hz": 0.010946707161565428,
-      "oracle_frequency_spread_rad": 0.08424587253237806,
+      "phase_cluster_spread_rad": 0.08883975157374709,
+      "refined_error_hz": -0.003954137917389744,
+      "oracle_frequency_spread_rad": 0.08424587224995622,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 20,
       "seed": 50,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.08915661499241885,
-      "refined_error_hz": -0.0013249614703454426,
-      "oracle_frequency_spread_rad": 0.08855983564115441,
+      "phase_cluster_spread_rad": 0.09299475704739285,
+      "refined_error_hz": -0.0038204602597033954,
+      "oracle_frequency_spread_rad": 0.08855983595932529,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 20,
       "seed": 51,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.12073585932744207,
-      "refined_error_hz": -0.011659289632916625,
-      "oracle_frequency_spread_rad": 0.08546147972037826,
+      "phase_cluster_spread_rad": 0.08763238005820423,
+      "refined_error_hz": 0.0028052994866811787,
+      "oracle_frequency_spread_rad": 0.08546147962209708,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 10,
       "seed": 47,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.3359601039481358,
-      "refined_error_hz": -0.03835072014680918,
-      "oracle_frequency_spread_rad": 0.1873771645773243,
+      "phase_cluster_spread_rad": 0.18751753381807046,
+      "refined_error_hz": -0.0009596150548532023,
+      "oracle_frequency_spread_rad": 0.18737716463654738,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 10,
       "seed": 48,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.33121289896957956,
-      "refined_error_hz": -0.037435976463711995,
-      "oracle_frequency_spread_rad": 0.18841651573293045,
+      "phase_cluster_spread_rad": 0.1891895548650787,
+      "refined_error_hz": -0.00229207912889251,
+      "oracle_frequency_spread_rad": 0.1884165159549,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 10,
       "seed": 49,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.30869355583372526,
-      "refined_error_hz": 0.033794027252042724,
-      "oracle_frequency_spread_rad": 0.1860350090046161,
+      "phase_cluster_spread_rad": 0.1879926376626229,
+      "refined_error_hz": 0.003592508944166184,
+      "oracle_frequency_spread_rad": 0.18603500936254816,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 10,
       "seed": 50,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.1930750144812458,
-      "refined_error_hz": -0.00011344287122483365,
-      "oracle_frequency_spread_rad": 0.19306331497290843,
+      "phase_cluster_spread_rad": 0.19466357810187168,
+      "refined_error_hz": 0.0037796654632984428,
+      "oracle_frequency_spread_rad": 0.19306331534396592,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "bpsk",
       "snr_db": 10,
       "seed": 51,
       "selected_order": 2,
-      "phase_cluster_spread_rad": 0.3402579856334772,
-      "refined_error_hz": -0.03877142874353012,
-      "oracle_frequency_spread_rad": 0.1868453974501615,
+      "phase_cluster_spread_rad": 0.18882916652330772,
+      "refined_error_hz": 0.004160659370427311,
+      "oracle_frequency_spread_rad": 0.18684539764620925,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "bpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 20,
       "seed": 47,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 1.4457297091996308,
-      "refined_error_hz": 0.08456079767256597,
-      "oracle_frequency_spread_rad": 0.5405928762155847,
-      "would_pass_requested_rule": false,
-      "published_fine_label": null
+      "phase_cluster_spread_rad": 0.5405967783381098,
+      "refined_error_hz": -0.00014302925228548702,
+      "oracle_frequency_spread_rad": 0.5405928757397137,
+      "would_pass_requested_rule": true,
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 20,
       "seed": 48,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 1.3301067573508254,
-      "refined_error_hz": -0.07727393585992104,
-      "oracle_frequency_spread_rad": 0.5642176014500643,
-      "would_pass_requested_rule": false,
-      "published_fine_label": null
+      "phase_cluster_spread_rad": 0.5642415336805677,
+      "refined_error_hz": 0.0003519386273183045,
+      "oracle_frequency_spread_rad": 0.5642176008366191,
+      "would_pass_requested_rule": true,
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 20,
       "seed": 49,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 0.7187692604528838,
-      "refined_error_hz": -0.031162993968791852,
-      "oracle_frequency_spread_rad": 0.5559890972489973,
+      "phase_cluster_spread_rad": 0.5565943311924915,
+      "refined_error_hz": 0.0017052715165846166,
+      "oracle_frequency_spread_rad": 0.5559890966376655,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 20,
       "seed": 50,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 1.8025056519253684,
-      "refined_error_hz": 0.10042701755173766,
-      "oracle_frequency_spread_rad": 0.5489854710926101,
-      "would_pass_requested_rule": false,
-      "published_fine_label": null
+      "phase_cluster_spread_rad": 0.5494809916321635,
+      "refined_error_hz": 0.001675735059507133,
+      "oracle_frequency_spread_rad": 0.5489854707620397,
+      "would_pass_requested_rule": true,
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 20,
       "seed": 51,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 0.545250021330075,
-      "refined_error_hz": -0.0006162989511722117,
-      "oracle_frequency_spread_rad": 0.5451714502401084,
+      "phase_cluster_spread_rad": 0.5453318979261093,
+      "refined_error_hz": -0.0008900968159650802,
+      "oracle_frequency_spread_rad": 0.5451714497109349,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 10,
       "seed": 47,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 1.3049583746300577,
-      "refined_error_hz": 0.0753270223740401,
-      "oracle_frequency_spread_rad": 0.5853404084449173,
-      "would_pass_requested_rule": false,
-      "published_fine_label": null
+      "phase_cluster_spread_rad": 0.5856347562008088,
+      "refined_error_hz": 0.0012682033047894947,
+      "oracle_frequency_spread_rad": 0.5853404080738137,
+      "would_pass_requested_rule": true,
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 10,
       "seed": 48,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 1.1119084019283,
-      "refined_error_hz": -0.06159088668573531,
-      "oracle_frequency_spread_rad": 0.6105367223777053,
-      "would_pass_requested_rule": false,
-      "published_fine_label": null
+      "phase_cluster_spread_rad": 0.6112432225547093,
+      "refined_error_hz": 0.001987291610930697,
+      "oracle_frequency_spread_rad": 0.6105367221942959,
+      "would_pass_requested_rule": true,
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 10,
       "seed": 49,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 0.6816315930389624,
-      "refined_error_hz": -0.022506183741825225,
-      "oracle_frequency_spread_rad": 0.599739406051617,
+      "phase_cluster_spread_rad": 0.6001737590254901,
+      "refined_error_hz": -0.0018938049861390027,
+      "oracle_frequency_spread_rad": 0.5997394056184324,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 10,
       "seed": 50,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 1.719115525509652,
-      "refined_error_hz": 0.09629207851503452,
-      "oracle_frequency_spread_rad": 0.5962456127044782,
-      "would_pass_requested_rule": false,
-      "published_fine_label": null
+      "phase_cluster_spread_rad": 0.596348693706051,
+      "refined_error_hz": 0.0009979141332223662,
+      "oracle_frequency_spread_rad": 0.5962456125023478,
+      "would_pass_requested_rule": true,
+      "published_fine_label": "qpsk"
     },
     {
       "kind": "qpsk",
       "snr_db": 10,
       "seed": 51,
       "selected_order": 4,
-      "phase_cluster_spread_rad": 0.7240818463556473,
-      "refined_error_hz": -0.027800415718957083,
-      "oracle_frequency_spread_rad": 0.5985654357902896,
+      "phase_cluster_spread_rad": 0.5989273606198917,
+      "refined_error_hz": -0.001380405872623669,
+      "oracle_frequency_spread_rad": 0.5985654354770442,
       "would_pass_requested_rule": true,
-      "published_fine_label": null
+      "published_fine_label": "qpsk"
     }
   ],
-  "symbol_rate_fallback": [
+  "symbol_rate": [
+    {
+      "kind": "bpsk",
+      "truth_snr_db": 20,
+      "measured_snr_db": 19.967001953163198,
+      "truth_symbol_rate_hz": 500.0,
+      "symbol_rate_hz": 499.8381082690118,
+      "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
+    },
     {
       "kind": "bpsk",
       "truth_snr_db": 10,
       "measured_snr_db": 9.968629620071345,
       "truth_symbol_rate_hz": 500.0,
-      "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+      "symbol_rate_hz": 499.8381082690118,
+      "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
     },
     {
       "kind": "bpsk",
       "truth_snr_db": 5,
       "measured_snr_db": 4.97131060306301,
       "truth_symbol_rate_hz": 500.0,
-      "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+      "symbol_rate_hz": 499.8381082690118,
+      "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
     },
     {
       "kind": "bpsk",
@@ -855,7 +865,7 @@
       "measured_snr_db": -0.03567139255678989,
       "truth_symbol_rate_hz": 500.0,
       "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+      "symbol_rate_status": "not reliably estimated (SNR below validated 5-20 dB range)"
     },
     {
       "kind": "bpsk",
@@ -863,23 +873,31 @@
       "measured_snr_db": -5.058034944966555,
       "truth_symbol_rate_hz": 500.0,
       "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+      "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+    },
+    {
+      "kind": "qpsk",
+      "truth_snr_db": 20,
+      "measured_snr_db": 19.96645444996241,
+      "truth_symbol_rate_hz": 500.0,
+      "symbol_rate_hz": 499.8381082690118,
+      "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
     },
     {
       "kind": "qpsk",
       "truth_snr_db": 10,
       "measured_snr_db": 9.96450080013778,
       "truth_symbol_rate_hz": 500.0,
-      "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+      "symbol_rate_hz": 499.8381082690118,
+      "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
     },
     {
       "kind": "qpsk",
       "truth_snr_db": 5,
       "measured_snr_db": 4.963242116791208,
       "truth_symbol_rate_hz": 500.0,
-      "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+      "symbol_rate_hz": 499.8381082690118,
+      "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
     },
     {
       "kind": "qpsk",
@@ -887,7 +905,7 @@
       "measured_snr_db": -0.050053933991524274,
       "truth_symbol_rate_hz": 500.0,
       "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+      "symbol_rate_status": "not reliably estimated (SNR below validated 5-20 dB range)"
     },
     {
       "kind": "qpsk",
@@ -895,8 +913,8 @@
       "measured_snr_db": -5.083766512657371,
       "truth_symbol_rate_hz": 500.0,
       "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (not attempted: fallback rung 2)"
+      "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
     }
   ],
-  "qualification": "Deterministic synthetic evidence only. No theoretical half-power truth exists in generator; nominal detection bands are not that truth. No symbol-rate accuracy claim."
+  "qualification": "Deterministic synthetic evidence only. No theoretical half-power truth exists in generator; nominal detection bands are not that truth. No field-performance guarantee."
 }

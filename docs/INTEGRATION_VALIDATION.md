@@ -1,6 +1,8 @@
 # Synchronous API and dashboard integration verification
 
-Verified locally on 2026-09-11. Integration rung 1 is delivered: synchronous API, dashboard detail and JSON export are connected, and the optional async path was tested and deliberately remains Detect-only. The underlying DSP remains at fallback rung 2: fine labels/confidences and symbol rate are null. No estimator formulas, accuracy thresholds, plot code, breakdown code or motion code changed.
+Verified locally on 2026-09-11. Integration rung 1 is delivered: synchronous API, dashboard detail and JSON export are connected, and the optional async path was tested and deliberately remains Detect-only. At that date the underlying DSP was at fallback rung 2 (fine labels/confidences and symbol rate always null); this has since changed, see below. No plot code, breakdown code or motion code changed.
+
+**Update (later pass):** fine PSK classification and symbol-rate estimation are no longer stubbed; see [Estimate and Classify](ESTIMATE_CLASSIFY.md) for the current field behavior and measured evidence. Field names, endpoints and the checks below are otherwise unaffected — that fix only changed `backend/pipeline/classify.py`'s internal estimator, not the API/dashboard wiring verified here.
 
 ## Checks
 
