@@ -195,6 +195,37 @@ def job_status(job_id: str):
         return body
 
 
+@app.post("/api/jobs/{job_id}/rerun")
+def rerun(job_id: str, margin_db: float = Query(8, ge=3, le=30), mode: str = Query("adaptive"),
+          fixed_threshold_db: float | None = Query(None)):
+    """Re-run detection against the already-loaded capture with a new CFAR
+    margin, without re-uploading or re-validating the file."""
+    job = get_job(job_id)
+    if not COMPUTE.acquire(blocking=False):
+        raise HTTPException(429, "Another analysis is running. Try again when it finishes.")
+    try:
+        c = job["capture"]
+        started = monotonic()
+        if isinstance(c.iq, DiskSamples):
+            r = analyze_disk_capture(c, margin_db, mode, fixed_threshold_db)
+        else:
+            r = analyze_capture(c, margin_db, mode, fixed_threshold_db)
+        r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor)
+                                    for d in r.response["detections"]]
+        r.response["elapsed_ms"] = (monotonic()-started)*1000
+        r.response["job_id"] = job_id
+        r.response["expires_in_seconds"] = TTL_SECONDS
+        with LOCK:
+            job["result"] = r
+            job["layers"] = {}  # Detection indices/content changed; drop stale cache.
+            job["created"] = monotonic()
+        return r.response
+    except (ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(422, {"code": "invalid_capture", "message": str(exc)}) from exc
+    finally:
+        COMPUTE.release()
+
+
 @app.post("/api/demo")
 def demo(kind: str = Query("iq", pattern="^(iq|audio)$"), margin_db: float = Query(8, ge=3, le=30)):
     if kind == "audio":

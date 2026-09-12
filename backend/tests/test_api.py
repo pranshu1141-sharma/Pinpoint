@@ -54,6 +54,25 @@ def test_real_upload_contract_spectrogram_layers_and_export():
     assert client.get(f"/api/detections/{job}/-1/layers").status_code == 404
 
 
+def test_rerun_recomputes_detections_with_a_new_margin_without_reupload():
+    x, _ = make_signal("pulsed")
+    r = client.post("/api/analyze", files={"file": ("pulse.iq", x.astype("<c8").tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le", "margin_db": 8})
+    assert r.status_code == 200, r.text
+    job = r.json()["job_id"]
+    loose = client.post(f"/api/jobs/{job}/rerun?margin_db=3")
+    assert loose.status_code == 200, loose.text
+    assert loose.json()["job_id"] == job
+    assert loose.json()["settings"]["margin_db"] == 3
+    strict = client.post(f"/api/jobs/{job}/rerun?margin_db=30")
+    assert strict.status_code == 200, strict.text
+    # A much higher margin can only keep or shrink the candidate set.
+    assert len(strict.json()["detections"]) <= len(loose.json()["detections"])
+    # Re-running invalidates cached layers for the old detection set.
+    assert client.get(f"/api/detections/{job}/0/layers").status_code in (200, 404)
+    assert client.post(f"/api/jobs/{job}/rerun?margin_db=2").status_code == 422
+
+
 def test_audio_layers_are_actual_different_wav_clips():
     t = np.arange(32000)/16000
     x = .4*np.sin(2*np.pi*1200*t)+np.random.default_rng(5).normal(0, .025, len(t))

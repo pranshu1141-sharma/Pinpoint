@@ -147,7 +147,7 @@ checklist, tracked as it ships:
 - [ ] Detection rows clickable → jump spectrogram viewport to that detection
 - [ ] Sortable/filterable detection table (confidence, frequency, needs_review)
 - [ ] Confidence-threshold slider live-filtering the detection list + spectrogram
-- [ ] Adjustable CFAR margin control with live re-run
+- [x] Adjustable CFAR margin control with live re-run
 - [ ] Interactive accuracy-vs-SNR curve (hover for trial counts)
 - [ ] Symbol-rate panel: reveal the FFT plot with the chosen harmonic marked
 - [ ] Modulation panel: reveal cumulant features + decision-tree path

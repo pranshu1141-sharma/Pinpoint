@@ -178,6 +178,21 @@ export async function waitForAnalysis(
   }
 }
 
+export async function rerunJob(
+  jobId: string,
+  settings: { marginDb: number; mode: string; fixedThresholdDb?: string },
+): Promise<Analysis> {
+  const params = new URLSearchParams({
+    margin_db: String(settings.marginDb),
+    mode: settings.mode,
+  });
+  if (settings.fixedThresholdDb)
+    params.set("fixed_threshold_db", settings.fixedThresholdDb);
+  return request<Analysis>(`/api/jobs/${jobId}/rerun?${params}`, {
+    method: "POST",
+  });
+}
+
 export async function uploadCapture(
   body: FormData,
   update: (p: AnalysisProgress) => void,

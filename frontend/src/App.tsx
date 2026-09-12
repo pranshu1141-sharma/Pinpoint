@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Activity, FolderOpen, Loader2, Radio, Upload, Settings2, ChevronDown, ChevronRight, Download, Copy, Check } from 'lucide-react';
-import { request, uploadCapture, waitForAnalysis, type Analysis, type AnalysisProgress, type Spectrogram } from './api';
+import { request, rerunJob, uploadCapture, waitForAnalysis, type Analysis, type AnalysisProgress, type Spectrogram } from './api';
 import { adaptDetections, adaptSpectrogram, describeFile } from './bolt/adapter';
 import { FftPlot } from './bolt/FftPlot';
 import { Waterfall } from './bolt/Waterfall';
@@ -17,6 +17,7 @@ import { SignalBreakdown } from './bolt/SignalBreakdown';
 type Run = { demo?: 'iq' | 'audio'; resume?: string };
 export default function App() {
   const input = useRef<HTMLInputElement>(null), resumed = useRef(false);
+  const queryClient = useQueryClient();
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<Analysis | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -49,6 +50,12 @@ export default function App() {
     onMutate: () => { setError(''); setProgress(null); setResult(null); setSelected(null); setCursor({frequency:null,power:null,time:null}); },
     onSuccess: (data, run) => { setResult(data); setMargin(String(data.settings.margin_db)); setMode(data.settings.mode); setFixed(data.settings.mode === 'fixed_debug' ? String(data.threshold_db) : ''); setSelected(data.detections.length ? String(data.detections[0].id) : null); setLastSource(run.demo ? { demo: run.demo } : {}); setProgress(null); setBreakdownOpen(true); },
     onError: (e) => { setError(e.message); setProgress(null); setSettings(true); },
+  });
+  const rerun = useMutation({
+    mutationFn: (jobId: string) => rerunJob(jobId, { marginDb: Number(margin), mode, fixedThresholdDb: fixed }),
+    onMutate: () => setError(''),
+    onSuccess: (data) => { setResult(data); setSelected(data.detections.length ? String(data.detections[0].id) : null); queryClient.invalidateQueries({ queryKey: ['spectrogram', data.job_id] }); },
+    onError: (e) => setError(e.message),
   });
   useEffect(() => {
     if (connected && !resumed.current) { resumed.current = true; const id = sessionStorage.getItem('detect-active-job'); if (id) mutation.mutate({ resume: id }); }
@@ -117,7 +124,7 @@ export default function App() {
       <small><FolderOpen size={12} />Supports: .wav, .iq, .sigmf-data + .sigmf-meta</small><p className="welcome-help">After loading a file, click Analyze to run the detection pipeline.<br />Use Settings to specify raw IQ or stereo WAV interpretation.</p><div className="demo-buttons"><button disabled={pending || !connected} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending || !connected} onClick={() => startDemo('audio')}>Audio demo</button></div><small>Bundled captures processed by the real pipeline.</small>
     </div></main> : <main className="bolt-workspace"><div className="bolt-center">
       <section className="fft-section"><div className="plot-title">FFT / PSD<span>Welch · {shown.metadata.power_unit}</span></div><FftPlot psdData={psd} noiseFloorDb={shown.noise_floor_db} thresholdDb={draftThreshold} thresholdLabel={changed ? 'Pending threshold — reanalyze' : 'Applied threshold'} onThresholdChange={v => { if (mode === 'adaptive') setMargin(Math.max(3, Math.min(30, v - shown.noise_floor_db)).toFixed(1)); else setFixed(v.toFixed(1)); }} detections={detections} selectedDetectionId={selected} onSelectDetection={select} freqMin={freqMin} freqMax={freqMax} dbMin={dbMin} dbMax={dbMax} onCursorMove={(frequency, power) => setCursor({frequency, power, time:null})} height={170} />
-        <div className="plot-caption">Baseband offset · drag threshold to set the next scan {changed ? <button onClick={() => mutation.mutate(lastSource)}>Apply &amp; reanalyze</button> : <span>{shown.settings.mode === 'fixed_debug' ? 'FIXED DEBUG' : `Adaptive margin ${shown.settings.margin_db} dB`} · {shown.elapsed_ms.toFixed(0)} ms</span>}</div>{shown.settings.processing && <p className="block-note">Noise and threshold lines summarize block estimates; each block uses its own threshold.</p>}
+        <div className="plot-caption">Baseband offset · drag threshold to set the next scan {changed ? <button disabled={rerun.isPending} onClick={() => rerun.mutate(shown.job_id)}>{rerun.isPending ? <Loader2 size={12} className="animate-spin" /> : null}Apply &amp; re-run</button> : <span>{shown.settings.mode === 'fixed_debug' ? 'FIXED DEBUG' : `Adaptive margin ${shown.settings.margin_db} dB`} · {shown.elapsed_ms.toFixed(0)} ms</span>}</div>{shown.settings.processing && <p className="block-note">Noise and threshold lines summarize block estimates; each block uses its own threshold.</p>}
       </section>
       <section className="waterfall-section"><div className="waterfall-main"><div className="plot-title">Waterfall<span>{spec.isFetching ? 'Loading measured spectrogram…' : `${shown.settings.nfft} FFT · ${(sampleRate / shown.settings.nfft).toFixed(3)} Hz/bin`}</span></div><div className="waterfall-canvas"><Waterfall spectrogram={spectrum} detections={detections} selectedDetectionId={selected} onSelectDetection={select} freqMin={freqMin} freqMax={freqMax} onCursorMove={(frequency, time) => setCursor({frequency,time,power:null})} sampleRate={sampleRate} totalSamples={shown.metadata.sample_count} /></div></div>{spectrum && <div className="waterfall-legend"><ColormapLegend minDb={spectrum.min_db} maxDb={spectrum.max_db} height={110} /></div>}</section>
       <section className={`bolt-breakdown ${breakdownOpen ? 'open' : ''}`}><button className="dock-toggle" aria-expanded={breakdownOpen} onClick={() => setBreakdownOpen(v => !v)}>{breakdownOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}Signal Breakdown — Detect Stage<span>{selected !== null ? `C${Number(selected)+1}` : 'Select a candidate'}</span><small>Space to toggle</small></button>{breakdownOpen && <SignalBreakdown key={`${shown.job_id}:${selected}`} analysis={shown} detection={detection} />}</section>
