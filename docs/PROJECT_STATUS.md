@@ -143,7 +143,7 @@ Scope record: [DASHBOARD_INTERACTIVITY.md](DASHBOARD_INTERACTIVITY.md). Core
 checklist, tracked as it ships:
 
 - [x] Click-to-inspect readout on the spectrogram (live freq/power/time at cursor)
-- [ ] Zoom/pan controls on the spectrogram
+- [x] Zoom/pan controls on the spectrogram
 - [ ] Detection rows clickable → jump spectrogram viewport to that detection
 - [ ] Sortable/filterable detection table (confidence, frequency, needs_review)
 - [x] Confidence-threshold slider live-filtering the detection list + spectrogram

@@ -99,6 +99,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .waterfall-pin-readout strong { font-weight:400; color:#69aff5; font-variant-numeric:tabular-nums; }
 .waterfall-pin-readout button { position:absolute; top:2px; right:4px; background:none; border:none; padding:0; color:#a0a0a0; font-size:12px; line-height:1; cursor:pointer; }
 .waterfall-pin-readout button:hover { color:#ed776c; border:none; }
+.waterfall-zoom-controls { position:absolute; top:6px; right:10px; z-index:2; display:flex; gap:2px; }
+.waterfall-zoom-controls button { display:flex; align-items:center; justify-content:center; width:20px; height:20px; padding:0; background:rgba(37,37,37,.85); border:1px solid #4a4a4a; border-radius:2px; color:#d4d4d4; }
+.waterfall-zoom-controls button:hover:not(:disabled) { border-color:#2a82da; color:#69aff5; }
+.waterfall-zoom-controls button:disabled { opacity:.35; cursor:default; }
 .bolt-breakdown { flex-shrink:0; border-top:1px solid #4a4a4a; background:#252525; }
 .dock-toggle { height:28px; width:100%; display:flex; align-items:center; gap:6px; padding:0 10px; background:#3c3c3c; color:#d4d4d4; border:0; border-bottom:1px solid #353535; text-transform:uppercase; font-size:11px; }
 .dock-toggle span { color:#aaa; font:10px var(--font-mono); margin-left:6px; }
