@@ -16,6 +16,14 @@ import { ColormapLegend } from './bolt/ColormapLegend';
 import { SignalBreakdown } from './bolt/SignalBreakdown';
 
 type Run = { demo?: 'iq' | 'audio'; resume?: string };
+type HistoryEntry = { job_id: string; filename: string; timestamp: number; detectionCount: number; sourceKind: string };
+const HISTORY_KEY = 'detect-session-history';
+function loadHistory(): HistoryEntry[] {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]'); } catch { return []; }
+}
+function saveHistory(list: HistoryEntry[]) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 10))); } catch { /* storage unavailable */ }
+}
 export default function App() {
   const input = useRef<HTMLInputElement>(null), resumed = useRef(false);
   const queryClient = useQueryClient();
@@ -30,6 +38,13 @@ export default function App() {
   const [exportView, setExportView] = useState<'json' | 'sigmf'>('json');
   const [sigmfPreview, setSigmfPreview] = useState<unknown>(null);
   const [sigmfLoading, setSigmfLoading] = useState(false);
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const recordHistory = (data: Analysis) => setHistory((prev) => {
+    const entry: HistoryEntry = { job_id: data.job_id, filename: data.metadata.filename, timestamp: Date.now(), detectionCount: data.detections.length, sourceKind: data.metadata.source_kind };
+    const next = [entry, ...prev.filter((h) => h.job_id !== data.job_id)];
+    saveHistory(next);
+    return next;
+  });
   const [cursor, setCursor] = useState<{ frequency: number | null; power: number | null; time: number | null }>({ frequency: null, power: null, time: null });
   const [playheadTime, setPlayheadTime] = useState<number | null>(null);
   const [lastSource, setLastSource] = useState<Run>({});
@@ -55,13 +70,13 @@ export default function App() {
       return uploadCapture(body, setProgress);
     },
     onMutate: () => { setError(''); setProgress(null); setResult(null); setSelected(null); setCursor({frequency:null,power:null,time:null}); setConfidenceFilter(0); setExportView('json'); setSigmfPreview(null); },
-    onSuccess: (data, run) => { setResult(data); setMargin(String(data.settings.margin_db)); setMode(data.settings.mode); setFixed(data.settings.mode === 'fixed_debug' ? String(data.threshold_db) : ''); setSelected(data.detections.length ? String(data.detections[0].id) : null); setLastSource(run.demo ? { demo: run.demo } : {}); setProgress(null); setBreakdownOpen(true); },
+    onSuccess: (data, run) => { setResult(data); setMargin(String(data.settings.margin_db)); setMode(data.settings.mode); setFixed(data.settings.mode === 'fixed_debug' ? String(data.threshold_db) : ''); setSelected(data.detections.length ? String(data.detections[0].id) : null); setLastSource(run.demo ? { demo: run.demo } : {}); setProgress(null); setBreakdownOpen(true); recordHistory(data); },
     onError: (e) => { setError(e.message); setProgress(null); setSettings(true); },
   });
   const rerun = useMutation({
     mutationFn: (jobId: string) => rerunJob(jobId, { marginDb: Number(margin), mode, fixedThresholdDb: fixed }),
     onMutate: () => setError(''),
-    onSuccess: (data) => { setResult(data); setSelected(data.detections.length ? String(data.detections[0].id) : null); setSigmfPreview(null); setExportView('json'); queryClient.invalidateQueries({ queryKey: ['spectrogram', data.job_id] }); },
+    onSuccess: (data) => { setResult(data); setSelected(data.detections.length ? String(data.detections[0].id) : null); setSigmfPreview(null); setExportView('json'); queryClient.invalidateQueries({ queryKey: ['spectrogram', data.job_id] }); recordHistory(data); },
     onError: (e) => setError(e.message),
   });
   useEffect(() => {
@@ -164,6 +179,21 @@ export default function App() {
         {exportView === 'sigmf' && sigmfLoading ? <p className="export-loading">Fetching SigMF metadata…</p> : <pre>{JSON.stringify(exportView === 'sigmf' ? sigmfPreview : shown.detections,null,2)}</pre>}
       </DockPanel>
       <DockPanel title="Fine Classification Accuracy" defaultOpen={false}><AccuracyCurve data={accuracy.data ?? null} loading={accuracy.isPending} /></DockPanel>
+      <DockPanel title="Session History" defaultOpen={false}>
+        {history.length === 0 ? <p className="history-empty">Analyzed files appear here, remembered in this browser.</p> : (
+          <ul className="history-list">
+            {history.map((h) => (
+              <li key={h.job_id}>
+                <button disabled={pending} onClick={() => mutation.mutate({ resume: h.job_id })}>
+                  <span className="history-filename">{h.filename}</span>
+                  <span className="history-meta">{h.sourceKind} · {h.detectionCount} candidate{h.detectionCount === 1 ? '' : 's'} · {new Date(h.timestamp).toLocaleTimeString()}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="history-note">Reload requires the backend job to still exist (~30-minute expiry); an expired job reports so instead of guessing.</p>
+      </DockPanel>
       <DockPanel title="Pipeline / Roadmap" defaultOpen={false}><div className="roadmap"><p><b>Detect · Estimate · Classify · built</b> → Report</p><p>Classify now includes coarse envelope family, Mth-power carrier refinement, fine PSK classification (BPSK/QPSK only) and symbol-rate estimation, each gated to its validated SNR range with an explicit unknown status otherwise. FM and pulsed candidates never receive a fine label or symbol rate.</p><p>Planned, not built: cyclostationary analysis, deep-learning detection, co-channel separation, frequency-hopping tracking, matched filtering, real-time streaming, and the Report stage.</p><p>Demodulation into decoded audio/data remains planned, not built in this version.</p></div></DockPanel>
       <div className="sidebar-demos"><button disabled={pending} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending} onClick={() => startDemo('audio')}>Audio demo</button><a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">API contract ↗</a></div>
     </aside></main>}

@@ -176,6 +176,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .sidebar-demos a { margin-left:auto; color:#aaa; font-size:10px; }
 .export-actions button,.sidebar-demos button { font-size:10px; }
 .bolt-sidebar pre { font:10px/1.7 var(--font-mono); max-height:200px; overflow:auto; padding:8px; margin:0; background:#1e1e1e; }
+.history-empty { padding:12px 8px; font-size:10px; color:#999; line-height:1.6; }
+.history-list { list-style:none; margin:0; padding:0; max-height:220px; overflow:auto; }
+.history-list li { border-bottom:1px solid #353535; }
+.history-list li:last-child { border-bottom:0; }
+.history-list button { display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; padding:6px 8px; background:transparent; border:0; border-radius:0; text-align:left; }
+.history-list button:hover:not(:disabled) { background:#252525; border-color:transparent; }
+.history-filename { font-size:11px; color:#d4d4d4; font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+.history-meta { font-size:9px; color:#888; }
+.history-note { margin:0; padding:6px 8px; font-size:9px; color:#7f7f7f; border-top:1px solid #353535; }
 .roadmap { padding:8px; font-size:10px; line-height:1.8; color:#aaa; }
 .roadmap p { margin:0 0 8px; }
 .roadmap b { color:#65aff5; }
