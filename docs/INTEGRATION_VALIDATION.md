@@ -4,6 +4,8 @@ Verified locally on 2026-09-11. Integration rung 1 is delivered: synchronous API
 
 **Update (later pass):** fine PSK classification and symbol-rate estimation are no longer stubbed; see [Estimate and Classify](ESTIMATE_CLASSIFY.md) for the current field behavior and measured evidence. Field names, endpoints and the checks below are otherwise unaffected — that fix only changed `backend/pipeline/classify.py`'s internal estimator, not the API/dashboard wiring verified here.
 
+**Update (large-capture pass):** the async path's "downstream stage fields remain absent" measurement below (the 5,376,000-byte upload check) was accurate on 2026-09-11 but is no longer the current behavior — async uploads now get per-track downstream enrichment via bounded direct re-reads (see [Estimate and Classify](ESTIMATE_CLASSIFY.md#integration-boundary)). The measurement is left as-is below as a historical record of what that date's test actually verified.
+
 ## Checks
 
 - Before integration: 104 backend tests passed, two documented strict expected failures.

@@ -1,0 +1,243 @@
+{
+  "description": "Real-capture triage: what Detect+Estimate+Classify actually returned. Not scored against ground truth (none exists); documents behavior only.",
+  "files": [
+    {
+      "file": "sigid3_trimmed.sigmf-data",
+      "path": "/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/data/real/sigid3_trimmed.sigmf-data",
+      "size_bytes": 1048576,
+      "error": null,
+      "metadata": {
+        "filename": "sigid3_trimmed.sigmf-data",
+        "sample_rate": 250000.0,
+        "sample_count": 131072,
+        "duration_seconds": 0.524288,
+        "source_kind": "iq",
+        "datatype": "cf32_le",
+        "center_frequency_hz": 929250000,
+        "wav_disambiguation": {
+          "result": "sigmf_metadata",
+          "reason": "Validated SigMF datatype and sampling metadata."
+        },
+        "power_unit": "dB re 1 sample-unit\u00b2/Hz",
+        "frequency_reference": "baseband offset"
+      },
+      "noise_floor_db": -73.93508545909734,
+      "elapsed_ms": 26.70841704821214,
+      "candidate_count": 2,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 131072,
+          "freq_lower_hz": 22338.8671875,
+          "freq_upper_hz": 49194.3359375,
+          "confidence": 0.8958,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 21.443,
+          "center_frequency_hz": 929287476.3216155,
+          "bandwidth_3db_hz": 343.4380725750343,
+          "bandwidth_99pct_hz": 15625.0,
+          "bandwidth_99pct_caveat": "unshaped-pulse-sidelobes",
+          "snr_db": 13.930013607699047,
+          "estimate_status": "estimated",
+          "modulation_family": "constant-envelope",
+          "modulation_confidence": 0.8300970950863009,
+          "envelope_variation": 0.05097087147410973,
+          "modulation_confidence_kind": "heuristic, not a calibrated probability",
+          "modulation_status": "classified (isolated-envelope heuristic)",
+          "center_frequency_refined_hz": 929292300.0095819,
+          "refinement_order": 2,
+          "refinement_sharpness": 9252417568768.0,
+          "refinement_status": "refined (Mth-power peak heuristic)",
+          "fine_modulation_label": null,
+          "fine_modulation_confidence": null,
+          "phase_cluster_spread_rad": 1.1785830032764326,
+          "fine_modulation_status": "not reliably classified (phase spread above threshold)",
+          "symbol_rate_hz": null,
+          "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        },
+        {
+          "id": 1,
+          "start_sample": 4608,
+          "end_sample": 118784,
+          "freq_lower_hz": 49926.7578125,
+          "freq_upper_hz": 51635.7421875,
+          "confidence": 0.5387,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": true,
+          "threshold_excess_db": 0.619,
+          "center_frequency_hz": 929300652.5304341,
+          "bandwidth_3db_hz": null,
+          "bandwidth_99pct_hz": 1708.984375,
+          "bandwidth_99pct_caveat": null,
+          "snr_db": 13.931893123746534,
+          "estimate_status": "partial (half-power lobe truncated by candidate band)",
+          "modulation_family": "varying-envelope",
+          "modulation_confidence": 0.7571637427037409,
+          "envelope_variation": 0.5271491228111223,
+          "modulation_confidence_kind": "heuristic, not a calibrated probability",
+          "modulation_status": "classified (isolated-envelope heuristic)",
+          "center_frequency_refined_hz": null,
+          "refinement_order": null,
+          "refinement_sharpness": null,
+          "refinement_status": "not reliably refined (requires constant-envelope evidence)",
+          "fine_modulation_label": null,
+          "fine_modulation_confidence": null,
+          "phase_cluster_spread_rad": null,
+          "fine_modulation_status": "not reliably classified (no phase refinement)",
+          "symbol_rate_hz": null,
+          "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        }
+      ],
+      "dc_spike_suspected": false,
+      "noise_floor_nonflat": false,
+      "clipping_suspected": false,
+      "statuses": {
+        "estimate_status": [
+          "estimated",
+          "partial (half-power lobe truncated by candidate band)"
+        ],
+        "modulation_status": [
+          "classified (isolated-envelope heuristic)",
+          "classified (isolated-envelope heuristic)"
+        ],
+        "fine_modulation_status": [
+          "not reliably classified (phase spread above threshold)",
+          "not reliably classified (no phase refinement)"
+        ],
+        "symbol_rate_status": [
+          "not reliably estimated (requires a confirmed PSK fine label)",
+          "not reliably estimated (requires a confirmed PSK fine label)"
+        ]
+      }
+    },
+    {
+      "file": "sigid3_full.sigmf-data",
+      "path": "/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/data/real/sigid3_full.sigmf-data",
+      "size_bytes": 2773184,
+      "error": null,
+      "metadata": {
+        "filename": "sigid3_full.sigmf-data",
+        "sample_rate": 250000.0,
+        "sample_count": 346648,
+        "duration_seconds": 1.386592,
+        "source_kind": "iq",
+        "datatype": "cf32_le",
+        "center_frequency_hz": 929250000,
+        "wav_disambiguation": {
+          "result": "sigmf_metadata",
+          "reason": "Validated SigMF datatype and sampling metadata."
+        },
+        "power_unit": "dB re 1 sample-unit\u00b2/Hz",
+        "frequency_reference": "baseband offset"
+      },
+      "noise_floor_db": -73.94589854842408,
+      "elapsed_ms": 72.9915410047397,
+      "candidate_count": 2,
+      "detections": [
+        {
+          "id": 0,
+          "start_sample": 0,
+          "end_sample": 346624,
+          "freq_lower_hz": 22338.8671875,
+          "freq_upper_hz": 49194.3359375,
+          "confidence": 0.8841,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": false,
+          "threshold_excess_db": 20.266,
+          "center_frequency_hz": 929287437.7301071,
+          "bandwidth_3db_hz": 390.7174708274433,
+          "bandwidth_99pct_hz": 14160.15625,
+          "bandwidth_99pct_caveat": "unshaped-pulse-sidelobes",
+          "snr_db": 13.944834688813819,
+          "estimate_status": "estimated",
+          "modulation_family": "constant-envelope",
+          "modulation_confidence": 0.8359367012311042,
+          "envelope_variation": 0.04921898963066874,
+          "modulation_confidence_kind": "heuristic, not a calibrated probability",
+          "modulation_status": "classified (isolated-envelope heuristic)",
+          "center_frequency_refined_hz": 929282700.0014427,
+          "refinement_order": 2,
+          "refinement_sharpness": 27123173556224.0,
+          "refinement_status": "refined (Mth-power peak heuristic)",
+          "fine_modulation_label": null,
+          "fine_modulation_confidence": null,
+          "phase_cluster_spread_rad": 1.1708010476083335,
+          "fine_modulation_status": "not reliably classified (phase spread above threshold)",
+          "symbol_rate_hz": null,
+          "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        },
+        {
+          "id": 1,
+          "start_sample": 4608,
+          "end_sample": 180224,
+          "freq_lower_hz": 49926.7578125,
+          "freq_upper_hz": 51635.7421875,
+          "confidence": 0.5399,
+          "detection_method": "adaptive_threshold",
+          "is_pulsed": false,
+          "pulse_width_samples": null,
+          "pri_samples": null,
+          "pulse_windows": [],
+          "needs_review": true,
+          "threshold_excess_db": 0.659,
+          "center_frequency_hz": 929300675.7595992,
+          "bandwidth_3db_hz": null,
+          "bandwidth_99pct_hz": 1708.984375,
+          "bandwidth_99pct_caveat": null,
+          "snr_db": 13.943443707979862,
+          "estimate_status": "partial (half-power lobe truncated by candidate band)",
+          "modulation_family": "varying-envelope",
+          "modulation_confidence": 0.835286518302038,
+          "envelope_variation": 0.5505859554906114,
+          "modulation_confidence_kind": "heuristic, not a calibrated probability",
+          "modulation_status": "classified (isolated-envelope heuristic)",
+          "center_frequency_refined_hz": null,
+          "refinement_order": null,
+          "refinement_sharpness": null,
+          "refinement_status": "not reliably refined (requires constant-envelope evidence)",
+          "fine_modulation_label": null,
+          "fine_modulation_confidence": null,
+          "phase_cluster_spread_rad": null,
+          "fine_modulation_status": "not reliably classified (no phase refinement)",
+          "symbol_rate_hz": null,
+          "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        }
+      ],
+      "dc_spike_suspected": false,
+      "noise_floor_nonflat": false,
+      "clipping_suspected": false,
+      "statuses": {
+        "estimate_status": [
+          "estimated",
+          "partial (half-power lobe truncated by candidate band)"
+        ],
+        "modulation_status": [
+          "classified (isolated-envelope heuristic)",
+          "classified (isolated-envelope heuristic)"
+        ],
+        "fine_modulation_status": [
+          "not reliably classified (phase spread above threshold)",
+          "not reliably classified (no phase refinement)"
+        ],
+        "symbol_rate_status": [
+          "not reliably estimated (requires a confirmed PSK fine label)",
+          "not reliably estimated (requires a confirmed PSK fine label)"
+        ]
+      }
+    }
+  ]
+}

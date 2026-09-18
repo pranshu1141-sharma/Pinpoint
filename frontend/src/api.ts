@@ -12,7 +12,8 @@ export type Detection = {
   needs_review: boolean;
   pulse_windows: { start_sample: number; end_sample: number }[];
   threshold_excess_db: number;
-  // Synchronous analysis fields; absent on Detect-only async/older results.
+  // Estimate/Classify fields. Present (possibly null) on sync, demo, and
+  // async large-capture results alike; optional only for older/legacy results.
   center_frequency_hz?: number | null;
   bandwidth_3db_hz?: number | null;
   bandwidth_99pct_hz?: number | null;

@@ -7,7 +7,8 @@ import numpy as np
 from scipy.io import wavfile
 from .ingest import Capture, load_capture
 from .sigmf_io import DTYPES
-from .detect import analyze_capture, DetectionResult, db
+from .detect import analyze_capture, estimate_noise_floor, DetectionResult, db
+from .classify import analyze_candidate
 from .layers import waveform, build_layers
 
 BLOCK_SAMPLES = 524288
@@ -17,6 +18,10 @@ DISPLAY_ROWS = 768
 
 class DiskSamples:
     """Slice-only reader: an accidental whole-file NumPy conversion is forbidden."""
+    # A single bounded read's sample cap. enrich_track (below) reads this same
+    # attribute for its own per-track limit, so the two can never drift apart.
+    MAX_READ_SAMPLES = 2_000_000
+
     def __init__(self, path, count, dtype, channels, offset=0, wav=False, source="iq", choice="auto"):
         self.path, self.count, self.dtype = Path(path), count, np.dtype(dtype)
         self.channels, self.offset, self.wav = channels, offset, wav
@@ -29,7 +34,7 @@ class DiskSamples:
         if not isinstance(key, slice) or key.step not in (None, 1):
             raise ValueError("Disk captures must be read in contiguous bounded slices.")
         start, stop, _ = key.indices(self.count)
-        if stop-start > 2_000_000:
+        if stop-start > self.MAX_READ_SAMPLES:
             raise ValueError("A processing window cannot exceed two million samples.")
         with self.path.open("rb") as source:
             source.seek(self.offset+start*self.dtype.itemsize*self.channels)
@@ -85,6 +90,74 @@ def open_disk_capture(path, filename, sample_rate=None, datatype=None, metadata=
     c.metadata.update(sample_count=count, duration_seconds=count/c.sample_rate,
                       processing="overlapping_blocks", file_size_bytes=path.stat().st_size)
     return c
+
+
+# A track longer than DiskSamples.MAX_READ_SAMPLES has no way to become one
+# contiguous in-memory buffer through a single bounded re-read, so downstream
+# enrichment is skipped for it rather than attempted on a partial/reassembled
+# buffer. Reading the limit from DiskSamples itself (not a separate literal)
+# means the two can never silently drift apart.
+TRACK_ENRICHMENT_MAX_SAMPLES = DiskSamples.MAX_READ_SAMPLES
+
+# Every field estimate_candidate/classify_* ever add, so a track that skips
+# enrichment still has the exact same key set as one that didn't -- API
+# consumers never have to branch on whether a field is merely absent.
+_TRACK_TOO_LONG_STATUS = "not reliably estimated (track exceeds the bounded re-analysis limit for large-capture blocks)"
+_NULL_DOWNSTREAM_FIELDS = {
+    "center_frequency_hz": None, "bandwidth_3db_hz": None, "bandwidth_99pct_hz": None,
+    "bandwidth_99pct_caveat": None, "snr_db": None, "estimate_status": _TRACK_TOO_LONG_STATUS,
+    "modulation_family": None, "modulation_confidence": None,
+    "modulation_confidence_kind": None, "modulation_status": _TRACK_TOO_LONG_STATUS,
+    "envelope_variation": None, "center_frequency_refined_hz": None,
+    "refinement_order": None, "refinement_sharpness": None, "refinement_status": _TRACK_TOO_LONG_STATUS,
+    "fine_modulation_label": None, "fine_modulation_confidence": None,
+    "phase_cluster_spread_rad": None, "fine_modulation_status": _TRACK_TOO_LONG_STATUS,
+    "symbol_rate_hz": None, "symbol_rate_status": _TRACK_TOO_LONG_STATUS,
+}
+
+
+def enrich_track(capture, track):
+    """Bounded per-track re-read plus the existing Estimate/Classify pipeline.
+
+    A block-merged track has no contiguous in-memory buffer and no per-block
+    noise floor is trustworthy for it specifically. Rather than reassembling
+    per-block segments (which would need to reconcile independent per-block
+    detector state), re-read the track's own span directly from disk in one
+    bounded slice -- the underlying file is genuinely contiguous, so this is
+    real phase-continuous IQ, not a reconstruction. The existing, unmodified
+    analyze_candidate then runs on it exactly as the synchronous upload path
+    already does. Tracks longer than DiskSamples' own bounded-read limit are
+    an explicit unresolved status, never a partial or reassembled result.
+    """
+    span = track["end_sample"]-track["start_sample"]
+    if not (1 <= span <= TRACK_ENRICHMENT_MAX_SAMPLES):
+        return {**track, **_NULL_DOWNSTREAM_FIELDS}
+    local_iq = capture.iq[track["start_sample"]:track["end_sample"]]
+    local_capture = Capture(local_iq, capture.sample_rate, capture.metadata)
+    # Clamped at both ends of both fields, not just the expected side: current
+    # merge logic never produces a window straddling a track's own bounds, but
+    # if that ever changed, an unclamped window could translate to start>=end
+    # here, and occupied_windows' bounds check would then reject the *whole*
+    # track's enrichment over one bad window rather than just that window.
+    local_track = {**track, "start_sample": 0, "end_sample": span,
+                   "pulse_windows": [{"start_sample": max(0, min(span, w["start_sample"]-track["start_sample"])),
+                                      "end_sample": max(0, min(span, w["end_sample"]-track["start_sample"]))}
+                                     for w in track["pulse_windows"]]}
+    try:
+        _, _, floor = estimate_noise_floor(local_iq, capture.sample_rate)
+        enriched = analyze_candidate(local_capture, local_track, noise_floor=floor)
+    except ValueError:
+        return {**track, **_NULL_DOWNSTREAM_FIELDS}
+    # Only genuinely new (downstream) fields are merged back; track's own
+    # Detect-stage fields (global sample coordinates, confidence, etc.) must
+    # survive untouched, not the local re-read's 0-based translated copies.
+    new_fields = {k: v for k, v in enriched.items() if k not in track}
+    # If a future Estimate/Classify field ever reused a Detect-stage key name,
+    # the filter above would silently drop it instead of merging it in -- this
+    # would fail loudly here (in tests) rather than silently losing a field.
+    assert new_fields.keys() == _NULL_DOWNSTREAM_FIELDS.keys(), (
+        f"analyze_candidate's field set changed: {new_fields.keys() ^ _NULL_DOWNSTREAM_FIELDS.keys()}")
+    return {**track, **new_fields}
 
 
 def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_db=None, progress=None,
@@ -179,7 +252,7 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
                 raise ValueError("Capture exceeds 4,096 candidates or 200,000 pulse windows. Split it for review; results were not silently truncated.")
         if progress:
             progress(core_end, n, f"Analyzed block {index+1}/{chunks}; {core_end:,}/{n:,} samples scanned")
-    for d in tracks:
+    for index, d in enumerate(tracks):
         windows = d["pulse_windows"]
         if windows:
             d["pulse_width_samples"] = int(round(np.median([w["end_sample"]-w["start_sample"] for w in windows])))
@@ -188,6 +261,7 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
             d.update(is_pulsed=False, pulse_width_samples=None, pri_samples=None)
         env = envelopes[d["id"]]
         env["waveform"] = [{"time_seconds": float(t), "value": float(v)} for t, v in zip(edges[:-1], env.pop("values"))]
+        tracks[index] = enrich_track(capture, d)
     floor = float(np.median(floors))
     elapsed = (perf_counter()-started)*1000
     base_response.update(detections=tracks, metadata=capture.metadata, elapsed_ms=elapsed,

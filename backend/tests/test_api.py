@@ -182,8 +182,10 @@ def test_sync_pulses_and_sigmf_absolute_frequency():
     assert d["snr_db"] == pytest.approx(10, abs=3)
 
 
-def test_real_large_upload_keeps_estimates_absent_after_block_merge(tmp_path, monkeypatch):
-    """A real >1 MiB, multi-block request must not publish first-block estimates as full-capture values."""
+def test_real_large_upload_gets_per_track_downstream_enrichment(tmp_path, monkeypatch):
+    """A real >1 MiB, multi-block request now gets the same downstream fields a
+    small synchronous upload gets, per finished track (bounded re-read), not
+    stale first-block estimates and not the old Detect-only contract."""
     monkeypatch.setattr(main, "UPLOADS", tmp_path)
     x, _ = make_signal("bpsk", 10, duration=14)
     assert x.nbytes > main.LARGE_FILE_BYTES
@@ -204,8 +206,40 @@ def test_real_large_upload_keeps_estimates_absent_after_block_merge(tmp_path, mo
         assert state["processed_samples"] == len(x)
         assert body["detections"]
         for d in body["detections"]:
-            assert not (ESTIMATE_FIELDS & d.keys())
+            assert ESTIMATE_FIELDS <= d.keys()
+        d = next(dd for dd in body["detections"] if dd["freq_lower_hz"] < 8000 < dd["freq_upper_hz"])
+        assert d["center_frequency_hz"] == pytest.approx(8000, rel=.02)
+        assert d["modulation_family"] == "constant-envelope"
         assert client.get(f"/api/export/{job}?format=json").json() == body["detections"]
+    finally:
+        main.discard_job(job)
+
+
+def test_large_upload_rerun_keeps_downstream_enrichment(tmp_path, monkeypatch):
+    """/rerun dispatches on the disk-backed capture the same way /api/analyze's
+    async path does, so it must inherit per-track enrichment with no extra
+    wiring -- this only re-runs Detect's threshold, not a re-upload."""
+    monkeypatch.setattr(main, "UPLOADS", tmp_path)
+    x, _ = make_signal("bpsk", 10, duration=14)
+    r = client.post("/api/analyze", files={"file": ("blocks.iq", x.tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le", "margin_db": 8})
+    job = r.json()["job_id"]
+    deadline = time.monotonic()+30
+    while time.monotonic() < deadline:
+        state = client.get(f"/api/jobs/{job}").json()
+        if state["status"] in ("complete", "failed"):
+            break
+        time.sleep(.02)
+    assert state["status"] == "complete", state
+    try:
+        rerun = client.post(f"/api/jobs/{job}/rerun?margin_db=3")
+        assert rerun.status_code == 200, rerun.text
+        detections = rerun.json()["detections"]
+        assert detections
+        for d in detections:
+            assert ESTIMATE_FIELDS <= d.keys()
+        d = next(dd for dd in detections if dd["freq_lower_hz"] < 8000 < dd["freq_upper_hz"])
+        assert d["center_frequency_hz"] == pytest.approx(8000, rel=.02)
     finally:
         main.discard_job(job)
 

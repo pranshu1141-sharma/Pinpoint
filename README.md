@@ -1,6 +1,6 @@
 # SIH26147 — PinPoint
 
-An offline RF capture detector and dashboard for the Smart India Hackathon NTRO software track. It locates candidate time/frequency regions, measures pulse timing, and exposes inspectable isolation layers. **Synchronous uploads (≤1 MiB) and demos now include Estimate, coarse envelope classification, Mth-power carrier refinement, fine PSK classification (BPSK/QPSK) and symbol-rate estimation in the API, detail table and JSON export.** Large async uploads remain Detect-only. Fine labels and symbol rate are gated to their validated SNR ranges — see [Estimate and Classify](docs/ESTIMATE_CLASSIFY.md) for exact conditions; no demodulation or decoding exists. See [integration verification](docs/INTEGRATION_VALIDATION.md).
+An offline RF capture detector and dashboard for the Smart India Hackathon NTRO software track. It locates candidate time/frequency regions, measures pulse timing, and exposes inspectable isolation layers. **Synchronous uploads (≤1 MiB), demos, and now async large uploads (per-track, bounded to 2,000,000 samples) all include Estimate, coarse envelope classification, Mth-power carrier refinement, fine PSK classification (BPSK/QPSK) and symbol-rate estimation in the API, detail table and JSON export.** Fine labels and symbol rate are gated to their validated SNR ranges — see [Estimate and Classify](docs/ESTIMATE_CLASSIFY.md) for exact conditions; no demodulation or decoding exists. See [integration verification](docs/INTEGRATION_VALIDATION.md).
 
 ## Complete project documentation
 

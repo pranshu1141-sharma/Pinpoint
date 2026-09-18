@@ -6,7 +6,7 @@ The FastAPI service listens on `http://127.0.0.1:8000` in the documented local s
 
 - Small uploads (≤1 MiB) return a completed result synchronously with HTTP 200, including Estimate, coarse envelope classification and frequency refinement for usable IQ candidates.
 - Uploads larger than 1 MiB return an asynchronous job with HTTP 202.
-- Async merged candidates remain Detect-only: downstream fields are absent. Both bundled demos use the synchronous path regardless of asset size; real audio returns explicit null IQ measurements and reasons.
+- Async merged candidates now get the same downstream fields, per finished track: each track is re-read directly from disk in one bounded slice (≤2,000,000 samples) and run through the unmodified Estimate/Classify pipeline, with a noise floor computed from that track's own samples rather than the whole capture. A track longer than that bound gets every downstream field explicitly null with an unresolved status, never a partial or reassembled result. Both bundled demos use the synchronous path regardless of asset size; real audio returns explicit null IQ measurements and reasons.
 - A job identifier is an opaque 32-character hexadecimal string.
 - Completed jobs expire 30 minutes after completion. The service keeps the newest three finished jobs.
 - Only one analysis may compute at a time.
@@ -74,6 +74,10 @@ Queued or processing response:
 ```
 
 When `status` is `complete`, the response adds `result`. When `status` is `failed`, it adds `error` and never publishes a partial result.
+
+### `POST /api/jobs/{job_id}/rerun?margin_db=&mode=&fixed_threshold_db=`
+
+Re-runs Detect against the already-loaded capture with a new CFAR margin, without re-uploading or re-validating the file. Dispatches on the stored capture's type: a synchronous (small-upload) job re-runs Detect then downstream Estimate/Classify exactly as the initial analyze did; a disk-backed (large-upload) job re-runs the full block scan through `analyze_disk_capture`, which already includes per-track downstream enrichment (see [Large-file processing](LARGE_FILE_PROCESSING.md#per-track-downstream-enrichment)) — downstream fields are not computed a second time for that path, since `analyze_disk_capture` already returns them. Returns the same shape as a completed analysis; also drops that job's cached candidate layers, since detection indices may have changed.
 
 ## Analysis result
 

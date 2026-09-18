@@ -5,8 +5,56 @@ import pytest
 from scipy.io import wavfile
 from fastapi.testclient import TestClient
 from backend.api import main
-from backend.pipeline.large_capture import open_disk_capture, analyze_disk_capture, build_disk_layers, DiskSamples
+from backend.pipeline.large_capture import (open_disk_capture, analyze_disk_capture, build_disk_layers,
+                                             DiskSamples, enrich_track, TRACK_ENRICHMENT_MAX_SAMPLES)
 from backend.pipeline.synth_gen import make_signal, FS
+from backend.tests.test_api import ESTIMATE_FIELDS
+
+
+def test_disk_backed_track_gets_downstream_enrichment(tmp_path):
+    """A >1 MiB async upload's tracks are no longer Detect-only: each finished
+    track gets a bounded direct re-read of its own span and the same
+    Estimate/Classify fields a small synchronous upload gets."""
+    x, truth = make_signal("bpsk", 10, duration=14)
+    path = tmp_path/"big.iq"
+    x.astype("<c8").tofile(path)
+    c = open_disk_capture(path, path.name, FS, "cf32_le")
+    result = analyze_disk_capture(c, block_samples=32768)
+    d = next(dd for dd in result.response["detections"] if dd["freq_lower_hz"] < 8000 < dd["freq_upper_hz"])
+    assert ESTIMATE_FIELDS <= d.keys()
+    assert d["center_frequency_hz"] == pytest.approx(8000, rel=.02)
+    assert d["snr_db"] == pytest.approx(10, abs=3)
+    assert d["estimate_status"] == "estimated"
+    assert d["modulation_family"] == "constant-envelope"
+    # Global (Detect-stage) coordinates must survive untouched, not the local
+    # re-read's translated 0-based coordinates.
+    assert d["start_sample"] == 0
+    assert d["end_sample"] == len(x)
+
+
+def test_track_exceeding_bounded_reread_limit_is_explicit_unknown(tmp_path):
+    """A track longer than DiskSamples' own bounded-read limit must report an
+    explicit unresolved status on every downstream field, never a wrong or
+    partial number, and must never attempt to read past the file's own length."""
+    x, _ = make_signal("bpsk", 10, duration=14)
+    path = tmp_path/"big.iq"
+    x.astype("<c8").tofile(path)
+    c = open_disk_capture(path, path.name, FS, "cf32_le")
+    track = {"id": 0, "start_sample": 0, "end_sample": TRACK_ENRICHMENT_MAX_SAMPLES+1,
+             "freq_lower_hz": -1000., "freq_upper_hz": 1000., "confidence": .9,
+             "detection_method": "adaptive_threshold", "is_pulsed": False,
+             "pulse_width_samples": None, "pri_samples": None, "pulse_windows": [],
+             "needs_review": False, "threshold_excess_db": 10.}
+    out = enrich_track(c, track)
+    assert ESTIMATE_FIELDS <= out.keys()
+    assert out["center_frequency_hz"] is None
+    assert out["modulation_family"] is None
+    assert out["fine_modulation_label"] is None
+    assert out["symbol_rate_hz"] is None
+    assert "bounded re-analysis" in out["estimate_status"]
+    # Detect-stage fields must be preserved exactly, not overwritten with nulls.
+    assert out["start_sample"] == 0 and out["end_sample"] == TRACK_ENRICHMENT_MAX_SAMPLES+1
+    assert out["confidence"] == .9
 
 
 def test_block_boundary_pulse_and_tail_are_not_lost(tmp_path):

@@ -1,5 +1,7 @@
 # SIH26147 — Master Project Context
 
+> **Status note (post-hackathon update):** this document was written during the original 36-hour build and describes the plan as it stood then — including §3's "no frontend/backend split, by design" argument and §9's 36-hour schedule. Development continued well past that window: the project now ships a FastAPI backend and a React dashboard (see [ARCHITECTURE.md](ARCHITECTURE.md), [API_REFERENCE.md](API_REFERENCE.md), [FRONTEND_DASHBOARD.md](FRONTEND_DASHBOARD.md)), and Stages 4 and 5 (§4) have since been fixed, implemented, and validated beyond what §4 and §8 describe — see [ESTIMATE_CLASSIFY.md](ESTIMATE_CLASSIFY.md) for the current, evidence-backed status. §3 and §9 are kept below as a historical record of the original reasoning, not current architecture; the rest of this document (the DSP technique rationale in §4, the formulas in §10, the scope boundaries in §7) remains an accurate description of *why* each technique was chosen, which is why it's still the right document to read for the engineering reasoning even though the delivery scope grew.
+
 ## 1. What This Project Is
 
 - **PS ID:** SIH26147
@@ -185,9 +187,9 @@ Welch-PSD `y[n]`, peak-find it (reusing Stage 2's own peak-finding + interpolati
 
 **Why it's now more tractable than originally assumed:** using Stage 3.5's refined frequency instead of Stage 2's raw one, folded-phase clustering spread for BPSK dropped from 1.83 rad (no usable clusters) to 0.56 rad (clean 2-cluster BPSK), close to the 0.46 rad achievable with the *true* frequency.
 
-**Still genuinely open:** validated only on the 2-cluster BPSK case — a broader sweep across QPSK/8PSK is real remaining work. Keep a confidence score regardless.
+**Shipped (post-hackathon):** the QPSK case initially failed its own acceptance target (2/5 seeds passing at both 20/10 dB) for a reason not diagnosed at the time this section was written: Stage 3.5's own peak search used a fixed 1024-point Welch window regardless of segment length, capping frequency resolution well below what QPSK's 4×-multiplied phase sensitivity needs over a ~2 s segment. Matching that search's resolution to the actual segment length (a single full-length periodogram instead of the fixed window) fixed it — both BPSK and QPSK now pass 5/5 seeds at 20 and 10 dB, and the pipeline publishes real `bpsk`/`qpsk` labels with a heuristic confidence rather than staying diagnostic-only. One correctness fix was needed alongside it: an unmodulated gated/pulsed carrier has trivially perfect phase concentration and would otherwise be misclassified as BPSK, so pulsed candidates are explicitly excluded from fine classification. **Still genuinely open, as originally noted:** a broader sweep across 8PSK/QAM — only the 2- and 4-cluster (BPSK/QPSK) cases are implemented; see [ESTIMATE_CLASSIFY.md](ESTIMATE_CLASSIFY.md) for full validated evidence and exact thresholds.
 
-**Fallback:** if this doesn't converge in time, report Stage 3's coarse family only, with a stated confidence.
+**Fallback:** below the validated SNR range, or for constellations this doesn't recognize, it correctly reports an explicit "not reliably classified" status rather than a specific label.
 
 ### Stage 5 — Symbol Rate Estimation
 **Technique — nonlinearity + FFT** (a simplified cyclostationary / "delay-and-multiply" method): on the Stage-3.5-refined signal, take the real part, compute its numerical derivative (spikes at symbol transitions), square it, then FFT/Welch-PSD:
@@ -209,6 +211,8 @@ nonlin[n] = (diff(Re(x_corrected))[n])²
 | −5 dB | 0/100 |
 
 **Honest reliable range: ~5–20 dB SNR.** Below that, noise amplification from the differentiation step is a separate, unsolved problem — the fallback applies: **report "not reliably estimated" rather than a specific wrong number.**
+
+**Shipped (post-hackathon):** implemented as designed above, with two additions found during implementation, not anticipated here. First, the harmonic-picking search must skip not just the DC bin but the first few bins next to it — the nonlinearity is non-negative, so its large DC term leaks into neighboring bins under the Welch window's main lobe, and an unmasked search can pick that leakage as the "lowest" harmonic. Second, it's gated to run only on a candidate that already has a confirmed fine PSK label (not just "constant-envelope," which also includes FM) and a measured SNR ≥4.5 dB (not exactly 5, to tolerate measurement noise around a true 5 dB signal) — validated 30/30 correct within 5% of truth across BPSK/QPSK × {20, 10, 5} dB. Now runs on both the synchronous and the async large-capture upload paths (the latter via a bounded per-track disk re-read; see [LARGE_FILE_PROCESSING.md](LARGE_FILE_PROCESSING.md#per-track-downstream-enrichment)).
 
 ### Stage 6 (optional, zero allocated hours) — Analog Demodulation to Audio
 Pure bonus differentiator, **never allowed to threaten required-stage time.**

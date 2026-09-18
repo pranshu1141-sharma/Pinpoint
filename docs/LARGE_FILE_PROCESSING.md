@@ -61,6 +61,12 @@ After all blocks finish, pulse width and PRI are recomputed from the complete me
 
 The scan fails explicitly if it would exceed 4,096 candidates or 200,000 pulse windows. It does not truncate these lists silently; the operator must split a pathologically complex capture for review.
 
+## Per-track downstream enrichment
+
+Async uploads are no longer Detect-only. Once a track's merge is final, `large_capture.enrich_track` performs one additional bounded disk read of that track's own sample span (`capture.iq[start:end]`, `DiskSamples`' own per-read limit, `DiskSamples.MAX_READ_SAMPLES` = 2,000,000 samples) and runs the same, unmodified Estimate/Classify pipeline the synchronous upload path uses (`analyze_candidate`) on it. This is a second, separate read from the block-scanning reads already described above — it does not reuse any block's in-memory array, since those are discarded once their block finishes. The noise floor used for this pass is computed from the track's own re-read samples, not the capture-wide block-median already stored for Detect's own PSD/threshold display.
+
+Bounded-memory implications: this adds at most one extra bounded read (≤2,000,000 samples, matching the block-read bound already described above) per finished track, so worst-case extra I/O is proportional to track count, capped by the existing 4,096-candidate limit — it does not scale with capture duration on its own. A track whose span exceeds the bound gets every downstream field set to an explicit unresolved status rather than a partial or reassembled result; see [Estimate and Classify](ESTIMATE_CLASSIFY.md#integration-boundary) for the exact field contract and the one residual caveat (a track's frequency bounds are a union across the blocks it was merged from, which is not addressed by this pass).
+
 ## Progress and recovery
 
 Progress is based on `core_end / total_samples`. Messages identify the current block and exact samples scanned. The browser stores the active job ID in same-tab `sessionStorage`, allowing polling to resume after a page refresh.
@@ -100,7 +106,7 @@ Layer generation never isolates an entire gigabyte capture. It reads at most one
 | Spectrogram endpoint verified | yes |
 | Tail candidate layers verified | yes |
 
-The exact burst sample ranges are stored in the JSON artifact. This measurement demonstrates bounded processing on the tested Windows machine and fixture. It is not a general throughput or hardware guarantee.
+The exact burst sample ranges are stored in the JSON artifact. This measurement demonstrates bounded processing on the tested Windows machine and fixture. It is not a general throughput or hardware guarantee. It also predates per-track downstream enrichment (above); re-running it would now additionally measure each found track's bounded re-read and Estimate/Classify cost, not just Detect's block scan.
 
 ## Running the optional check
 

@@ -75,8 +75,9 @@ def run_analysis(filename, data, sample_rate=None, datatype=None, metadata=None,
         r = analyze_capture(c, margin_db, mode, fixed_threshold_db)
         # Preserve the validated Capture/noise-density contract. Passing already
         # filtered samples would change bandwidth, SNR and carrier estimates.
-        # Block jobs intentionally keep Detect-only candidates: block-local
-        # estimates cannot describe a merged track without further validation.
+        # Large disk-backed uploads take a separate enrichment path (see
+        # large_capture.enrich_track): each finished track gets its own
+        # bounded direct re-read instead of reusing this whole-capture flow.
         r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor)
                                     for d in r.response["detections"]]
         # The existing log still describes Detect. The API timer includes all
@@ -209,11 +210,16 @@ def rerun(job_id: str, margin_db: float = Query(8, ge=3, le=30), mode: str = Que
         c = job["capture"]
         started = monotonic()
         if isinstance(c.iq, DiskSamples):
+            # analyze_disk_capture already enriches each finished track with a
+            # bounded per-track re-read (see large_capture.enrich_track); a
+            # second pass here would apply analyze_candidate's whole-capture
+            # assumptions directly to the disk-backed reader with each
+            # track's global sample bounds, which it does not support.
             r = analyze_disk_capture(c, margin_db, mode, fixed_threshold_db)
         else:
             r = analyze_capture(c, margin_db, mode, fixed_threshold_db)
-        r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor)
-                                    for d in r.response["detections"]]
+            r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor)
+                                        for d in r.response["detections"]]
         r.response["elapsed_ms"] = (monotonic()-started)*1000
         r.response["job_id"] = job_id
         r.response["expires_in_seconds"] = TTL_SECONDS
