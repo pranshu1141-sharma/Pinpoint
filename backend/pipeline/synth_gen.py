@@ -17,13 +17,46 @@ def make_signal(kind, snr_db=10, duration=2.0, seed=47, frequency=8000):
     truth = []
     if kind == "noise":
         return noise.astype(np.complex64), truth
-    if kind in ("bpsk", "qpsk"):
-        order = 2 if kind == "bpsk" else 4
+    if kind in ("bpsk", "qpsk", "8psk"):
+        order = {"bpsk": 2, "qpsk": 4, "8psk": 8}[kind]
         symbols = np.exp(2j * np.pi * rng.integers(0, order, n // 96 + 1) / order)
         # Smooth symbol transitions to bound occupied bandwidth, instead of testing
         # an unrealistically infinite-bandwidth rectangular symbol waveform.
         base = signal.fftconvolve(np.repeat(symbols, 96)[:n], signal.firwin(193, 900, fs=FS), mode="same")
         bandwidth = 1800
+    elif kind == "ask":
+        # Unipolar 2-level (OOK-style, non-zero low level) amplitude keying:
+        # real-valued, varying-envelope by construction. Two levels give more
+        # measured envelope-variation margin above envelope_detect's 0.3
+        # varying-envelope threshold than more, closer-spaced levels would,
+        # while their contrast ratio still stays under its pulse-vs-continuous
+        # cutoff, so this is one continuous varying-envelope band, not a
+        # misread gated burst.
+        levels = np.array([.4, 1.])
+        symbols = levels[rng.integers(0, len(levels), n // 96 + 1)]
+        base = signal.fftconvolve(np.repeat(symbols, 96)[:n], signal.firwin(193, 900, fs=FS), mode="same")
+        bandwidth = 1800
+    elif kind == "qam":
+        # 16-QAM: independent 4-level in-phase/quadrature symbols, jointly
+        # varying amplitude and phase (unlike PSK's constant-modulus symbols).
+        # Levels are spread just past envelope_detect's varying-envelope
+        # threshold while staying inside its pulse-vs-continuous contrast
+        # ratio, so this is detected as one continuous varying-envelope band
+        # rather than misread as a gated burst.
+        levels = np.array([-1., -.45, .45, 1.])
+        i_sym = levels[rng.integers(0, len(levels), n // 96 + 1)]
+        q_sym = levels[rng.integers(0, len(levels), n // 96 + 1)]
+        symbols = i_sym + 1j * q_sym
+        base = signal.fftconvolve(np.repeat(symbols, 96)[:n], signal.firwin(193, 900, fs=FS), mode="same")
+        bandwidth = 1800
+    elif kind == "fsk":
+        # 4-FSK: discrete tone switching per symbol with continuous phase
+        # (integrated frequency), constant envelope by construction.
+        deviations = np.array([-600., -200., 200., 600.])
+        chosen = deviations[rng.integers(0, len(deviations), n // 96 + 1)]
+        freq_seq = np.repeat(chosen, 96)[:n]
+        base = np.exp(1j * 2 * np.pi * np.cumsum(freq_seq) / FS)
+        bandwidth = 2 * float(np.max(np.abs(deviations))) + FS / 96
     elif kind == "fm":
         # Integrating a sinusoidal frequency deviation gives phase index Δf/fm;
         # an extra 2π here would incorrectly multiply the requested deviation.
@@ -42,7 +75,7 @@ def make_signal(kind, snr_db=10, duration=2.0, seed=47, frequency=8000):
     iq = base * np.exp(2j * np.pi * frequency * t) + noise
     truth.append(dict(kind=kind, snr_db=snr_db, freq_lower_hz=frequency-bandwidth/2,
                       freq_upper_hz=frequency+bandwidth/2, start_sample=0, end_sample=n,
-                      symbol_rate_hz=FS/96 if kind in ("bpsk", "qpsk") else None,
+                      symbol_rate_hz=FS/96 if kind in ("bpsk", "qpsk", "8psk", "ask", "qam", "fsk") else None,
                       pulse_width_samples=2400 if kind == "pulsed" else None,
                       pri_samples=12000 if kind == "pulsed" else None))
     return iq.astype(np.complex64), truth
@@ -60,7 +93,7 @@ def save_capture(path, iq, truth):
 
 def generate_suite(directory):
     directory = Path(directory)
-    for kind in ("bpsk", "qpsk", "fm"):
+    for kind in ("bpsk", "qpsk", "8psk", "ask", "qam", "fsk", "fm"):
         for snr in (20, 10, 0, -5):
             x, truth = make_signal(kind, snr)
             save_capture(directory / f"{kind}_{snr}db", x, truth)

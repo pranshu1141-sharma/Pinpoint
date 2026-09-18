@@ -1,7 +1,7 @@
 from collections import OrderedDict, defaultdict
 import json
 from pathlib import Path
-from threading import RLock, BoundedSemaphore
+from threading import RLock, BoundedSemaphore, Event
 from time import monotonic
 from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
@@ -16,7 +16,8 @@ from backend.pipeline.detect import analyze_capture, db
 from backend.pipeline.classify import analyze_candidate, symbol_rate_diagnostic
 from backend.pipeline.layers import build_layers, waveform
 from backend.pipeline.sigmf_io import export_metadata
-from backend.pipeline.large_capture import open_disk_capture, analyze_disk_capture, build_disk_layers, DiskSamples
+from backend.pipeline.large_capture import (open_disk_capture, analyze_disk_capture, build_disk_layers,
+                                            DiskSamples, AnalysisCancelled)
 
 app = FastAPI(title="SIH26147 · Detect", version="1.0.0", description="Offline detection with synchronous IQ estimates and coarse classification; no decoding.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -138,13 +139,15 @@ async def analyze(file: UploadFile = File(...), metadata: UploadFile | None = Fi
         if not COMPUTE.acquire(blocking=False):
             raise HTTPException(429, "Another analysis is running. Try again when it finishes.")
         job_id = uuid4().hex
+        cancel_event = Event()
         with LOCK:
             JOBS[job_id] = {"status":"queued", "created":monotonic(), "path":path,
                             "processed_samples":0, "total_samples":None, "progress":0,
-                            "message":"Upload received. Validating capture metadata.", "layers":{}}
+                            "message":"Upload received. Validating capture metadata.", "layers":{},
+                            "cancel_event":cancel_event}
         try:
             EXECUTOR.submit(process_large_job, job_id, path, file.filename or "capture", sample_rate,
-                            datatype, meta, wav_mode, margin_db, mode, fixed_threshold_db)
+                            datatype, meta, wav_mode, margin_db, mode, fixed_threshold_db, cancel_event)
         except Exception:
             COMPUTE.release()
             with LOCK:
@@ -158,7 +161,8 @@ async def analyze(file: UploadFile = File(...), metadata: UploadFile | None = Fi
         await file.close()
 
 
-def process_large_job(job_id, path, filename, sample_rate, datatype, meta, wav_mode, margin_db, mode, fixed_threshold_db):
+def process_large_job(job_id, path, filename, sample_rate, datatype, meta, wav_mode, margin_db, mode,
+                      fixed_threshold_db, cancel_event):
     def progress(done, total, message):
         with LOCK:
             JOBS[job_id].update(status="processing", processed_samples=done, total_samples=total,
@@ -166,12 +170,18 @@ def process_large_job(job_id, path, filename, sample_rate, datatype, meta, wav_m
     try:
         capture = open_disk_capture(path, filename, sample_rate, datatype, meta, wav_mode)
         progress(0, len(capture.iq), "Metadata validated. Scanning the complete capture in overlapping blocks.")
-        result = analyze_disk_capture(capture, margin_db, mode, fixed_threshold_db, progress)
+        result = analyze_disk_capture(capture, margin_db, mode, fixed_threshold_db, progress,
+                                      cancel_check=cancel_event.is_set)
         result.response.update(job_id=job_id, expires_in_seconds=TTL_SECONDS)
         with LOCK:
             JOBS[job_id].update(status="complete", capture=capture, result=result, created=monotonic(), progress=1,
                                 message="Complete capture analyzed.")
             prune_jobs()
+    except AnalysisCancelled as exc:
+        with LOCK:
+            JOBS[job_id].update(status="cancelled", created=monotonic(), message=str(exc))
+            path.unlink(missing_ok=True)
+            JOBS[job_id].pop("path", None)
     except Exception as exc:
         with LOCK:
             JOBS[job_id].update(status="failed", error=str(exc), created=monotonic(), message="Analysis failed; no partial result published.")
@@ -196,6 +206,31 @@ def job_status(job_id: str):
         if state == "failed":
             body["error"] = job["error"]
         return body
+
+
+@app.post("/api/jobs/{job_id}/cancel")
+def cancel_job(job_id: str):
+    """Request cancellation of a running large-capture analysis. Best-effort
+    and asynchronous: analyze_disk_capture only polls cancel_check between a
+    block scan and between track-enrichment steps (see large_capture.py), so
+    the job may take a moment to actually stop; poll GET .../jobs/{job_id}
+    for status=="cancelled" to confirm. Cancelling a job that has already
+    reached a terminal state (complete/failed/cancelled) is a no-op, not an
+    error -- the request is inherently racing the job's own completion.
+    """
+    with LOCK:
+        job = JOBS.get(job_id)
+        if job is None:
+            raise HTTPException(404, "Job expired or missing.")
+        cancel_event = job.get("cancel_event")
+        if cancel_event is None:
+            raise HTTPException(409, "This job has no in-progress analysis to cancel "
+                                     "(it completed synchronously or was never a large-capture job).")
+        already_done = job.get("status") in ("complete", "failed", "cancelled")
+        cancel_event.set()
+        return {"job_id": job_id, "requested": True,
+                "message": "Already finished; cancellation has no effect." if already_done
+                else "Cancellation requested; poll job status for confirmation."}
 
 
 @app.post("/api/jobs/{job_id}/rerun")

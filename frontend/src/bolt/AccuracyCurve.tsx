@@ -6,7 +6,9 @@ interface AccuracyCurveProps {
   loading: boolean;
 }
 
-const COLORS: Record<string, string> = { bpsk: '#2a82da', qpsk: '#ed776c' };
+const COLORS: Record<string, string> = {
+  bpsk: '#2a82da', qpsk: '#ed776c', '8psk': '#4caf50', ask: '#f0ad4e', fsk: '#9b59b6', qam: '#8d6e63',
+};
 const W = 280, H = 120, PAD_L = 32, PAD_R = 10, PAD_T = 10, PAD_B = 22;
 
 export function AccuracyCurve({ data, loading }: AccuracyCurveProps) {

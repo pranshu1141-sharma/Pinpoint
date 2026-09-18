@@ -1,12 +1,45 @@
 """Blind, offline energy detection. Frequency bands are candidates, not classes."""
 from dataclasses import dataclass
+from functools import lru_cache
+from pathlib import Path
 from time import perf_counter
+import json
 import numpy as np
 from scipy import signal, ndimage
+from .calibration import IsotonicCalibrator
 from .ingest import Capture
 
 REVIEW_THRESHOLD = .70
 EPS = 1e-30
+
+_DOCS_DIR = Path(__file__).resolve().parents[2] / "docs"
+# Held-out-test ECE from backend/pipeline/calibrate.py's last run (see
+# docs/confidence-calibration.json for the full reliability-diagram data and
+# VALIDATION.md's Phase 3 report). Both calibrators are fit on a synthetic
+# corpus only -- no real-file calibration exists yet, so this is a
+# synthetic-validated correction, not a claim about real captures.
+CALIBRATION_ECE = {"confidence": 0.0066, "confidence_evidence_based": 0.0999}
+
+
+@lru_cache(maxsize=None)
+def _load_calibrator(score_name):
+    path = _DOCS_DIR / f"calibration-{score_name.replace('_', '-')}.json"
+    if not path.exists():
+        return None
+    return IsotonicCalibrator.from_json(json.loads(path.read_text()))
+
+
+def calibrate_confidence(score_name, raw_value):
+    """Isotonic-calibrated value for a raw confidence score, or None with an
+    explicit reason if no fitted calibrator is available (e.g. calibrate.py
+    has not been run in this checkout)."""
+    calibrator = _load_calibrator(score_name)
+    if calibrator is None:
+        return None, "uncalibrated (no fitted calibrator file present)"
+    value = float(calibrator.predict(np.array([raw_value]))[0])
+    ece = CALIBRATION_ECE.get(score_name)
+    return value, f"isotonic-calibrated on synthetic corpus (held-out ECE={ece:.4f})" if ece is not None \
+        else "isotonic-calibrated on synthetic corpus"
 
 
 def db(value):
@@ -91,6 +124,34 @@ def envelope_detect(isolated, fs, noise_power):
             "envelope": envelope, "envelope_threshold": threshold}
 
 
+def power_cv_deviation(power_region):
+    """abs(coefficient of variation - 1) of per-bin-mean-normalized raw power.
+
+    A single complex-Gaussian-noise frequency bin's power is exponentially
+    distributed with CV (std/mean) exactly 1; normalizing each frequency bin
+    by its own time-mean before pooling removes a real signal's own passband
+    roll-off (different mean power per bin) from contaminating this shape
+    statistic. Deviation from 1 is independent evidence of non-noise content
+    -- independent of the threshold-excess/occupancy confidence below, since
+    it is a shape test, not an amplitude-threshold test.
+
+    A raw 4th-moment spectral-kurtosis statistic (the roadmap's original
+    suggestion) was tried first and rejected on measured evidence: it swung
+    between roughly 1 and 16 on pure-noise regions at typical candidate
+    sample sizes, because Welch's 75% frame overlap heavily correlates
+    adjacent time samples -- a 4th-moment estimator-variance problem this
+    2nd-moment ratio does not share. This statistic measured <=0.03 on every
+    pure-noise region tested (n=4,000-7,500 samples) and >=0.08 on every real
+    synthetic signal region tested (BPSK/QPSK/FM/pulsed).
+    """
+    row_mean = power_region.mean(axis=1, keepdims=True)
+    normalized = power_region/np.maximum(row_mean, EPS)
+    mean = float(np.mean(normalized))
+    if mean <= 0:
+        return 0.
+    return float(abs(np.std(normalized)/mean-1.))
+
+
 def adaptive_threshold_detect(power, noise_floor, margin_db=8, fixed_threshold_db=None):
     # A 3×3 power average reduces speckle false alarms without replacing the
     # time-resolved scan with full-capture averaging (short bursts still count).
@@ -157,12 +218,28 @@ def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_thresh
         # This is an explainable evidence score, NOT a calibrated probability or
         # a modulation classifier. Borderline energy gets an explicit review flag.
         confidence = float(np.clip(.48 + .38*(1-np.exp(-max(0, excess)/10)) + .12*occupancy, 0, .99))
+        # A second, independent evidence channel (roadmap item 2): a shape
+        # statistic on raw (unsmoothed) power, not an amplitude threshold.
+        # Deliberately NOT collapsed into `confidence` above -- no calibration
+        # dataset exists to justify combining the two into one number.
+        deviation = power_cv_deviation(power[fa:fb][:, ti])
+        confidence_evidence_based = float(np.clip(.48+.5*(1-np.exp(-deviation/.2)), 0, .99))
         idx = len(detections)
         if pulse["is_pulsed"]:
             start = pulse["pulse_windows"][0]["start_sample"]
             end = pulse["pulse_windows"][-1]["end_sample"]
+        confidence_calibrated, confidence_calibration_status = calibrate_confidence("confidence", confidence)
+        evidence_calibrated, evidence_calibration_status = calibrate_confidence(
+            "confidence_evidence_based", confidence_evidence_based)
         d = {"id": idx, "start_sample": start, "end_sample": end,
              "freq_lower_hz": lower, "freq_upper_hz": upper, "confidence": round(confidence, 4),
+             "confidence_calibrated": round(confidence_calibrated, 4) if confidence_calibrated is not None else None,
+             "confidence_calibration_status": confidence_calibration_status,
+             "confidence_evidence_based": round(confidence_evidence_based, 4),
+             "confidence_evidence_based_kind": "heuristic, not a calibrated probability",
+             "confidence_evidence_based_calibrated": round(evidence_calibrated, 4) if evidence_calibrated is not None else None,
+             "confidence_evidence_based_calibration_status": evidence_calibration_status,
+             "power_cv_deviation": round(deviation, 4),
              "detection_method": "adaptive_threshold" if mode == "adaptive" else "fixed_threshold_debug",
              **{k: pulse[k] for k in ("is_pulsed", "pulse_width_samples", "pri_samples", "pulse_windows")},
              "needs_review": confidence < REVIEW_THRESHOLD, "threshold_excess_db": round(excess, 3)}

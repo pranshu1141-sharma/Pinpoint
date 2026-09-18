@@ -1,0 +1,15 @@
+{
+  "global": {
+    "core:datatype": "cf32_le",
+    "core:sample_rate": 250000,
+    "core:version": "1.2.0",
+    "core:description": "rtl_433_tests real capture, converted from cu8: Ford TPMS (VDO/Lear), FSK_PULSE_PCM Manchester per rtl_433 src/devices/tpms_ford.c and tests/Ford_TPMS/README.txt. Source: https://github.com/merbanan/rtl_433_tests/blob/master/tests/Ford/TPMS/gfile059.cu8 (sample rate assumed at rtl_433's documented default of 250 kHz; center frequency assumed from the device's known operating band, not independently confirmed against this specific capture's own acquisition settings)"
+  },
+  "captures": [
+    {
+      "core:sample_start": 0,
+      "core:frequency": 315000000
+    }
+  ],
+  "annotations": []
+}

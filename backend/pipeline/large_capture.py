@@ -15,17 +15,37 @@ BLOCK_SAMPLES = 524288
 GUARD_SAMPLES = 4096
 DISPLAY_ROWS = 768
 
+# A single bounded read's budget is expressed as a real-time duration, not a
+# raw sample count: the original flat 2,000,000-sample cap meant a read
+# covered ~4 s at a 480 kHz audio-style rate but only ~0.1 s at a 20 MHz SDR
+# rate -- the same *memory* cost (2M complex64 samples = 16 MiB) bought wildly
+# different amounts of actual signal depending on sample rate, which is not
+# what a "processing window" limit should mean. MAX_READ_SECONDS instead
+# targets a duration a human reviewer can reason about consistently across
+# capture types; MAX_READ_SAMPLES_CEILING remains as a hard memory ceiling so
+# a very low sample-rate file (where the duration alone would allow an
+# enormous read) still cannot blow the same 16 MiB-class budget.
+MAX_READ_SECONDS = 60.0
+MAX_READ_SAMPLES_CEILING = 2_000_000
+
+
+def max_read_samples(sample_rate):
+    """The bounded-read sample budget for a given sample rate: enough for
+    MAX_READ_SECONDS of real time, but never more than MAX_READ_SAMPLES_CEILING
+    samples regardless of how low the sample rate is."""
+    return min(int(MAX_READ_SECONDS*sample_rate), MAX_READ_SAMPLES_CEILING)
+
 
 class DiskSamples:
     """Slice-only reader: an accidental whole-file NumPy conversion is forbidden."""
-    # A single bounded read's sample cap. enrich_track (below) reads this same
-    # attribute for its own per-track limit, so the two can never drift apart.
-    MAX_READ_SAMPLES = 2_000_000
 
-    def __init__(self, path, count, dtype, channels, offset=0, wav=False, source="iq", choice="auto"):
+    def __init__(self, path, count, dtype, channels, sample_rate, offset=0, wav=False, source="iq", choice="auto"):
         self.path, self.count, self.dtype = Path(path), count, np.dtype(dtype)
         self.channels, self.offset, self.wav = channels, offset, wav
         self.source, self.choice = source, choice
+        # enrich_track (below) reads this same attribute for its own
+        # per-track limit, so the two can never drift apart.
+        self.max_read_samples = max_read_samples(sample_rate)
 
     def __len__(self):
         return self.count
@@ -34,8 +54,10 @@ class DiskSamples:
         if not isinstance(key, slice) or key.step not in (None, 1):
             raise ValueError("Disk captures must be read in contiguous bounded slices.")
         start, stop, _ = key.indices(self.count)
-        if stop-start > self.MAX_READ_SAMPLES:
-            raise ValueError("A processing window cannot exceed two million samples.")
+        if stop-start > self.max_read_samples:
+            raise ValueError(f"A processing window cannot exceed {self.max_read_samples:,} samples "
+                             f"({MAX_READ_SECONDS:.0f} s at this capture's sample rate, capped at "
+                             f"{MAX_READ_SAMPLES_CEILING:,} samples).")
         with self.path.open("rb") as source:
             source.seek(self.offset+start*self.dtype.itemsize*self.channels)
             raw = source.read((stop-start)*self.dtype.itemsize*self.channels)
@@ -73,7 +95,7 @@ def open_disk_capture(path, filename, sample_rate=None, datatype=None, metadata=
         finally:
             mapped._mmap.close()
         c = load_capture(filename, preview.getvalue(), sample_rate, datatype, metadata, wav_mode)
-        reader = DiskSamples(path, count, dtype, channels, offset, True, c.metadata["source_kind"], wav_mode)
+        reader = DiskSamples(path, count, dtype, channels, c.sample_rate, offset, True, c.metadata["source_kind"], wav_mode)
         c.metadata["wav_disambiguation"]["reason"] += " Channel evidence sampled from the first 131,072 frames; all sample values are validated during the full scan."
     else:
         with path.open("rb") as source:
@@ -85,19 +107,19 @@ def open_disk_capture(path, filename, sample_rate=None, datatype=None, metadata=
         if path.stat().st_size % stride:
             raise ValueError("Data contains an incomplete sample; check the selected datatype.")
         count = path.stat().st_size//stride
-        reader = DiskSamples(path, count, dtype, channels, source=c.metadata["source_kind"])
+        reader = DiskSamples(path, count, dtype, channels, c.sample_rate, source=c.metadata["source_kind"])
     c.iq = reader
     c.metadata.update(sample_count=count, duration_seconds=count/c.sample_rate,
                       processing="overlapping_blocks", file_size_bytes=path.stat().st_size)
     return c
 
 
-# A track longer than DiskSamples.MAX_READ_SAMPLES has no way to become one
-# contiguous in-memory buffer through a single bounded re-read, so downstream
-# enrichment is skipped for it rather than attempted on a partial/reassembled
-# buffer. Reading the limit from DiskSamples itself (not a separate literal)
-# means the two can never silently drift apart.
-TRACK_ENRICHMENT_MAX_SAMPLES = DiskSamples.MAX_READ_SAMPLES
+# A track longer than max_read_samples(capture.sample_rate) has no way to
+# become one contiguous in-memory buffer through a single bounded re-read, so
+# downstream enrichment is skipped for it rather than attempted on a
+# partial/reassembled buffer. enrich_track (below) calls max_read_samples()
+# itself with the capture's own sample rate, so this can never silently drift
+# from DiskSamples' read limit.
 
 # Every field estimate_candidate/classify_* ever add, so a track that skips
 # enrichment still has the exact same key set as one that didn't -- API
@@ -111,8 +133,11 @@ _NULL_DOWNSTREAM_FIELDS = {
     "envelope_variation": None, "center_frequency_refined_hz": None,
     "refinement_order": None, "refinement_sharpness": None, "refinement_status": _TRACK_TOO_LONG_STATUS,
     "fine_modulation_label": None, "fine_modulation_confidence": None,
-    "phase_cluster_spread_rad": None, "fine_modulation_status": _TRACK_TOO_LONG_STATUS,
+    "phase_cluster_spread_rad": None, "envelope_level_count": None, "frequency_level_count": None,
+    "fine_modulation_status": _TRACK_TOO_LONG_STATUS,
     "symbol_rate_hz": None, "symbol_rate_status": _TRACK_TOO_LONG_STATUS,
+    "qam_symbol_rate_hz": None, "qam_order": None, "qam_order_confidence": None,
+    "constellation_family": None, "qam_order_status": _TRACK_TOO_LONG_STATUS,
 }
 
 
@@ -130,7 +155,7 @@ def enrich_track(capture, track):
     an explicit unresolved status, never a partial or reassembled result.
     """
     span = track["end_sample"]-track["start_sample"]
-    if not (1 <= span <= TRACK_ENRICHMENT_MAX_SAMPLES):
+    if not (1 <= span <= max_read_samples(capture.sample_rate)):
         return {**track, **_NULL_DOWNSTREAM_FIELDS}
     local_iq = capture.iq[track["start_sample"]:track["end_sample"]]
     local_capture = Capture(local_iq, capture.sample_rate, capture.metadata)
@@ -160,8 +185,21 @@ def enrich_track(capture, track):
     return {**track, **new_fields}
 
 
+class AnalysisCancelled(Exception):
+    """Raised from analyze_disk_capture when cancel_check() returns True.
+    Callers (see backend/api/main.py's process_large_job) catch this
+    separately from a genuine failure so a cancelled job is reported as
+    cancelled, not as an analysis error."""
+
+
 def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_db=None, progress=None,
-                         block_samples=BLOCK_SAMPLES):
+                         block_samples=BLOCK_SAMPLES, cancel_check=None):
+    """cancel_check, if given, is polled once per block during the scan and
+    once per track during downstream enrichment (see AnalysisCancelled) --
+    both phases can take real wall-clock time on a large capture, so a
+    cancellation requested during either one must actually stop it promptly
+    rather than only being checked between the two phases.
+    """
     started = perf_counter()
     n, fs = len(capture.iq), capture.sample_rate
     if block_samples % 256 or block_samples < 4096:
@@ -177,6 +215,8 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
     # envelope context, bounded by half a core block and aligned to the STFT hop.
     guard = ((min(block_samples//2, max(GUARD_SAMPLES, int(fs*.001)))+255)//256)*256
     for index, core_start in enumerate(range(0, n, block_samples)):
+        if cancel_check and cancel_check():
+            raise AnalysisCancelled(f"Cancelled after {core_start:,}/{n:,} samples scanned.")
         core_end = min(n, core_start+block_samples)
         # FIR/STFT context prevents a processing boundary from looking like a
         # pulse edge. Only core samples contribute to overview and annotations.
@@ -187,6 +227,12 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
         base_response = r.response
         times = r.times+left/fs
         keep = (times >= core_start/fs) & (times < core_end/fs)
+        # `.astype(int)` here is a *display-row* bin index (0..rows-1, rows is
+        # DISPLAY_ROWS-bounded, i.e. small) -- not a sample offset, so even
+        # int32's ~2.1 billion range is never at risk regardless of file size.
+        # See VALIDATION.md's Phase 5 int32 audit for the fields that do carry
+        # real sample offsets (start_sample/end_sample/etc): those are plain
+        # Python ints (arbitrary precision) or numpy intp/int64 throughout.
         bins = np.minimum(rows-1, (times[keep]/(n/fs)*rows).astype(int))
         if overview is None:
             overview = np.zeros((len(r.frequencies), rows), dtype=np.float32)
@@ -232,6 +278,8 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
                 # Use the least confident observed block: long captures must not
                 # hide a weak interval behind stronger portions of the same band.
                 target["confidence"] = min(target["confidence"], d["confidence"])
+                target["confidence_evidence_based"] = min(target["confidence_evidence_based"],
+                                                           d["confidence_evidence_based"])
                 target["needs_review"] |= d["needs_review"]
                 target["is_pulsed"] |= d["is_pulsed"]
                 for w in windows:
@@ -253,6 +301,8 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
         if progress:
             progress(core_end, n, f"Analyzed block {index+1}/{chunks}; {core_end:,}/{n:,} samples scanned")
     for index, d in enumerate(tracks):
+        if cancel_check and cancel_check():
+            raise AnalysisCancelled(f"Cancelled after enriching {index:,}/{len(tracks):,} tracks.")
         windows = d["pulse_windows"]
         if windows:
             d["pulse_width_samples"] = int(round(np.median([w["end_sample"]-w["start_sample"] for w in windows])))
@@ -262,6 +312,8 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
         env = envelopes[d["id"]]
         env["waveform"] = [{"time_seconds": float(t), "value": float(v)} for t, v in zip(edges[:-1], env.pop("values"))]
         tracks[index] = enrich_track(capture, d)
+        if progress and tracks:
+            progress(n, n, f"Enriching candidate tracks with Estimate/Classify: {index+1}/{len(tracks)}")
     floor = float(np.median(floors))
     elapsed = (perf_counter()-started)*1000
     base_response.update(detections=tracks, metadata=capture.metadata, elapsed_ms=elapsed,

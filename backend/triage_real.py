@@ -21,6 +21,14 @@ REAL_DATA = Path(__file__).parent / "data" / "real"
 FILES = [
     (REAL_DATA / "sigid3_trimmed.sigmf-data", REAL_DATA / "sigid3_trimmed.sigmf-meta"),
     (REAL_DATA / "sigid3_full.sigmf-data", REAL_DATA / "sigid3_full.sigmf-meta"),
+    (REAL_DATA / "grcon23_qam.sigmf-data", REAL_DATA / "grcon23_qam.sigmf-meta"),
+    (REAL_DATA / "sigid1_trimmed.sigmf-data", REAL_DATA / "sigid1_trimmed.sigmf-meta"),
+    (REAL_DATA / "sigid2_trimmed.sigmf-data", REAL_DATA / "sigid2_trimmed.sigmf-meta"),
+    (REAL_DATA / "pt2262_remote_1.sigmf-data", REAL_DATA / "pt2262_remote_1.sigmf-meta"),
+    (REAL_DATA / "pt2262_remote_2.sigmf-data", REAL_DATA / "pt2262_remote_2.sigmf-meta"),
+    (REAL_DATA / "ford_tpms_1.sigmf-data", REAL_DATA / "ford_tpms_1.sigmf-meta"),
+    (REAL_DATA / "ford_tpms_2.sigmf-data", REAL_DATA / "ford_tpms_2.sigmf-meta"),
+    (REAL_DATA / "ford_tpms_3.sigmf-data", REAL_DATA / "ford_tpms_3.sigmf-meta"),
 ]
 
 

@@ -1,6 +1,7 @@
 """Opt-in, explicitly heuristic IQ modulation measurements."""
 import numpy as np
 from scipy import signal as scipy_signal
+from scipy.cluster.vq import kmeans2
 
 from .detect import EPS, estimate_noise_floor, isolate_band
 from .estimate import NFFT, estimate_candidate, interpolated_peak, occupied_windows, tuning_frequency
@@ -91,7 +92,7 @@ def refine_frequency(capture: Capture, candidate: dict) -> dict:
     # near-stationary raised tone) for resolution matched to the segment length.
     nperseg = min(len(x), 1 << 20)
     hypotheses = []
-    for order in (2, 4):
+    for order in (2, 4, 8):
         f, p, _ = estimate_noise_floor(x**order, capture.sample_rate, nperseg=nperseg)
         peak = interpolated_peak(f, p)
         if peak is None:
@@ -107,8 +108,12 @@ def refine_frequency(capture: Capture, candidate: dict) -> dict:
     return out
 
 
-FINE_LABELS = {2: "bpsk", 4: "qpsk"}
-FINE_SPREAD_THRESHOLD = .8
+FINE_LABELS = {2: "bpsk", 4: "qpsk", 8: "8psk"}
+# Higher raising orders amplify residual phase/frequency noise faster (an
+# order-8 raise turns the same phase jitter into 4x the phase excursion an
+# order-2 raise would), so 8PSK needs a looser acceptance threshold than
+# BPSK/QPSK to avoid false "not reliably classified" on genuinely clean 8PSK.
+FINE_SPREAD_THRESHOLD = {2: .8, 4: .8, 8: 1.4}
 
 
 def classify_fine(capture: Capture, candidate: dict) -> dict:
@@ -129,13 +134,13 @@ def classify_fine(capture: Capture, candidate: dict) -> dict:
     "bpsk" label.
     """
     out = {**candidate, "fine_modulation_label": None, "fine_modulation_confidence": None,
-           "phase_cluster_spread_rad": None,
+           "phase_cluster_spread_rad": None, "envelope_level_count": None, "frequency_level_count": None,
            "fine_modulation_status": "not reliably classified (no phase refinement)"}
     order = candidate.get("refinement_order")
     if candidate.get("is_pulsed"):
         out["fine_modulation_status"] = "not reliably classified (pulsed bursts not validated)"
         return out
-    if candidate.get("modulation_family") != "constant-envelope" or order not in (2, 4):
+    if candidate.get("modulation_family") != "constant-envelope" or order not in FINE_LABELS:
         return out
     x = corrected_segment(capture, candidate, candidate.get("center_frequency_refined_hz"))
     if x is None or not np.any(np.abs(x) > 0):
@@ -147,12 +152,141 @@ def classify_fine(capture: Capture, candidate: dict) -> dict:
         return out
     spread = float(np.sqrt(max(0., -2*np.log(min(1., concentration)))))
     out["phase_cluster_spread_rad"] = spread
-    if spread < FINE_SPREAD_THRESHOLD:
+    threshold = FINE_SPREAD_THRESHOLD[order]
+    if spread < threshold:
         out.update(fine_modulation_label=FINE_LABELS[order],
-                   fine_modulation_confidence=float(1.-spread/FINE_SPREAD_THRESHOLD),
+                   fine_modulation_confidence=float(1.-spread/threshold),
                    fine_modulation_status="classified (phase-cluster concentration heuristic)")
     else:
         out["fine_modulation_status"] = "not reliably classified (phase spread above threshold)"
+    return out
+
+
+LEVEL_CLUSTER_CANDIDATES = (2, 3, 4)
+# A gap-to-spread ratio, in the same explainable-evidence spirit as the PSK
+# phase-spread test above: how many within-cluster standard deviations
+# separate the closest two levels. Not a calibrated probability.
+LEVEL_SEPARATION_THRESHOLD = 3.0
+ASK_PHASE_CONCENTRATION_THRESHOLD = .55
+# FM's continuous frequency sweep clusters deceptively well at k=2 (a sinusoid
+# spends more time near its extremes, mimicking two "levels"), scoring
+# consistently ~4.0-4.4 across -5..20 dB in measurement; genuine held-tone FSK
+# scores 5.8+ at 10-20 dB. This threshold sits in the gap measured between
+# them, so FSK is only published where that gap is validated (10-20 dB) --
+# below that FSK's own score drops into FM's range too and is left unknown.
+FSK_SEPARATION_THRESHOLD = 5.5
+# The delay-and-multiply symbol-rate estimator (see estimate_symbol_rate) is
+# an NRZ-transition detector: measured to generalize cleanly from BPSK/QPSK to
+# 8PSK and ASK (<0.05% error, same fixtures used to validate PSK). FSK's
+# information is carried in frequency, not amplitude/phase transitions -- the
+# same nonlinearity measured ~99% error on FSK fixtures, so it is excluded
+# rather than published wrong. QAM has no confirmed order and no symbol-timing
+# recovery in this project, so it is excluded too.
+SYMBOL_RATE_LABELS = frozenset({"bpsk", "qpsk", "8psk", "ask"})
+
+
+def _cluster_levels(values, ks=LEVEL_CLUSTER_CANDIDATES):
+    """Best 1-D k-means fit (by gap/within-cluster-spread ratio) over a small
+    set of candidate cluster counts, or None if none of them fit cleanly.
+
+    Used for both ASK's envelope levels and FSK's instantaneous-frequency
+    levels: both are "how many discrete values does this take" questions,
+    unlike PSK's phase-concentration test.
+    """
+    values = np.asarray(values, dtype=np.float64)
+    best = None
+    for k in ks:
+        if len(values) < 8*k:
+            continue
+        centroids, labels = kmeans2(values.reshape(-1, 1), k, seed=0, minit="++")
+        centroids = centroids[:, 0]
+        order = np.argsort(centroids)
+        centroids = centroids[order]
+        remap = np.empty(k, dtype=int)
+        remap[order] = np.arange(k)
+        labels = remap[labels]
+        within = [float(np.std(values[labels == i])) for i in range(k) if np.any(labels == i)]
+        if len(within) < k or max(within) <= 0:
+            continue
+        gap = float(np.min(np.diff(centroids)))
+        score = gap/max(within)
+        if best is None or score > best[0]:
+            best = (score, k, centroids, labels)
+    return best
+
+
+def classify_fine_ask(capture: Capture, candidate: dict) -> dict:
+    """Amplitude/phase-keying discrimination for varying-envelope candidates,
+    which refine_frequency's Mth-power search never attempts (it requires
+    constant envelope). ASK/QAM don't produce a PSK raised-tone carrier, so
+    this clusters the envelope's discrete levels instead.
+
+    QAM's exact order (16-QAM vs 64-QAM, ...) needs symbol-timing recovery
+    this project doesn't have, so a jointly amplitude- and phase-varying
+    signal (checked via phase concentration within the top envelope cluster)
+    is published only as an unordered, explicitly lower-confidence "qam" flag
+    -- never a specific guessed order.
+    """
+    out = {**candidate}
+    if candidate.get("fine_modulation_label") is not None or candidate.get("is_pulsed"):
+        return out
+    if candidate.get("modulation_family") != "varying-envelope":
+        return out
+    # Below 0 dB, even the coarse envelope-family test itself is unvalidated
+    # (test_coarse_family_acceptance only asserts it for snr>=0): a genuinely
+    # constant-envelope signal (e.g. BPSK) can measure as varying-envelope
+    # from noise alone at very low SNR, so trusting an envelope-level cluster
+    # built from noise would risk a wrong "ask"/"qam" label, not just "unknown".
+    snr = candidate.get("snr_db")
+    if snr is None or not np.isfinite(snr) or snr < 0:
+        out["fine_modulation_status"] = "not reliably classified (SNR too low for envelope-family evidence)"
+        return out
+    x = corrected_segment(capture, candidate, candidate.get("center_frequency_hz"))
+    if x is None or len(x) < 8*min(LEVEL_CLUSTER_CANDIDATES):
+        return out
+    found = _cluster_levels(np.abs(x))
+    if found is None or found[0] < LEVEL_SEPARATION_THRESHOLD:
+        out["fine_modulation_status"] = "not reliably classified (envelope levels not well separated)"
+        return out
+    score, k, _, labels = found
+    out["envelope_level_count"] = k
+    top = labels == k-1
+    concentration = float(abs(np.mean(np.exp(1j*np.angle(x[top]))))) if np.any(top) else 0.
+    confidence = float(min(1., (score-LEVEL_SEPARATION_THRESHOLD)/LEVEL_SEPARATION_THRESHOLD))
+    if concentration >= ASK_PHASE_CONCENTRATION_THRESHOLD:
+        out.update(fine_modulation_label="ask", fine_modulation_confidence=confidence,
+                   fine_modulation_status="classified (envelope-cluster heuristic)")
+    else:
+        out.update(fine_modulation_label="qam", fine_modulation_confidence=confidence*.5,
+                   fine_modulation_status="classified (low-confidence joint amplitude/phase "
+                                          "heuristic, order unresolved)")
+    return out
+
+
+def classify_fine_fsk(capture: Capture, candidate: dict) -> dict:
+    """Discrete-tone detection for constant-envelope candidates that failed
+    every Mth-power PSK hypothesis in classify_fine. FSK carries information
+    in frequency switching, not phase concentration, so this clusters
+    instantaneous frequency (the unwrapped phase derivative) instead.
+    """
+    out = {**candidate}
+    if candidate.get("fine_modulation_label") is not None or candidate.get("is_pulsed"):
+        return out
+    if candidate.get("modulation_family") != "constant-envelope":
+        return out
+    x = corrected_segment(capture, candidate, candidate.get("center_frequency_hz"))
+    if x is None or len(x) < 8*min(LEVEL_CLUSTER_CANDIDATES)+1:
+        return out
+    inst_freq = np.diff(np.unwrap(np.angle(x.astype(np.complex128))))*capture.sample_rate/(2*np.pi)
+    found = _cluster_levels(inst_freq)
+    if found is None or found[0] < FSK_SEPARATION_THRESHOLD:
+        out["fine_modulation_status"] = "not reliably classified (frequency levels not well separated)"
+        return out
+    score, k, _, _ = found
+    out["frequency_level_count"] = k
+    confidence = float(min(1., (score-FSK_SEPARATION_THRESHOLD)/FSK_SEPARATION_THRESHOLD))
+    out.update(fine_modulation_label="fsk", fine_modulation_confidence=confidence,
+               fine_modulation_status="classified (instantaneous-frequency-cluster heuristic)")
     return out
 
 
@@ -173,8 +307,8 @@ def estimate_symbol_rate(capture: Capture, candidate: dict) -> dict:
     rather than returning a wrong number.
     """
     out = {**candidate, "symbol_rate_hz": None,
-           "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"}
-    if candidate.get("fine_modulation_label") not in FINE_LABELS.values():
+           "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"}
+    if candidate.get("fine_modulation_label") not in SYMBOL_RATE_LABELS:
         return out
     snr = candidate.get("snr_db")
     if snr is None or not np.isfinite(snr):
@@ -253,5 +387,9 @@ def analyze_candidate(capture: Capture, candidate: dict, *, noise_floor=None) ->
     out = classify_coarse(capture, out)
     out = refine_frequency(capture, out)
     out = classify_fine(capture, out)
+    out = classify_fine_fsk(capture, out)
+    out = classify_fine_ask(capture, out)
     out = estimate_symbol_rate(capture, out)
+    from .qam_order import resolve_qam_order  # deferred: qam_order imports classify itself
+    out = resolve_qam_order(capture, out)
     return out

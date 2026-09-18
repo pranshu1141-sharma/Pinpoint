@@ -21,6 +21,7 @@ ESTIMATE_FIELDS = {
     "envelope_variation", "center_frequency_refined_hz", "refinement_order",
     "refinement_sharpness", "refinement_status", "fine_modulation_label",
     "fine_modulation_confidence", "fine_modulation_status", "phase_cluster_spread_rad",
+    "envelope_level_count", "frequency_level_count",
     "symbol_rate_hz", "symbol_rate_status",
 }
 
@@ -211,6 +212,54 @@ def test_real_large_upload_gets_per_track_downstream_enrichment(tmp_path, monkey
         assert d["center_frequency_hz"] == pytest.approx(8000, rel=.02)
         assert d["modulation_family"] == "constant-envelope"
         assert client.get(f"/api/export/{job}?format=json").json() == body["detections"]
+    finally:
+        main.discard_job(job)
+
+
+def test_cancel_endpoint_stops_an_in_progress_async_job(tmp_path, monkeypatch):
+    """POST .../jobs/{id}/cancel on a running large-capture job must lead to
+    status "cancelled" (or, if the race loses and the job finished first,
+    "complete") -- never "failed", which would misreport a cancellation as
+    an analysis error."""
+    monkeypatch.setattr(main, "UPLOADS", tmp_path)
+    x, _ = make_signal("bpsk", 10, duration=14)
+    r = client.post("/api/analyze", files={"file": ("blocks.iq", x.tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le"})
+    assert r.status_code == 202, r.text
+    job = r.json()["job_id"]
+    try:
+        cancel_response = client.post(f"/api/jobs/{job}/cancel")
+        assert cancel_response.status_code == 200
+        assert cancel_response.json()["requested"] is True
+        deadline = time.monotonic()+30
+        while time.monotonic() < deadline:
+            state = client.get(f"/api/jobs/{job}").json()
+            if state["status"] in ("complete", "failed", "cancelled"):
+                break
+            time.sleep(.02)
+        assert state["status"] in ("complete", "cancelled"), state
+    finally:
+        main.discard_job(job)
+
+
+def test_cancel_endpoint_unknown_job_404():
+    r = client.post("/api/jobs/does-not-exist/cancel")
+    assert r.status_code == 404
+
+
+def test_cancel_endpoint_on_synchronous_job_is_409(tmp_path, monkeypatch):
+    """A small (<1 MiB) upload never goes through process_large_job, so it
+    never gets a cancel_event -- cancelling it is a client error, not a
+    silent no-op that would falsely suggest cancellation is meaningful here."""
+    monkeypatch.setattr(main, "UPLOADS", tmp_path)
+    x, _ = make_signal("bpsk", 10, duration=2)
+    r = client.post("/api/analyze", files={"file": ("small.iq", x.tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le"})
+    assert r.status_code == 200
+    job = r.json()["job_id"]
+    try:
+        cancel_response = client.post(f"/api/jobs/{job}/cancel")
+        assert cancel_response.status_code == 409
     finally:
         main.discard_job(job)
 

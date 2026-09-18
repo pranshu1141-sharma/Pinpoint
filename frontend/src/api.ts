@@ -5,6 +5,9 @@ export type Detection = {
   freq_lower_hz: number;
   freq_upper_hz: number;
   confidence: number;
+  confidence_evidence_based?: number | null;
+  confidence_evidence_based_kind?: string | null;
+  power_cv_deviation?: number | null;
   detection_method: string;
   is_pulsed: boolean;
   pulse_width_samples: number | null;
@@ -33,6 +36,8 @@ export type Detection = {
   fine_modulation_confidence?: number | null;
   fine_modulation_status?: string | null;
   phase_cluster_spread_rad?: number | null;
+  envelope_level_count?: number | null;
+  frequency_level_count?: number | null;
   symbol_rate_hz?: number | null;
   symbol_rate_status?: string | null;
 };

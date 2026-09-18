@@ -84,7 +84,7 @@ def test_refinement_varying_envelope_is_unknown():
     assert out["refinement_order"] is None
 
 
-@pytest.mark.parametrize("kind,order,label", [("bpsk", 2, "bpsk"), ("qpsk", 4, "qpsk")])
+@pytest.mark.parametrize("kind,order,label", [("bpsk", 2, "bpsk"), ("qpsk", 4, "qpsk"), ("8psk", 8, "8psk")])
 @pytest.mark.parametrize("snr", [20, 10])
 def test_fine_rule_majority_acceptance(kind, order, label, snr):
     """Matching the Mth-power search's resolution to the segment length (see
@@ -100,7 +100,7 @@ def test_fine_rule_majority_acceptance(kind, order, label, snr):
         rows.append((seed, out["refinement_order"], out["phase_cluster_spread_rad"], out["fine_modulation_label"]))
         matches += (out["refinement_order"] == order
                     and out["phase_cluster_spread_rad"] is not None
-                    and out["phase_cluster_spread_rad"] < .8
+                    and out["phase_cluster_spread_rad"] < classify.FINE_SPREAD_THRESHOLD[order]
                     and out["fine_modulation_label"] == label)
     assert matches == len(rows), rows
 
@@ -122,6 +122,48 @@ def test_fine_unavailable_refinement_returns_nulls():
     assert out["fine_modulation_label"] is None
     assert out["fine_modulation_confidence"] is None
     assert out["phase_cluster_spread_rad"] is None
+
+
+@pytest.mark.parametrize("kind,label", [("ask", "ask"), ("qam", "qam"), ("fsk", "fsk")])
+@pytest.mark.parametrize("snr", [20, 10])
+def test_ask_qam_fsk_majority_acceptance(kind, label, snr):
+    """ASK/QAM use envelope-level clustering (refine_frequency never runs on
+    varying-envelope candidates); FSK uses instantaneous-frequency clustering
+    as a fallback after PSK's Mth-power hypotheses fail. QAM's own generator
+    (backend/pipeline/synth_gen.py) is a joint amplitude/phase constellation,
+    so it correctly lands on the best-effort, order-unresolved "qam" path
+    rather than "ask"."""
+    matches = 0
+    rows = []
+    for seed in range(47, 52):
+        c, d, _ = fixture(kind, snr, seed=seed)
+        out = classify.analyze_candidate(c, d)
+        rows.append((seed, out["fine_modulation_label"], out.get("envelope_level_count"),
+                     out.get("frequency_level_count")))
+        matches += out["fine_modulation_label"] == label
+    assert matches == len(rows), rows
+
+
+@pytest.mark.parametrize("kind", ["bpsk", "qpsk", "8psk", "fm"])
+@pytest.mark.parametrize("snr", [20, 10, 0, -5])
+def test_ask_qam_fsk_never_false_fire_on_psk_or_fm(kind, snr):
+    """FM's continuous frequency sweep can look deceptively bimodal to a naive
+    2-cluster fit (see FSK_SEPARATION_THRESHOLD's docstring); PSK's constant
+    envelope must never trip the varying-envelope ASK/QAM path."""
+    c, d, _ = fixture(kind, snr)
+    out = classify.analyze_candidate(c, d)
+    assert out["fine_modulation_label"] not in ("ask", "qam", "fsk")
+
+
+def test_ask_qam_never_false_fire_below_validated_snr():
+    """Below 0 dB, envelope-family classification itself is unvalidated
+    (test_coarse_family_acceptance only asserts family for snr>=0); a
+    genuinely constant-envelope signal can measure as varying-envelope from
+    noise alone, so classify_fine_ask must decline rather than guess."""
+    for seed in range(47, 52):
+        c, d, _ = fixture("bpsk", -5, seed=seed)
+        out = classify.analyze_candidate(c, d)
+        assert out["fine_modulation_label"] not in ("ask", "qam")
 
 
 @pytest.mark.parametrize("kind", ["bpsk", "qpsk", "fm"])
@@ -148,10 +190,12 @@ def test_end_to_end_never_leaks_stale_input_values(kind, snr):
         assert out["symbol_rate_hz"] is None
 
 
-@pytest.mark.parametrize("kind", ["bpsk", "qpsk"])
+@pytest.mark.parametrize("kind", ["bpsk", "qpsk", "8psk"])
 @pytest.mark.parametrize("snr", [20, 10, 5])
 def test_symbol_rate_majority_acceptance(kind, snr):
-    """Validated range per the master-context Stage 5 study: reliable at 5-20 dB."""
+    """Validated range per the master-context Stage 5 study: reliable at 5-20 dB.
+    The delay-and-multiply nonlinearity is an NRZ-transition detector, not
+    order-specific, so 8PSK generalizes the same as BPSK/QPSK."""
     matches = 0
     rows = []
     for seed in range(47, 52):
@@ -161,6 +205,34 @@ def test_symbol_rate_majority_acceptance(kind, snr):
         matches += (out["symbol_rate_hz"] is not None
                     and out["symbol_rate_hz"] == pytest.approx(truth["symbol_rate_hz"], rel=.05))
     assert matches > len(rows)/2, rows
+
+
+@pytest.mark.parametrize("snr", [20, 10])
+def test_ask_symbol_rate_majority_acceptance(snr):
+    """ASK is only validated at 10-20 dB: its own coarse envelope-family
+    detection (not symbol-rate estimation itself) degrades below that, per
+    test_ask_qam_never_false_fire_below_validated_snr."""
+    matches = 0
+    rows = []
+    for seed in range(47, 52):
+        c, d, truth = fixture("ask", snr, seed=seed)
+        out = classify.analyze_candidate(c, d)
+        rows.append((seed, out["symbol_rate_hz"]))
+        matches += (out["symbol_rate_hz"] is not None
+                    and out["symbol_rate_hz"] == pytest.approx(truth["symbol_rate_hz"], rel=.05))
+    assert matches == len(rows), rows
+
+
+@pytest.mark.parametrize("kind", ["fsk", "qam"])
+@pytest.mark.parametrize("snr", [20, 10])
+def test_fsk_qam_symbol_rate_stays_unresolved(kind, snr):
+    """The delay-and-multiply nonlinearity measured ~99% error on FSK (its
+    information is carried in frequency, not amplitude/phase transitions);
+    QAM has no confirmed order and no symbol-timing recovery in this project.
+    Both are excluded from SYMBOL_RATE_LABELS rather than published wrong."""
+    c, d, _ = fixture(kind, snr)
+    out = classify.analyze_candidate(c, d)
+    assert out["symbol_rate_hz"] is None
 
 
 @pytest.mark.parametrize("kind", ["bpsk", "qpsk"])

@@ -1,0 +1,16 @@
+{
+    "global": {
+        "core:datatype": "cf32_le",
+        "core:sample_rate": 38400,
+        "core:author": "Clayton Smith",
+        "core:description": "Broken modulator - https://ctf-2023.gnuradio.org",
+        "core:version": "1.0.0"
+    },
+    "captures": [
+        {
+            "core:sample_start": 0,
+            "core:frequency": 1337000000
+        }
+    ],
+    "annotations": []
+}

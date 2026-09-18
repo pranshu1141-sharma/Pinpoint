@@ -48,6 +48,8 @@
         "fine_modulation_label": "bpsk",
         "fine_modulation_confidence": 0.8818103455709105,
         "phase_cluster_spread_rad": 0.09455172354327158,
+        "envelope_level_count": null,
+        "frequency_level_count": null,
         "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
         "symbol_rate_hz": 499.8381082690118,
         "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
@@ -92,6 +94,8 @@
         "fine_modulation_label": "bpsk",
         "fine_modulation_confidence": 0.765603082727412,
         "phase_cluster_spread_rad": 0.18751753381807046,
+        "envelope_level_count": null,
+        "frequency_level_count": null,
         "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
         "symbol_rate_hz": 499.8381082690118,
         "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
@@ -136,6 +140,8 @@
         "fine_modulation_label": "bpsk",
         "fine_modulation_confidence": 0.5249440992688447,
         "phase_cluster_spread_rad": 0.3800447205849243,
+        "envelope_level_count": null,
+        "frequency_level_count": null,
         "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
         "symbol_rate_hz": null,
         "symbol_rate_status": "not reliably estimated (SNR below validated 5-20 dB range)"
@@ -180,9 +186,11 @@
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
         "phase_cluster_spread_rad": null,
-        "fine_modulation_status": "not reliably classified (no phase refinement)",
+        "envelope_level_count": null,
+        "frequency_level_count": null,
+        "fine_modulation_status": "not reliably classified (SNR too low for envelope-family evidence)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"
       }
     },
     {
@@ -224,6 +232,8 @@
         "fine_modulation_label": "qpsk",
         "fine_modulation_confidence": 0.3242540270773627,
         "phase_cluster_spread_rad": 0.5405967783381098,
+        "envelope_level_count": null,
+        "frequency_level_count": null,
         "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
         "symbol_rate_hz": 499.8381082690118,
         "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
@@ -268,6 +278,8 @@
         "fine_modulation_label": "qpsk",
         "fine_modulation_confidence": 0.26795655474898894,
         "phase_cluster_spread_rad": 0.5856347562008088,
+        "envelope_level_count": null,
+        "frequency_level_count": null,
         "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
         "symbol_rate_hz": 499.8381082690118,
         "symbol_rate_status": "estimated (nonlinearity + lowest-near-peak spectral heuristic)"
@@ -312,6 +324,8 @@
         "fine_modulation_label": "qpsk",
         "fine_modulation_confidence": 0.001331126430289764,
         "phase_cluster_spread_rad": 0.7989350988557682,
+        "envelope_level_count": null,
+        "frequency_level_count": null,
         "fine_modulation_status": "classified (phase-cluster concentration heuristic)",
         "symbol_rate_hz": null,
         "symbol_rate_status": "not reliably estimated (SNR below validated 5-20 dB range)"
@@ -356,9 +370,11 @@
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
         "phase_cluster_spread_rad": 1.0681136267947997,
-        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
+        "envelope_level_count": null,
+        "frequency_level_count": null,
+        "fine_modulation_status": "not reliably classified (frequency levels not well separated)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"
       }
     },
     {
@@ -400,9 +416,11 @@
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
         "phase_cluster_spread_rad": 1.4191996954559865,
-        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
+        "envelope_level_count": null,
+        "frequency_level_count": null,
+        "fine_modulation_status": "not reliably classified (frequency levels not well separated)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"
       }
     },
     {
@@ -444,9 +462,11 @@
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
         "phase_cluster_spread_rad": 1.40655808733564,
-        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
+        "envelope_level_count": null,
+        "frequency_level_count": null,
+        "fine_modulation_status": "not reliably classified (frequency levels not well separated)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"
       }
     },
     {
@@ -488,9 +508,11 @@
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
         "phase_cluster_spread_rad": 1.39339010667814,
-        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
+        "envelope_level_count": null,
+        "frequency_level_count": null,
+        "fine_modulation_status": "not reliably classified (frequency levels not well separated)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"
       }
     },
     {
@@ -532,9 +554,11 @@
         "fine_modulation_label": null,
         "fine_modulation_confidence": null,
         "phase_cluster_spread_rad": 1.4577988501298962,
-        "fine_modulation_status": "not reliably classified (phase spread above threshold)",
+        "envelope_level_count": null,
+        "frequency_level_count": null,
+        "fine_modulation_status": "not reliably classified (frequency levels not well separated)",
         "symbol_rate_hz": null,
-        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+        "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"
       }
     }
   ],
@@ -873,7 +897,7 @@
       "measured_snr_db": -5.058034944966555,
       "truth_symbol_rate_hz": 500.0,
       "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+      "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"
     },
     {
       "kind": "qpsk",
@@ -913,7 +937,7 @@
       "measured_snr_db": -5.083766512657371,
       "truth_symbol_rate_hz": 500.0,
       "symbol_rate_hz": null,
-      "symbol_rate_status": "not reliably estimated (requires a confirmed PSK fine label)"
+      "symbol_rate_status": "not reliably estimated (requires a confirmed PSK/ASK fine label)"
     }
   ],
   "qualification": "Deterministic synthetic evidence only. No theoretical half-power truth exists in generator; nominal detection bands are not that truth. No field-performance guarantee."
