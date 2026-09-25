@@ -19,3 +19,7 @@ __MACOSX/
 .env.*
 !.env.example
 !.env.sample
+
+# Estimate spike evaluation rows (regenerate with experiments/estimate_spike/run_eval.py)
+artifacts/estimate_spike/rows_*.json
+experiments/reference_spike/rows*.json
