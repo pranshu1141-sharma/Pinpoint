@@ -72,6 +72,27 @@ def test_fsk_scores_true_rate_below_double_rate(seed):
     assert fsk.fit(x, xc, FS, 80e3).score < fsk.fit(x, xc, FS, 160e3).score
 
 
+@pytest.mark.parametrize("h", [0.5, 1.0])
+@pytest.mark.parametrize("seed", range(4))
+def test_fsk_needle_recovers_rate_from_offset_finalist(seed, h):
+    """A finalist 0.15% off drifts ~0.5 symbol over the segment and scores far worse than the
+    true rate. After the needle the hypothesis must score like the exact true rate, and the
+    drift must at least halve. At 10 dB the score's own optimum can sit ~0.1 symbol of drift
+    from the truth, and the hard-boundary score is jagged by ~0.03 nats for rate changes of
+    ~1e-5 (measured), so neither exact drift nor an exact score match is asserted."""
+    rng = np.random.default_rng(200 + seed)
+    rate = rng.uniform(40e3, 140e3)
+    x, _ = generate(rng, "FSK2", snr_db=10.0, rate=rate, h=h)
+    fsk = FskExpert(DEFAULT)
+    start = rate * 1.0015
+    refined, hint = fsk.refine_rate(x, FS, start)
+    assert abs(refined - rate) <= 0.5 * abs(start - rate)
+    xc = _xc(x)
+    truth = fsk.fit(x, xc, FS, rate).score
+    assert fsk.fit(x, xc, FS, start).score > truth + 0.05  # the problem is real
+    assert fsk.fit(x, xc, FS, refined, timing_hint=hint).score <= truth + 0.04
+
+
 @pytest.mark.parametrize("seed", range(6))
 def test_bpsk_not_reported_at_double_rate(seed):
     rng = np.random.default_rng(100 + seed)

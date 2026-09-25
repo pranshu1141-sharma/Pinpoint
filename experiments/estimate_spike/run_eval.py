@@ -19,9 +19,14 @@ def main():
     ap.add_argument("--n", type=int, default=500)
     ap.add_argument("--seed", type=int, default=4)
     ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--prototype", action="store_true", help="fsk_rescore_refine=False (exact v5)")
+    ap.add_argument("--prototype", action="store_true", help="disable post-prototype deviations (exact v5)")
+    ap.add_argument("--no-fsk-needle", action="store_true", help="keep the FSK timing re-refine, skip the FSK needle")
     args = ap.parse_args()
-    cfg = dataclasses.replace(DEFAULT, fsk_rescore_refine=False) if args.prototype else DEFAULT
+    cfg = DEFAULT
+    if args.prototype:
+        cfg = dataclasses.replace(cfg, fsk_rescore_refine=False, fsk_needle=False)
+    elif args.no_fsk_needle:
+        cfg = dataclasses.replace(cfg, fsk_needle=False)
     rows, t_start = [], time.time()
     for i, (x, truth) in enumerate(corpus(args.n, args.seed)):
         t0 = time.perf_counter()
@@ -35,7 +40,7 @@ def main():
         if (i + 1) % 50 == 0:
             print(i + 1, round(time.time() - t_start, 1), flush=True)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    meta = dict(n=args.n, seed=args.seed, prototype=args.prototype, config=dataclasses.asdict(cfg))
+    meta = dict(n=args.n, seed=args.seed, prototype=args.prototype, no_fsk_needle=args.no_fsk_needle, config=dataclasses.asdict(cfg))
     args.out.write_text(json.dumps(dict(meta=meta, rows=rows), default=float))
     print("done", len(rows), round(time.time() - t_start, 1))
 

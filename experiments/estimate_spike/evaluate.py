@@ -105,13 +105,15 @@ def recall(rows):
             "PSK/QAM old E1/E2": (("PSK", "QAM16"), "legacy_psk"),
             "PSK/QAM finalists (after ranking + needle)": (("PSK", "QAM16"), "psk_finalists"),
             "FSK gap-difference": (("FSK2",), "fsk_proposals"), "FSK old E4": (("FSK2",), "legacy_fsk"),
-            "FSK finalists (after Fisher ranking)": (("FSK2",), "fsk_finalists")}
+            "FSK finalists (after Fisher ranking)": (("FSK2",), "fsk_ranked")}
     out = {}
     for name, (kinds, key) in sets.items():
         out[name] = []
         for _, fn in bins:
             I = [r for r in rows if r["kind"] in kinds and fn(r["snr"])]
-            out[name].append((100 * np.mean([hit(r[key], r["Rs"]) for r in I]), len(I)))
+            # rows from before the FSK needle existed store the ranked finalists as fsk_finalists
+            out[name].append((100 * np.mean([hit(r.get(key, r["fsk_finalists"] if key == "fsk_ranked" else None),
+                                                 r["Rs"]) for r in I]), len(I)))
     return [b for b, _ in bins], out
 
 
@@ -121,7 +123,8 @@ def router(rows, dense, half):
     y = np.array([d["d"].expert if d["d"].expert != "null" else "nrz" for d in dense])
     clf = DecisionTreeClassifier(max_depth=4, random_state=0).fit(X[half], y[half])
     P, cls = clf.predict_proba(X), list(clf.classes_)
-    T = lambda r, e: r["timings_s"].get(e, 0.0)
+    # the FSK needle only has to run when the FSK expert does, so it is charged to that expert
+    T = lambda r, e: r["timings_s"].get(e, 0.0) + (r["timings_s"].get("needle_fsk", 0.0) if e == "fsk" else 0.0)
     shared = np.array([T(r, "features") + T(r, "screen_psk") + T(r, "screen_fsk") for r in rows])
     dense_t = shared + np.array([sum(T(r, e) for e in ALL_EXPERTS) for r in rows])
     B = ~half
@@ -239,7 +242,7 @@ def evaluate(path: Path):
         md.append(f"| {m} | {v['ms']:.0f} ms | {rms} ms | {fmt(v['agree'])} | {fmt(rag)} | {fmt(v['acc'])} | {fmt(racc)} "
                   f"| {v['cw']}/{nB} | {rcw}/277 |")
 
-    stages = ["features", "screen_psk", "screen_fsk", "nrz", "rrc", "fsk", "analog"]
+    stages = ["features", "screen_psk", "screen_fsk", "needle_fsk", "nrz", "rrc", "fsk", "analog"]
     md.append("\n#### Per-stage timing (all captures, one core)\n")
     md.append("| Stage | mean ms | p50 ms | p95 ms | max ms |\n|---|---|---|---|---|")
     js["timing_ms"] = {}

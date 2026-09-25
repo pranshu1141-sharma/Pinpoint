@@ -3,12 +3,14 @@
 Transitions are measured across a gap equal to the smoothing width: an adjacent
 difference of a smoothed signal shrinks the jump by 1/w, exactly like the noise.
 """
+from typing import Optional
+
 import numpy as np
 
 from .config import SpikeConfig
 from .dsp import dedupe, line_peaks, moving_average
 from .experts_psk import nrz_quick_score
-from .expert_fsk import fsk_quick_score
+from .expert_fsk import FskExpert, fsk_quick_score
 
 
 def _gap_lines(track: np.ndarray, w: int, fs: float, band, cfg: SpikeConfig) -> list[float]:
@@ -56,3 +58,15 @@ def rank_fsk(x: np.ndarray, fs: float, props: list[float], cfg: SpikeConfig) -> 
     """Keep the finalists whose per-symbol frequencies split most cleanly into two clusters."""
     q = [fsk_quick_score(x, fs, r, cfg) for r in props]
     return [props[i] for i in np.argsort(q)[::-1][:cfg.finalists]]
+
+
+def fsk_needle_refine(x: np.ndarray, fs: float, finalists: list[float], band,
+                      cfg: SpikeConfig) -> list[tuple[float, Optional[float]]]:
+    """Needle-refine every FSK finalist with the FSK model itself.
+
+    Returns (rate, timing hint) pairs, deduped within 1% (first kept).
+    """
+    expert = FskExpert(cfg)
+    pairs = [expert.refine_rate(x, fs, r) for r in finalists]
+    keep = dedupe([r for r, _ in pairs], band, cfg.refine_dedupe_tol)
+    return [pair for pair in pairs if pair[0] in keep]

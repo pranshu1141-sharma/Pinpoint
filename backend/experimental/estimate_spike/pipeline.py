@@ -11,7 +11,8 @@ from .expert_fsk import FskExpert
 from .experts_psk import NrzPskExpert, RrcPskExpert
 from .features import router_features
 from .hypothesis import ALL_EXPERTS, Hypothesis
-from .proposals import fsk_proposals, needle_refine, psk_proposals, rank_fsk, rank_psk
+from .proposals import (fsk_needle_refine, fsk_proposals, needle_refine, psk_proposals, rank_fsk,
+                        rank_psk)
 
 
 @dataclass
@@ -24,7 +25,8 @@ class SpikeResult:
     psk_proposals: list[float]
     psk_finalists: list[float]
     fsk_proposals: list[float]
-    fsk_finalists: list[float]
+    fsk_finalists: list[float]            # after needle refinement when cfg.fsk_needle
+    fsk_ranked: list[float]
     timings_s: dict[str, float] = field(default_factory=dict)  # diagnostic only
 
     def to_dict(self) -> dict:
@@ -73,16 +75,20 @@ def analyze_segment(x: np.ndarray, fs: float, cfg: SpikeConfig = DEFAULT,
     def screen_fsk():
         props = fsk_proposals(x, fs, band, cfg)
         return props, rank_fsk(x, fs, props, cfg)
-    fprops, ffin = timed("screen_fsk", screen_fsk) if "fsk" in experts else ([], [])
+    fprops, franked = timed("screen_fsk", screen_fsk) if "fsk" in experts else ([], [])
+    fsk_targets = [(r, None) for r in franked]
+    if cfg.fsk_needle and franked:
+        fsk_targets = timed("needle_fsk", lambda: fsk_needle_refine(x, fs, franked, band, cfg))
+    ffin = [r for r, _ in fsk_targets]
 
     hyps: list[Hypothesis] = []
-    rate_experts = {"nrz": (NrzPskExpert(cfg), pfin), "rrc": (RrcPskExpert(cfg), pfin),
-                    "fsk": (FskExpert(cfg), ffin)}
-    for name in ("nrz", "rrc", "fsk"):
-        if name not in experts:
-            continue
-        expert, rates = rate_experts[name]
-        fits = timed(name, lambda: [expert.fit(x, xc, fs, r) for r in rates])
+    for name, expert in (("nrz", NrzPskExpert(cfg)), ("rrc", RrcPskExpert(cfg))):
+        if name in experts:
+            fits = timed(name, lambda: [expert.fit(x, xc, fs, r) for r in pfin])
+            hyps += [h for h in fits if h is not None]
+    if "fsk" in experts:
+        fsk = FskExpert(cfg)
+        fits = timed("fsk", lambda: [fsk.fit(x, xc, fs, r, timing_hint=hint) for r, hint in fsk_targets])
         hyps += [h for h in fits if h is not None]
     if "analog" in experts:
         hyps.append(timed("analog", lambda: AnalogExpert(cfg).fit(x, fs)))
@@ -91,4 +97,4 @@ def analyze_segment(x: np.ndarray, fs: float, cfg: SpikeConfig = DEFAULT,
     return SpikeResult(hypotheses=hyps, features=feats, noise_var=noise_variance(xc, fs),
                        total_power=float(np.mean(np.abs(x) ** 2)), carrier_hz=float(carrier),
                        psk_proposals=pprops, psk_finalists=pfin, fsk_proposals=fprops,
-                       fsk_finalists=ffin, timings_s=timings)
+                       fsk_finalists=ffin, fsk_ranked=franked, timings_s=timings)
