@@ -25,6 +25,7 @@ This directory is the complete technical and project context for the current Pha
 | [Frontend dashboard](FRONTEND_DASHBOARD.md) | Every panel, interaction, visualization, state, and frontend dependency. |
 | [Signal Breakdown](SIGNAL_BREAKDOWN.md) | What each isolation layer does and why it is not decoding. |
 | [Large-file processing](LARGE_FILE_PROCESSING.md) | The 1–2 GiB upload path, bounded-memory scan, block merge rules, storage, and recovery. |
+| [Estimate spike (experimental)](ESTIMATE_SPIKE.md) | The experimental propose → verify (MDL) estimator, including FSK needle refinement: how it works, how to run it, and its limits. Numbers are in [its results report](estimate_spike_results.md). Not wired into the product. |
 | [Testing and validation](TESTING_AND_VALIDATION.md) | Automated coverage, synthetic truth, measured results, and the limits of those results. |
 | [Operations](OPERATIONS.md) | Installation, startup, routine use, troubleshooting, cleanup, and operational constraints. |
 | [Limitations and roadmap](LIMITATIONS_AND_ROADMAP.md) | Known technical limits and everything intentionally unbuilt. |

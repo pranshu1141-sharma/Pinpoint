@@ -24,6 +24,18 @@ The documentation audit ran the commands above on 2026-09-10:
 
 The backend run emitted two non-failing deprecation warnings from the installed Starlette/AnyIO test stack. Vite emitted a non-failing chunk-size advisory because the main minified JavaScript bundle is 905.77 kB (282.55 kB gzip). These are maintenance signals, not failed checks.
 
+## Experimental Estimate spike
+
+The experimental estimator ([Estimate spike](ESTIMATE_SPIKE.md)) has its own tests and evaluation harness. Neither touches Detect.
+
+```bash
+.venv/bin/python -m pytest backend/tests/test_estimate_spike.py -q
+.venv/bin/python -m experiments.estimate_spike.run_eval --n 500 --seed 4 --out artifacts/estimate_spike/rows_seed4.json
+.venv/bin/python -m experiments.estimate_spike.evaluate artifacts/estimate_spike/rows_seed4.json --json docs/estimate-spike-results.json
+```
+
+Snapshot on 2026-09-26 (branch `feat/estimate-spike`): the full backend suite gave **271 passed, 3 skipped, 1 xfailed**. The spike file gave 41 passed plus the documented AM xfail. Evaluation on seed 4 (500 captures): 8/277 confidently wrong on the held-out half, and 0/500 captures over the 0.5 s budget. `--prototype` reproduces the reference prototype's tables exactly. Tables and discussion: [Estimate spike results](estimate_spike_results.md).
+
 ## Synthetic fixture generator
 
 Run:
