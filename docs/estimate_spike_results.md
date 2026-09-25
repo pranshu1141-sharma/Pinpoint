@@ -2,6 +2,7 @@
 
 **Status: experimental, methodology under test.** This is not the shipped Estimate stage. The shipped stage (`backend/pipeline/estimate.py`, `classify.py`) is unchanged, and nothing in `backend/pipeline` or `backend/api` imports this code (a test enforces that). All evidence below is **synthetic AWGN only**.
 
+- How it works and how to use it: [Estimate spike](ESTIMATE_SPIKE.md)
 - Code: [`backend/experimental/estimate_spike/`](../backend/experimental/estimate_spike/)
 - Tests: [`backend/tests/test_estimate_spike.py`](../backend/tests/test_estimate_spike.py)
 - Harness: [`experiments/estimate_spike/`](../experiments/estimate_spike/). The prototype is kept for comparison in [`experiments/reference_spike/`](../experiments/reference_spike/).

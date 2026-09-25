@@ -2,6 +2,10 @@
 
 An offline RF capture detector and dashboard for the Smart India Hackathon NTRO software track. It locates candidate time/frequency regions, measures pulse timing, and exposes inspectable isolation layers. **Synchronous uploads (≤1 MiB), demos, and now async large uploads (per-track, bounded to 2,000,000 samples) all include Estimate, coarse envelope classification, Mth-power carrier refinement, fine PSK classification (BPSK/QPSK) and symbol-rate estimation in the API, detail table and JSON export.** Fine labels and symbol rate are gated to their validated SNR ranges — see [Estimate and Classify](docs/ESTIMATE_CLASSIFY.md) for exact conditions; no demodulation or decoding exists. See [integration verification](docs/INTEGRATION_VALIDATION.md).
 
+## Experimental: Estimate spike
+
+An experimental propose → verify (MDL) estimator lives in `backend/experimental/estimate_spike/`. It rebuilds each segment under competing hypotheses (PSK/QAM, 2-FSK with needle-refined rates, AM/FM, noise) and uses score margins as confidence. It is **not** wired into the API or dashboard and is validated on synthetic data only. See [docs/ESTIMATE_SPIKE.md](docs/ESTIMATE_SPIKE.md) and [the results](docs/estimate_spike_results.md).
+
 ## Complete project documentation
 
 The structured documentation starts at [`docs/README.md`](docs/README.md). It includes requirement-by-requirement completion status, architecture, every authored file and artifact family, detector formulas, input rules, the full API contract, dashboard behavior, Signal Breakdown provenance, 1 GiB processing evidence, tests, operations, limitations, roadmap, judge-defense answers, and a glossary.
