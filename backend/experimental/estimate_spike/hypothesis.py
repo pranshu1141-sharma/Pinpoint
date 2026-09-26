@@ -7,7 +7,9 @@ from typing import Optional, Protocol
 
 import numpy as np
 
-FAMILY = {"BPSK": "PSK", "QPSK": "PSK", "QAM16": "QAM16", "FSK2": "FSK",
+# Hypotheses that only probe for structure outside the library: never published as a label.
+UNKNOWN_CE = "unknown constant-envelope"
+FAMILY = {"BPSK": "PSK", "QPSK": "PSK", "8PSK": "PSK", "QAM16": "QAM16", "FSK2": "FSK", "FSK4": "FSK", "FSK8": UNKNOWN_CE,
           "AM": "AM", "FM": "FM", "none": "none"}
 DIGITAL_EXPERTS = ("nrz", "rrc", "lsp", "fsk")
 ALL_EXPERTS = ("nrz", "rrc", "lsp", "fsk", "analog")
@@ -20,6 +22,7 @@ class Hypothesis:
     rate: Optional[float]
     score: float
     residual: float
+    usage: float = 1.0      # p-value that all alphabet points are used (1.0 when not applicable)
 
     @property
     def family(self) -> str:

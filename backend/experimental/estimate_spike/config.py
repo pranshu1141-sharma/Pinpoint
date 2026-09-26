@@ -12,13 +12,16 @@ class Thresholds:
     m_fam: float = 0.411
     m_rate: float = 0.149
     unexplained_max: float = 0.097
+    # Fixed by principle (a 1% test), not fit: a label names an alphabet, so every point must be
+    # in use; p < 0.01 that the least-used point is this rare under uniform use -> not published.
+    min_usage: float = 0.01
 
 
 @dataclass(frozen=True)
 class SpikeConfig:
     rate_band: tuple[float, float] = (0.01, 0.3)      # symbol-rate search band, x fs
     nfft: int = 16384
-    carrier_power: int = 4                           # M-th power carrier estimate
+    carrier_power: tuple[int, ...] = (4, 8)          # M-th power carrier lines tried (most prominent wins)
     psk_scales: tuple[int, ...] = (1, 2, 4, 8)
     fsk_scales: tuple[int, ...] = (2, 4, 8, 16)
     peaks_per_scale: int = 3
@@ -27,16 +30,19 @@ class SpikeConfig:
     dedupe_tol: float = 0.02
     refine_dedupe_tol: float = 0.01
     needle_offsets: tuple[float, ...] = (-0.006, -0.003, 0.0, 0.003, 0.006)
-    alphabets: tuple[int, ...] = (2, 4, 16)
+    alphabets: tuple[int, ...] = (2, 4, 8, 16)
     snap_block: int = 16
     rrc_alpha: float = 0.35
     rrc_span: int = 6
     rrc_phases: int = 8
-    lsp_span: int = 3                    # least-squares pulse support, +-symbols
+    lsp_span: int = 2                    # least-squares pulse support, +-symbols
     lsp_grid: int = 16                   # pulse samples per symbol (coarser grids favour 2x rates)
     lsp_rate_iters: int = 2              # decision-directed rate refinements
     lsp_drift_chunks: int = 8
     lsp_max_drift: float = 0.002         # larger clock errors are outside the linear regime
+    fsk_library_tones: tuple[int, ...] = (2, 4)
+    fsk_probe_tones: tuple[int, ...] = (8,)   # probe for discrete IF levels outside the library (FM gate)
+    fsk_needle_tones: tuple[int, ...] = (2, 4)  # tone counts whose rate the needle refines
     fsk_search_block: int = 2
     fsk_score_block: int = 8
     fsk_quick_phases: int = 6

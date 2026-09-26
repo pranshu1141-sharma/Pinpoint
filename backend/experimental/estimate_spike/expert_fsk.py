@@ -1,4 +1,4 @@
-"""2-tone continuous-phase FSK expert (1 bit/symbol)."""
+"""Continuous-phase M-FSK expert (M = 2, 4: log2 M bits/symbol)."""
 from dataclasses import dataclass
 from typing import Optional
 
@@ -36,8 +36,30 @@ def _prepare(x: np.ndarray, fs: float) -> _FskInputs:
     return _FskInputs(fs, nn, t, xs, dd, np.abs(np.diff(fi)))
 
 
-def _score_at(p: _FskInputs, sps: float, tau: float, blk_syms: int) -> tuple:
-    """(score, residual) of the 2-FSK rebuild at samples/symbol `sps` and timing `tau`."""
+def _tone_clusters(mf: np.ndarray, sd: np.ndarray, fs: float, tones: int):
+    """Tone frequencies from per-symbol frequencies (k-means with Kay tone estimates), or None."""
+    inner, sdi = mf[1:-1], sd[1:-1]
+    if tones == 2:
+        if not (inner > 0).any() or not (inner <= 0).any():
+            return None
+        dec = mf > 0
+        for _ in range(4):  # 2-means with Kay tone estimates
+            di = dec[1:-1]
+            fa = _kay_hz(sdi[di].sum(), fs) if di.any() else 0.0
+            fb = _kay_hz(sdi[~di].sum(), fs) if (~di).any() else 0.0
+            dec = np.abs(mf - fa) < np.abs(mf - fb)
+        return np.array([fa, fb])
+    c = np.quantile(inner, (np.arange(tones) + 0.5) / tones)
+    for _ in range(6):
+        lab = np.argmin(np.abs(inner[:, None] - c[None, :]), axis=1)
+        if len(set(lab.tolist())) < tones:
+            return None
+        c = np.array([_kay_hz(sdi[lab == i].sum(), fs) for i in range(tones)])
+    return c
+
+
+def _score_at(p: _FskInputs, sps: float, tau: float, blk_syms: int, tones: int = 2) -> tuple:
+    """(score, residual) of the M-FSK rebuild at samples/symbol `sps` and timing `tau`."""
     fs = p.fs
     u = p.nn / sps + tau
     k = np.floor(u).astype(int)
@@ -49,32 +71,27 @@ def _score_at(p: _FskInputs, sps: float, tau: float, blk_syms: int) -> tuple:
     # Kay-style: sum complex phase-difference products, take the angle once
     sd = np.bincount(k, p.dd.real * interior, nk) + 1j * np.bincount(k, p.dd.imag * interior, nk)
     mf = np.angle(sd) * fs / (2 * np.pi)
-    inner = mf[1:-1]
-    if not (inner > 0).any() or not (inner <= 0).any():
+    c = _tone_clusters(mf, sd, fs, tones)
+    if c is None:
         return (np.inf, np.nan)
-    dec = mf > 0
-    for _ in range(4):  # 2-means with Kay tone estimates
-        di = dec[1:-1]
-        fa = _kay_hz(sd[1:-1][di].sum(), fs) if di.any() else 0.0
-        fb = _kay_hz(sd[1:-1][~di].sum(), fs) if (~di).any() else 0.0
-        dec = np.abs(mf - fa) < np.abs(mf - fb)
-    za = p.xs * np.exp(-2j * np.pi * fa * p.t)
-    zb = p.xs * np.exp(-2j * np.pi * fb * p.t)
-    ea = np.abs(np.bincount(k, za.real, nk) + 1j * np.bincount(k, za.imag, nk))
-    eb = np.abs(np.bincount(k, zb.real, nk) + 1j * np.bincount(k, zb.imag, nk))
+    decisions = [np.argmin(np.abs(mf[:, None] - c[None, :]), axis=1)]
+    if tones == 2:   # non-coherent energy decisions too (one complex exponential per tone: 2-FSK only)
+        energy = np.stack([np.abs(np.bincount(k, z.real, nk) + 1j * np.bincount(k, z.imag, nk))
+                           for z in (p.xs * np.exp(-2j * np.pi * f * p.t) for f in c)], 1)
+        decisions.append(np.argmax(energy, axis=1))
     blk = k // blk_syms
     nb = blk.max() + 1
     cnt = np.maximum(np.bincount(blk, minlength=nb), 1)
     res = np.inf
-    # nearest-tone vs non-coherent energy decisions; keep the better rebuild
-    for bits in (np.abs(mf - fa) < np.abs(mf - fb), ea >= eb):
-        tone = np.where(bits, fa, fb)[k]
+    # keep the better rebuild of the decision rules
+    for sel in decisions:
+        tone = c[sel][k]
         ph = np.exp(1j * 2 * np.pi * np.cumsum(tone) / fs)
         z = p.xs * np.conj(ph)
         cz = (np.bincount(blk, z.real, nb) + 1j * np.bincount(blk, z.imag, nb)) / cnt
         res = min(res, np.mean(np.abs(p.xs[msk] - (cz[blk] * ph)[msk]) ** 2) + TINY)
     n_eff, n_sym = int(msk.sum()), k.max() - 1
-    score = np.log(res) + (n_sym * np.log(2) + 1 + (nb + 2) * np.log(n_eff)) / n_eff
+    score = np.log(res) + (n_sym * np.log(tones) + 1 + (nb + tones) * np.log(n_eff)) / n_eff
     return (float(score), float(res))
 
 
@@ -121,11 +138,24 @@ class FskExpert:
         return best
 
     def fit(self, x: np.ndarray, xc: np.ndarray, fs: float, rate: float,
-            timing_hint: Optional[float] = None) -> Optional[Hypothesis]:
-        _, (score, res) = self._timing(_prepare(x, fs), rate, timing_hint)
-        if not np.isfinite(score):
+            timing_hint: Optional[float] = None, tones_set: Optional[tuple] = None) -> Optional[Hypothesis]:
+        """Best of 2-FSK (full timing search) and each higher tone count in `tones_set`
+        (default cfg.fsk_library_tones; timing refined from the 2-FSK optimum)."""
+        cfg = self.cfg
+        p = _prepare(x, fs)
+        tau, (score, res) = self._timing(p, rate, timing_hint)
+        best = (score, res, 2)
+        sps = fs / rate
+        for tones in (cfg.fsk_library_tones if tones_set is None else tones_set):
+            if tones == 2:
+                continue
+            _, (s_m, r_m) = fine_search(lambda t: _score_at(p, sps, t, cfg.fsk_score_block, tones), tau, sps,
+                                        extra_phases=cfg.fsk_quick_phases, steps=(0.25, 0.125, 0.0625))
+            if s_m < best[0]:
+                best = (s_m, r_m, tones)
+        if not np.isfinite(best[0]):
             return None
-        return Hypothesis(self.name, "FSK2", float(rate), score, res)
+        return Hypothesis(self.name, f"FSK{best[2]}", float(rate), best[0], best[1])
 
     def refine_rate(self, x: np.ndarray, fs: float, rate: float) -> tuple[float, Optional[float]]:
         """Needle refinement of one FSK finalist (the rate fit is needle-sharp).
@@ -140,10 +170,38 @@ class FskExpert:
         """
         cfg = self.cfg
         p = _prepare(x, fs)
-        centre = (len(x) - 1) / 2
-        tau, (s0, _) = self._timing(p, rate, final_scan=False)  # the pattern search moves timing itself
-        if not np.isfinite(s0):
+        best = self._needle(p, rate, 2)
+        if best[0] is None:
             return float(rate), None
+        for m in cfg.fsk_needle_tones:
+            if m == 2:
+                continue
+            # only if m tones still fit better at the refined 2-FSK rate (at an offset rate,
+            # drift makes 2-FSK look m-toned, so the tone count is judged after refinement)
+            sps = fs / best[1]
+            s2 = _score_at(p, sps, best[2], cfg.fsk_score_block, 2)[0]
+            _, (sm, _) = fine_search(lambda t: _score_at(p, sps, t, cfg.fsk_score_block, m), best[2], sps,
+                                     extra_phases=cfg.fsk_quick_phases)
+            if sm < s2:
+                cand = self._needle(p, rate, m)
+                if cand[0] is not None and cand[0] < sm:
+                    best = cand
+        return float(best[1]), float(best[2])
+
+    def _needle(self, p: _FskInputs, rate: float, tones: int) -> tuple:
+        """(final needle score or None, rate, timing phase) of the joint rate x timing search."""
+        cfg = self.cfg
+        fs = p.fs
+        centre = (len(p.nn) - 1) / 2
+        sps0 = fs / rate
+        if tones == 2:
+            tau, (s0, _) = self._timing(p, rate, final_scan=False)  # the pattern search moves timing itself
+        else:
+            tau2, _ = self._timing(p, rate, final_scan=False)
+            tau, (s0, _) = fine_search(lambda t: _score_at(p, sps0, t, cfg.fsk_score_block, tones), tau2, sps0,
+                                       extra_phases=cfg.fsk_quick_phases)
+        if not np.isfinite(s0):
+            return (None, float(rate), None)
         c0 = centre * rate / fs + tau          # symbol coordinate at the centre
         seen: dict[tuple, float] = {}
 
@@ -151,7 +209,7 @@ class FskExpert:
             key = (round(r, 6), round(c, 6))
             if key not in seen:
                 sps = fs / r
-                seen[key] = _score_at(p, sps, (c - centre / sps) % 1.0, cfg.fsk_needle_block)[0]
+                seen[key] = _score_at(p, sps, (c - centre / sps) % 1.0, cfg.fsk_needle_block, tones)[0]
             return seen[key]
 
         step = cfg.fsk_needle_grid_step
@@ -169,7 +227,8 @@ class FskExpert:
                 if (r_new, c_new) == (r_best, c_best):
                     break
                 r_best, c_best = r_new, c_new
-        return float(r_best), float((c_best - centre * r_best / fs) % 1.0)
+        return (ev(r_best, c_best), float(r_best), float((c_best - centre * r_best / fs) % 1.0))
+
 
 def fsk_quick_score(x: np.ndarray, fs: float, rate: float, cfg: SpikeConfig) -> float:
     """Cheap ranking: Fisher ratio of per-symbol frequencies split at the median, best timing."""

@@ -30,8 +30,10 @@ class Thresholds:
 THRESHOLDS = Thresholds()
 
 # Families each estimator claims to model. OUT_OF_LIBRARY are held out to test abstention.
-IN_LIBRARY = frozenset({"BPSK", "QPSK", "QAM16", "FSK2"})
-OUT_OF_LIBRARY = frozenset({"8PSK", "FSK4"})
+# WP0 baseline: in = BPSK/QPSK/QAM16/FSK2, out = 8PSK/FSK4. WP3 added 8PSK and FSK4 to the
+# library, so the held-out set became 8-FSK and rectangular 8-QAM (an appended G2 block).
+IN_LIBRARY = frozenset({"BPSK", "QPSK", "8PSK", "QAM16", "FSK2", "FSK4"})
+OUT_OF_LIBRARY = frozenset({"FSK8", "QAM8"})
 
 G1_TEST_SEED = 7
 G1_TEST_N = 300

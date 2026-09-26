@@ -6,13 +6,15 @@ Differences from the original, all parameters rather than new shapes:
     to the shipped fixtures at every rate.
   * 4-FSK deviations scale with the rate (+-0.4, +-1.2 Rs), as the original's
     +-200/+-600 Hz were at 500 Bd.
+  * held-out families for the abstention criterion: rectangular 8-QAM ("qam8",
+    I in {-3,-1,1,3}, Q in {-1,1}) and 8-FSK ("fsk8", deviations (m - 3.5) * 0.4 Rs).
   * returns the noiseless signal too, for ground truth (never given to a system).
 """
 import numpy as np
 from scipy import signal
 
 FS = 48000
-LINEAR = ("bpsk", "qpsk", "8psk", "qam")
+LINEAR = ("bpsk", "qpsk", "8psk", "qam", "qam8")
 
 
 def smoothing_taps(sps: int) -> np.ndarray:
@@ -35,12 +37,16 @@ def make_signal(kind: str, snr_db: float, carrier_hz: float, sps: int, seed: int
         elif kind == "qam":
             levels = np.array([-1., -.45, .45, 1.])
             symbols = levels[rng.integers(0, 4, k)] + 1j * levels[rng.integers(0, 4, k)]
+        elif kind == "qam8":
+            symbols = np.array([-3., -1., 1., 3.])[rng.integers(0, 4, k)] + 1j * np.array([-1., 1.])[rng.integers(0, 2, k)]
         else:
             symbols = np.array([.4, 1.])[rng.integers(0, 2, k)]
         base = signal.fftconvolve(np.repeat(symbols, sps)[:n], smoothing_taps(sps), mode="same")
-    elif kind == "fsk":
-        deviations = rate * np.array([-1.2, -.4, .4, 1.2])
-        freq_seq = np.repeat(deviations[rng.integers(0, 4, k)], sps)[:n]
+    elif kind in ("fsk", "fsk8"):
+        levels = 4 if kind == "fsk" else 8
+        deviations = rate * (np.arange(levels) - (levels - 1) / 2) * 0.8 if levels == 4 else \
+            rate * (np.arange(levels) - 3.5) * 0.4
+        freq_seq = np.repeat(deviations[rng.integers(0, levels, k)], sps)[:n]
         base = np.exp(1j * 2 * np.pi * np.cumsum(freq_seq) / FS)
     elif kind == "fm":
         base = np.exp(1j * 700 / 230 * np.sin(2 * np.pi * 230 * t))

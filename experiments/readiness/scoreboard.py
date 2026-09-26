@@ -35,15 +35,32 @@ def _g2_job(args):
     return systems.run(system, generators.g2_capture(**spec))
 
 
-def compute_rows(system, gen, workers, g1_n):
+def compute_rows(system, gen, workers, g1_n, cached=()):
+    """Rows for every capture of `gen`; captures whose id is in `cached` rows are reused."""
+    have = {r["id"]: r for r in cached}
     if gen == "G1":
-        jobs, fn = [(system, c) for c in generators.g1_captures(g1_n)], _g1_job
+        caps = list(generators.g1_captures(g1_n))
+        ids = [c.id for c in caps]
+        jobs, fn = [(system, c) for c in caps if c.id not in have], _g1_job
     elif gen == "G2":
-        jobs, fn = [(system, s) for s in generators.g2_specs()], _g2_job
+        specs = generators.g2_specs()
+        ids = [generators.g2_capture_id(**s) for s in specs]
+        jobs, fn = [(system, s) for s, i in zip(specs, ids) if i not in have], _g2_job
     else:
         return []
-    with ProcessPoolExecutor(workers) as ex:
-        return list(ex.map(fn, jobs, chunksize=4))
+    if jobs:
+        with ProcessPoolExecutor(workers) as ex:
+            for r in ex.map(fn, jobs, chunksize=4):
+                have[r["id"]] = r
+    return [have[i] for i in ids]
+
+
+def refresh_library_flags(rows):
+    """Library membership can change (WP3); cached truth rows carry the flags of their run."""
+    for r in rows:
+        r["truth"]["in_library"] = r["truth"]["label"] in config.IN_LIBRARY
+        r["truth"]["out_of_library"] = r["truth"]["label"] in config.OUT_OF_LIBRARY
+    return rows
 
 
 # ------------------------------------------------------------------ criteria
@@ -258,14 +275,14 @@ def main(argv=None):
     for sysname in args.systems.split(","):
         for gen in args.gens.split(","):
             path = CACHE / f"rows_{sysname}_{gen}.json"
-            if args.reuse and path.exists() and sysname not in args.fresh.split(","):
-                rows = json.loads(path.read_text())
-            else:
-                t0 = time.time()
-                rows = compute_rows(sysname, gen, args.workers, args.g1_n)
+            cached = json.loads(path.read_text()) if args.reuse and path.exists() \
+                and sysname not in args.fresh.split(",") else []
+            t0 = time.time()
+            rows = compute_rows(sysname, gen, args.workers, args.g1_n, cached)
+            if len(rows) != len(cached) or not cached:
                 path.write_text(json.dumps(rows, default=float))
-                print(f"{sysname} {gen}: {len(rows)} rows in {time.time() - t0:.0f} s", flush=True)
-            rows_by.setdefault(sysname, {})[gen] = rows
+                print(f"{sysname} {gen}: {len(rows) - len(cached)} new rows in {time.time() - t0:.0f} s", flush=True)
+            rows_by.setdefault(sysname, {})[gen] = refresh_library_flags(rows)
     product = systems.product_estimator()
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
                             text=True).stdout.strip()

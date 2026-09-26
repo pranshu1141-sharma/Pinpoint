@@ -102,7 +102,7 @@ def test_label_criteria_count_published_wrong_over_all_captures():
 
 def test_rate_criteria_and_noise_labels():
     rows = [_row("BPSK", "BPSK", 1e3, 1e3), _row("QPSK", "QPSK", 1e3, 2e3), _row("noise", "BPSK"),
-            _row("8PSK", "BPSK", 1e3, None)]
+            _row("FSK8", "BPSK", 1e3, None)]
     r = metrics.rate_stats(rows)
     assert r["published_wrong"] == pytest.approx(1 / 4) and r["published_correct_digital"] == pytest.approx(1 / 3)
     assert r["harmonic_errors"] == pytest.approx(1 / 3)
@@ -143,3 +143,18 @@ def test_criterion_passes_only_when_every_applicable_generator_passes():
     assert gen_marks([c]) == {"G1": True, "G2": False, "G3": None}
     assert _crit("L1", "x", {"G1": (0.01, True, 10), "G3": (None, None, 0)})["passed"]
     assert not _crit("L1", "x", {"G3": (None, None, 0)})["passed"]
+
+
+def test_library_after_wp3_and_held_out_block():
+    assert {"8PSK", "FSK4"} <= config.IN_LIBRARY and not {"8PSK", "FSK4"} & config.OUT_OF_LIBRARY
+    assert config.OUT_OF_LIBRARY == {"FSK8", "QAM8"}
+    specs = generators.g2_specs()
+    held = [s for s in specs if s["kind"] in ("fsk8", "qam8")]
+    assert len(held) == 2 * 4 * 4 * 3
+    # the held-out block is appended: the original grid keeps its seeds
+    assert [s["seed"] for s in specs[:len(specs) - len(held)]] == \
+        list(range(generators.G2_TEST_SEED_BASE, generators.G2_TEST_SEED_BASE + len(specs) - len(held)))
+    cap = generators.g2_capture("qam8", 20, 3000, 24, held[0]["seed"])
+    assert cap.truth["label"] == "QAM8" and cap.truth["out_of_library"] and cap.truth["rate"] == 2000
+    cap = generators.g2_capture("fsk8", 20, 0, 24, held[1]["seed"])
+    assert cap.truth["label"] == "FSK8" and not cap.truth["linear"]

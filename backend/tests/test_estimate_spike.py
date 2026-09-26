@@ -236,3 +236,67 @@ def test_rrc_rolloffs_outside_the_old_library_report_true_rate(alpha):
     d = _decide(analyze_segment(x, 1e6))
     assert d.rate is not None and abs(d.rate - rate) / rate < 0.05, (d.expert, d.rate)
     assert d.label == "QPSK"
+
+
+# ---- WP3: library gaps (8PSK, 4-FSK) and the FM sink
+
+def _wide(kind, snr, fc, sps, seed):
+    from experiments.readiness.synth_wide import make_signal
+    x, _ = make_signal(kind, snr, fc, sps, seed, 24000)
+    return _decide(analyze_segment(np.asarray(x, complex), 48000))
+
+
+@pytest.mark.parametrize("sps,fc,seed", [(24, 3000, 1), (48, 8000, 2), (12, 0, 3)])
+def test_8psk_is_labelled_8psk(sps, fc, seed):
+    d = _wide("8psk", 20, fc, sps, seed)
+    assert d.label == "8PSK" and d.label_shipped, d
+    assert abs(d.rate - 48000 / sps) / (48000 / sps) < 0.05
+
+
+@pytest.mark.parametrize("sps,fc,seed", [(24, 3000, 1), (48, 15000, 2), (12, 0, 3)])
+def test_4fsk_is_labelled_fsk4_not_fm(sps, fc, seed):
+    d = _wide("fsk", 20, fc, sps, seed)
+    assert d.label == "FSK4" and d.label_shipped, d
+
+
+@pytest.mark.parametrize("seed", [1, 2])
+def test_fm_is_still_labelled_fm(seed):
+    d = _wide("fm", 20, 3000, 96, seed)
+    assert d.label == "FM" and d.label_shipped
+    x, _ = generate(np.random.default_rng(seed), "FM", snr_db=13.0)
+    assert _decide(analyze_segment(x, FS)).label == "FM"
+
+
+def test_discrete_frequency_levels_outside_the_library_are_never_published_as_fm():
+    # 8-FSK is not in the library: FM would explain it, but its IF sits on discrete levels
+    rng = np.random.default_rng(8)
+    fs, sps, n = 48000, 24, 24000
+    dev = (fs / sps) * (np.arange(8) - 3.5) * 0.4
+    f = np.repeat(dev[rng.integers(0, 8, n // sps + 1)], sps)[:n]
+    x = np.exp(2j * np.pi * (np.cumsum(f) / fs + 3000 * np.arange(n) / fs))
+    x = x * 10 + (rng.standard_normal(n) + 1j * rng.standard_normal(n)) / np.sqrt(2)
+    d = _decide(analyze_segment(x, fs))
+    assert not (d.label == "FM" and d.label_shipped), d
+
+
+def _qam_capture(points, seed, snr=20.0, sps=10, n=8192):
+    rng = np.random.default_rng(seed)
+    sy = points[rng.integers(0, len(points), n // sps + 2)]
+    s = np.repeat(sy, sps)[:n]
+    s = s / np.sqrt(np.mean(np.abs(s) ** 2)) * np.exp(2j * np.pi * 0.02 * np.arange(n))
+    return s + (rng.standard_normal(n) + 1j * rng.standard_normal(n)) * np.sqrt(10 ** (-snr / 10) / 2)
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_subset_constellation_is_not_published_with_the_full_alphabet_label(seed):
+    # rectangular 8-QAM is a subset of the 16-QAM grid: the model fits, but half the points are unused
+    rect8 = (np.array([-3, -1, 1, 3.0])[:, None] + 1j * np.array([-1, 1.0])[None, :]).ravel()
+    d = _decide(analyze_segment(_qam_capture(rect8, seed), FS))
+    assert not (d.label_shipped and d.label == "QAM16"), d
+
+
+@pytest.mark.parametrize("seed", [1, 2])
+def test_full_16qam_is_still_published(seed):
+    grid = (np.array([-3, -1, 1, 3.0])[:, None] + 1j * np.array([-3, -1, 1, 3.0])[None, :]).ravel()
+    d = _decide(analyze_segment(_qam_capture(grid, seed), FS))
+    assert d.label == "QAM16" and d.label_shipped, d

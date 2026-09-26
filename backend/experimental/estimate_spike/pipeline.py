@@ -95,6 +95,13 @@ def analyze_segment(x: np.ndarray, fs: float, cfg: SpikeConfig = DEFAULT,
     if "analog" in experts:
         hyps.append(timed("analog", lambda: AnalogExpert(cfg).fit(x, fs)))
     hyps.append(null_hypothesis(x))
+    # FM gate: FM may only win if the IF is not on discrete levels. Probe with more tones
+    # than the library holds, and only when FM is currently the best explanation.
+    if "fsk" in experts and cfg.fsk_probe_tones and min(hyps, key=lambda h: h.score).label == "FM":
+        fsk = FskExpert(cfg)
+        probes = timed("fsk_probe", lambda: [fsk.fit(x, xc, fs, r, timing_hint=hint, tones_set=cfg.fsk_probe_tones)
+                                             for r, hint in fsk_targets])
+        hyps += [h for h in probes if h is not None and h.label != "FSK2"]
 
     return SpikeResult(hypotheses=hyps, features=feats, noise_var=noise_variance(xc, fs),
                        total_power=float(np.mean(np.abs(x) ** 2)), carrier_hz=float(carrier),

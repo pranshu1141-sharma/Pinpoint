@@ -5,7 +5,7 @@ from typing import Iterable, Optional
 import numpy as np
 
 from .config import SpikeConfig, DEFAULT, Thresholds
-from .hypothesis import ALL_EXPERTS, DIGITAL_EXPERTS, Hypothesis
+from .hypothesis import ALL_EXPERTS, DIGITAL_EXPERTS, UNKNOWN_CE, Hypothesis
 
 
 @dataclass(frozen=True)
@@ -48,7 +48,8 @@ def _num(v: float) -> Optional[float]:
 def decide(hyps: list[Hypothesis], noise_var: float, total_power: float,
            thresholds: Thresholds = Thresholds(), active: Iterable[str] = ALL_EXPERTS,
            cfg: SpikeConfig = DEFAULT) -> Decision:
-    """Pick the winner among active experts (+ null) and apply calibrated margin thresholds."""
+    """Pick the winner among active experts (+ null) and apply the margin thresholds
+    (fit on a calibration split, never on test data)."""
     active = set(active)
     pool = [h for h in hyps if h.expert in active or h.expert == "null"]
     best = min(pool, key=lambda h: h.score)
@@ -64,7 +65,10 @@ def decide(hyps: list[Hypothesis], noise_var: float, total_power: float,
     if best.family != "none":
         unexplained = max(best.residual - noise_var, 0) / max(total_power - noise_var, 1e-12)
     fam_pass = best.family != "none" and m_fam >= thresholds.m_fam
-    label_shipped = bool(fam_pass and unexplained <= thresholds.unexplained_max)
+    # A probe hypothesis (e.g. 8 discrete IF levels) winning means "structure outside the
+    # library": FM cannot win it, and no label is published (unknown constant-envelope family).
+    label_shipped = bool(fam_pass and unexplained <= thresholds.unexplained_max and best.family != UNKNOWN_CE
+                         and best.usage >= thresholds.min_usage)
     rate_shipped = bool(best.expert in DIGITAL_EXPERTS and m_rate >= thresholds.m_rate)
     tier = "labelled" if label_shipped else ("unknown_family" if fam_pass else "abstain")
     return Decision(best.expert, best.family, best.label, best.rate, float(m_fam), float(null - best.score),
