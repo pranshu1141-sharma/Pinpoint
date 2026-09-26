@@ -8,7 +8,7 @@ Generated from `docs/readiness.json` by `python -m experiments.readiness.scorebo
 
 <!-- readiness:start -->
 ```
-Detect                  ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
+Detect                  ██████░░░░  67%  (2/3 criteria)  [G1 ✗ G2 ✓ G3 –]
 Parameters              ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
 Modulation label        ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
 Symbol rate             ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
@@ -18,7 +18,7 @@ Real data (G3)          ░░░░░░░░░░   0%  (0/1 criteria)  [G1
 Automation              ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 Docs                    ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 --------------------
-Overall                 ████████░░  82%  (14/17 criteria)
+Overall                 ███████░░░  76%  (13/17 criteria)
 ```
 <!-- readiness:end -->
 
@@ -92,7 +92,7 @@ Tier 2 remains excluded. Later stages now have the following independently quali
 | Estimate stage | Complete for the tested IQ contract and synchronous API/detail integration: center, both bandwidth definitions and full-band SNR; explicit unknown states. Synthetic center/SNR acceptance passes 12/12. No theoretical fixture half-power bandwidth is supplied by the generator. Async integration is not built. |
 | Modulation classification | Default: verify estimator (propose → verify, MDL margins) — BPSK/QPSK/8PSK/16-QAM/2-ASK/2-FSK/4-FSK/AM/FM with *unknown family* and abstention tiers; measured on synthetic G1/G2 in [CLAIMS.md](CLAIMS.md). Legacy heuristics (`estimator=legacy`): coarse family plus fine bpsk/qpsk/8psk/ask/fsk, qam order-unresolved, fixture-validated only. |
 | Symbol rate | Default: verify estimator (published only when family and rate margins pass; measured in CLAIMS.md). Legacy (`estimator=legacy`): implemented and gated — estimated only with a confirmed bpsk/qpsk/8psk/ask fine label and measured SNR ≥4.5 dB; legacy estimator: validated 30/30 on the synth_gen fixtures (48 kHz, 96 samples/symbol, one filter) within 5% of the generator's 500 Hz truth across bpsk/qpsk × {20,10,5} dB × five seeds (8PSK/ASK measured <0.05% error at 20/10 dB, same nonlinearity). FSK is excluded (~99% measured error — its information is carried in frequency, not amplitude/phase transitions); QAM is excluded (no confirmed order, no symbol-timing recovery). Explicit null with reason below the gate or for excluded labels; accuracy below 4.5 dB SNR is unverified. |
-| Estimate v5 propose→verify (MDL) | **Experimental: methodology under test.** Separate from the Estimate/Classify/Symbol-rate rows above, which are unchanged. `backend/experimental/estimate_spike/` rebuilds each segment under competing hypotheses (NRZ/RRC PSK-QAM, 2-FSK, AM/FM, null) and uses score margins as confidence. Every PSK and FSK finalist is needle-refined; the FSK needle is a joint rate × timing search. Seed 4, 500 synthetic captures, held-out test half: 8/277 confidently wrong; FSK symbol rate right 95% at 9–14 dB (prototype 80%); 327 ms mean per 4,096 samples. It is not imported by Detect, the pipeline or the API. Synthetic AWGN only. See [Estimate spike](ESTIMATE_SPIKE.md) and [its results](estimate_spike_results.md). |
+| Estimate v5 propose→verify (MDL) | **Integrated as the default label/rate estimator** through `backend/pipeline/verify_estimator.py` (see the Downstream IQ analysis row and [CLAIMS.md](CLAIMS.md)); the original spike evaluation is kept in [ESTIMATE_SPIKE.md](ESTIMATE_SPIKE.md). |
 | FM/AM/PSK demodulation | Planned, not built |
 | Decoded audio/data output | Planned, not built |
 | Report stage | Planned, not built |

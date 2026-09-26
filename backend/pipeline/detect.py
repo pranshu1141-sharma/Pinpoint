@@ -18,7 +18,7 @@ _DOCS_DIR = Path(__file__).resolve().parents[2] / "docs"
 # VALIDATION.md's Phase 3 report). Both calibrators are fit on a synthetic
 # corpus only -- no real-file calibration exists yet, so this is a
 # synthetic-validated correction, not a claim about real captures.
-CALIBRATION_ECE = {"confidence": 0.0069, "confidence_evidence_based": 0.0594}
+CALIBRATION_ECE = {"confidence": 0.007, "confidence_evidence_based": 0.114}
 
 
 @lru_cache(maxsize=None)
@@ -170,7 +170,8 @@ FRAGMENT_GAP_OF_WIDTH = 0.25     # merge co-timed neighbours separated by <= 1/4
 SIDELOBE_GAP_OF_WIDTH = 1.0      # ... or by <= the stronger band's width when the other is >= 6 dB weaker
 SIDELOBE_DB = 6.0
 CO_TIMED = 0.8                   # share of the shorter band's active frames shared with the other
-GAP_EXCESS_DB = 1.5              # ... or by any gap whose time-averaged power stays this far above noise
+GAP_EXCESS_DB = 1.5              # ... or by a gap >= this above the LOCAL noise and
+VALLEY_DB = 10.0                 # ... no deeper than this below the weaker adjacent band
 
 
 def merge_fragments(bands, mask, smooth, power=None):
@@ -179,51 +180,86 @@ def merge_fragments(bands, mask, smooth, power=None):
     Spectral nulls split one signal into a main lobe and sidelobes (sinc/filtered
     pulses), and at low SNR a noisy PSD splits a wide lobe into pieces; the WP0
     scoreboard saw 36% of single-signal captures come back as 2-8 detections.
-    Two neighbours are joined only when they are co-timed (>= CO_TIMED of the
-    shorter band's active frames overlap) and either the gap is small relative to
-    the wider band, or the gap is at most the stronger band's width and the other
-    band is >= SIDELOBE_DB weaker (sidelobe-like), or the gap's power averaged over
-    the co-active frames stays >= GAP_EXCESS_DB above a noise reference (a wide
-    lobe at negative SNR leaves sparse fragments, but signal remains between them;
-    between separate signals the gap falls to the noise). The reference is the
-    20th percentile of the time-averaged spectrum, bias-corrected for averaging.
+    Neighbours must be co-timed (>= CO_TIMED of the shorter band's active frames).
+    Every rule compares the two ADJACENT component bands (never an accumulated merge,
+    which chained one signal into the next through its sidelobe):
+      * the gap is <= FRAGMENT_GAP_OF_WIDTH of the wider component, or
+      * the gap is <= the stronger component's width, the other is >= SIDELOBE_DB
+        weaker, and that weak band is not equally attributable to a stronger band on
+        its other side, or
+      * the gap's time-averaged power is >= GAP_EXCESS_DB above the local noise (the
+        median of non-band bins one to three pair-widths away, so neither a receiver
+        stopband elsewhere nor an undetected part of the same lobe counts) and no deeper than VALLEY_DB below the weaker component: sparse
+        fragments of one weak lobe have signal between them; separate signals leave a
+        noise valley.
     Evidence is later computed over the occupied rows only, not the bridged gap.
     """
-    noise_ref = None
-    if power is not None and power.shape[1] >= 2:
-        from scipy.stats import gamma
-        k = max(1.0, power.shape[1] / 2)          # 75%-overlap Hann frames: ~half independent
-        q = gamma.ppf(0.2, k) / k
-        noise_ref = float(np.percentile(power.mean(axis=1), 20) / q)
-    items = []
+    frames_power = None if power is None else power
+    band_rows = np.zeros(mask.shape[0], bool)
+    for fa, fb in bands:
+        band_rows[fa:fb] = True
+    comps = []
     for fa, fb in bands:
         on = np.any(mask[fa:fb], axis=0)
         peak = float(db(np.max(smooth[fa:fb][:, on]))) if on.any() else -np.inf
-        items.append(dict(fa=fa, fb=fb, rows=list(range(fa, fb)), on=on, peak=peak))
+        comps.append(dict(fa=fa, fb=fb, on=on, peak=peak))
+    items = [dict(comps=[c], rows=list(range(c["fa"], c["fb"])), on=c["on"]) for c in comps]
+
+    def mean_power(fa, fb, frames):
+        return float(frames_power[fa:fb][:, frames].mean())
+
+    def other_side(i, weak_is_left):
+        """The component on the far side of the weak one (or None)."""
+        if weak_is_left:
+            cs = items[i]["comps"]
+            return cs[-2] if len(cs) > 1 else (items[i - 1]["comps"][-1] if i > 0 else None)
+        cs = items[i + 1]["comps"]
+        return cs[1] if len(cs) > 1 else (items[i + 2]["comps"][0] if i + 2 < len(items) else None)
+
+    def joinable(i):
+        a, b = items[i], items[i + 1]
+        ca, cb = a["comps"][-1], b["comps"][0]
+        shorter = min(ca["on"].sum(), cb["on"].sum())
+        if shorter == 0 or (ca["on"] & cb["on"]).sum() < CO_TIMED * shorter:
+            return False
+        gap = cb["fa"] - ca["fb"]
+        wa, wb = ca["fb"] - ca["fa"], cb["fb"] - cb["fa"]
+        if gap <= FRAGMENT_GAP_OF_WIDTH * max(wa, wb):
+            return True
+        strong, weak = (ca, cb) if ca["peak"] >= cb["peak"] else (cb, ca)
+        if strong["peak"] - weak["peak"] >= SIDELOBE_DB and gap <= SIDELOBE_GAP_OF_WIDTH * (strong["fb"] - strong["fa"]):
+            o = other_side(i, weak is ca)
+            owned_elsewhere = o is not None and o["peak"] - weak["peak"] >= SIDELOBE_DB and \
+                min(abs(o["fa"] - weak["fb"]), abs(weak["fa"] - o["fb"])) <= o["fb"] - o["fa"]
+            if not owned_elsewhere:
+                return True
+        if frames_power is not None and gap > 0:
+            frames = ca["on"] | cb["on"]
+            span = cb["fb"] - ca["fa"]
+            # noise from non-band bins one to three pair-widths away: beside the pair, an
+            # undetected part of the same weak lobe would be taken for noise
+            near = [*range(max(0, ca["fa"] - 3 * span), max(0, ca["fa"] - span)),
+                    *range(min(mask.shape[0], cb["fb"] + span), min(mask.shape[0], cb["fb"] + 3 * span))]
+            local = [k for k in near if not band_rows[k]]
+            if len(local) >= 4:
+                noise = float(np.median(frames_power[local][:, frames].mean(axis=1)))
+                g = mean_power(ca["fb"], cb["fa"], frames)
+                weaker = min(mean_power(ca["fa"], ca["fb"], frames), mean_power(cb["fa"], cb["fb"], frames))
+                if db(g) - db(noise) >= GAP_EXCESS_DB and db(weaker) - db(g) <= VALLEY_DB:
+                    return True
+        return False
+
     changed = True
     while changed and len(items) > 1:
         changed = False
         for i in range(len(items) - 1):
-            a, b = items[i], items[i + 1]
-            gap = b["fa"] - a["fb"]
-            shorter = min(a["on"].sum(), b["on"].sum())
-            if shorter == 0 or (a["on"] & b["on"]).sum() < CO_TIMED * shorter:
-                continue
-            strong, weak = (a, b) if a["peak"] >= b["peak"] else (b, a)
-            wide = max(a["fb"] - a["fa"], b["fb"] - b["fa"])
-            gap_excess = -np.inf
-            if noise_ref and gap > 0:
-                frames = a["on"] | b["on"]
-                gap_excess = float(db(power[a["fb"]:b["fa"]][:, frames].mean()) - db(noise_ref))
-            if gap <= FRAGMENT_GAP_OF_WIDTH * wide or gap_excess >= GAP_EXCESS_DB or (
-                    gap <= SIDELOBE_GAP_OF_WIDTH * (strong["fb"] - strong["fa"])
-                    and strong["peak"] - weak["peak"] >= SIDELOBE_DB):
-                items[i] = dict(fa=a["fa"], fb=b["fb"], rows=a["rows"] + b["rows"], on=a["on"] | b["on"],
-                                peak=max(a["peak"], b["peak"]))
+            if joinable(i):
+                a, b = items[i], items[i + 1]
+                items[i] = dict(comps=a["comps"] + b["comps"], rows=a["rows"] + b["rows"], on=a["on"] | b["on"])
                 del items[i + 1]
                 changed = True
                 break
-    return [(it["fa"], it["fb"], it["rows"]) for it in items]
+    return [(it["comps"][0]["fa"], it["comps"][-1]["fb"], it["rows"]) for it in items]
 
 
 @dataclass

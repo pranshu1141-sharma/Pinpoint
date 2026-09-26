@@ -30,6 +30,13 @@ def _g1_job(args):
     return systems.run(system, cap)
 
 
+SEEDS = {"g1": config.G1_TEST_SEED, "g2": generators.G2_TEST_SEED_BASE}
+
+
+def _g1_seed():
+    return SEEDS["g1"]
+
+
 def _g2_job(args):
     system, spec = args
     return systems.run(system, generators.g2_capture(**spec))
@@ -39,11 +46,11 @@ def compute_rows(system, gen, workers, g1_n, cached=()):
     """Rows for every capture of `gen`; captures whose id is in `cached` rows are reused."""
     have = {r["id"]: r for r in cached}
     if gen == "G1":
-        caps = list(generators.g1_captures(g1_n))
+        caps = list(generators.g1_captures(g1_n, seed=SEEDS["g1"]))
         ids = [c.id for c in caps]
         jobs, fn = [(system, c) for c in caps if c.id not in have], _g1_job
     elif gen == "G2":
-        specs = generators.g2_specs()
+        specs = generators.g2_specs(SEEDS["g2"])
         ids = [generators.g2_capture_id(**s) for s in specs]
         jobs, fn = [(system, s) for s, i in zip(specs, ids) if i not in have], _g2_job
     else:
@@ -62,9 +69,9 @@ def speed_rows(system, gen, g1_n):
     """Per-candidate estimator time measured sequentially (one process, nothing else running in
     this program): the row pass runs 10 workers at once, which measures a loaded machine."""
     if gen == "G1":
-        caps = list(generators.g1_captures(g1_n))[::SPEED_STRIDE]
+        caps = list(generators.g1_captures(g1_n, seed=SEEDS["g1"]))[::SPEED_STRIDE]
     elif gen == "G2":
-        caps = [generators.g2_capture(**s) for s in generators.g2_specs()[::SPEED_STRIDE]]
+        caps = [generators.g2_capture(**s) for s in generators.g2_specs(SEEDS["g2"])[::SPEED_STRIDE]]
     else:
         return []
     out = []
@@ -294,14 +301,21 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--g1-n", type=int, default=config.G1_TEST_N)
     ap.add_argument("--out", type=Path, default=ROOT / "docs")
+    ap.add_argument("--g1-seed", type=int, default=config.G1_TEST_SEED)
+    ap.add_argument("--g2-seed-base", type=int, default=generators.G2_TEST_SEED_BASE)
+    ap.add_argument("--tag", default="", help="suffix for caches (use with fresh seeds and a separate --out)")
     ap.add_argument("--sync-docs", action="store_true",
                     help="rewrite the bars in PROJECT_STATUS and the rj-marked numbers in CLAIMS first")
     args = ap.parse_args(argv)
     CACHE.mkdir(parents=True, exist_ok=True)
+    SEEDS.update(g1=args.g1_seed, g2=args.g2_seed_base)
+    if args.g2_seed_base in generators.G2_CALIBRATION_SEEDS or args.g1_seed == 4:
+        raise SystemExit("refusing to score on calibration seeds")
+    tag = f"_{args.tag}" if args.tag else ""
     rows_by, speed_by = {}, {}
     for sysname in args.systems.split(","):
         for gen in args.gens.split(","):
-            path = CACHE / f"rows_{sysname}_{gen}.json"
+            path = CACHE / f"rows_{sysname}_{gen}{tag}.json"
             cached = json.loads(path.read_text()) if args.reuse and path.exists() \
                 and sysname not in args.fresh.split(",") else []
             t0 = time.time()
@@ -311,7 +325,7 @@ def main(argv=None):
                 print(f"{sysname} {gen}: {len(rows) - len(cached)} new rows in {time.time() - t0:.0f} s", flush=True)
             rows_by.setdefault(sysname, {})[gen] = refresh_library_flags(rows)
             if sysname == systems.product_estimator():
-                sp_path = CACHE / f"speed_{sysname}_{gen}.json"
+                sp_path = CACHE / f"speed_{sysname}_{gen}{tag}.json"
                 if args.reuse and sp_path.exists() and sysname not in args.fresh.split(","):
                     sp = json.loads(sp_path.read_text())
                 else:
@@ -322,6 +336,7 @@ def main(argv=None):
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
                             text=True).stdout.strip()
     meta = dict(commit=commit, date=time.strftime("%Y-%m-%d"), thresholds=TH.__dict__,
+                seeds=dict(g1=args.g1_seed, g2_base=args.g2_seed_base),
                 in_library=sorted(config.IN_LIBRARY), out_of_library=sorted(config.OUT_OF_LIBRARY))
     extra = dict(real=real_criterion(), cli=cli_criterion(), docs=_crit("X1", "docs agree", {}))
     phases, candidate, stats = evaluate(rows_by, product, extra, speed_by)

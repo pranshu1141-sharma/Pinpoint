@@ -22,8 +22,8 @@
    "real_min_recordings": 5
   },
   "seeds": {
-   "g1": 7,
-   "g2_base": 100000
+   "g1": 11,
+   "g2_base": 300000
   },
   "in_library": [
    "8PSK",
@@ -40,7 +40,7 @@
   ]
  },
  "product": "verify",
- "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2713 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nModulation label        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSymbol rate             \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nSpeed                   \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nReal data (G3)          \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2717]\nAutomation              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nDocs                    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\n--------------------\nOverall                 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591  76%  (13/17 criteria)\n```",
+ "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2713 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2713 G3 \u2013]\nModulation label        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSymbol rate             \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nSpeed                   \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nReal data (G3)          \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2717]\nAutomation              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nDocs                    \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2717]\n--------------------\nOverall                 \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  65%  (11/17 criteria)\n```",
  "phases": [
   {
    "name": "Detect",
@@ -55,7 +55,7 @@
       "G1": {
        "value": 1.0,
        "passed": true,
-       "n": 125
+       "n": 108
       },
       "G2": {
        "value": 1.0,
@@ -72,7 +72,7 @@
       "G1": {
        "value": 0.0,
        "passed": true,
-       "n": 44
+       "n": 29
       },
       "G2": {
        "value": 0.0,
@@ -87,12 +87,12 @@
      "passed": false,
      "gens": {
       "G1": {
-       "value": 0.1062992125984252,
+       "value": 0.0830188679245283,
        "passed": false,
-       "n": 254
+       "n": 265
       },
       "G2": {
-       "value": 0.013052208835341365,
+       "value": 0.014056224899598393,
        "passed": true,
        "n": 996
       }
@@ -102,7 +102,7 @@
   },
   {
    "name": "Parameters",
-   "passed": 3,
+   "passed": 2,
    "total": 3,
    "criteria": [
     {
@@ -111,12 +111,12 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.9696969696969697,
+       "value": 0.9852941176470589,
        "passed": true,
-       "n": 66
+       "n": 68
       },
       "G2": {
-       "value": 0.9919871794871795,
+       "value": 0.9871794871794872,
        "passed": true,
        "n": 624
       }
@@ -125,15 +125,15 @@
     {
      "id": "P2",
      "desc": "-3 dB bandwidth within +-25% of truth (>= 90% of captures)",
-     "passed": true,
+     "passed": false,
      "gens": {
       "G1": {
-       "value": 0.9242424242424242,
-       "passed": true,
-       "n": 66
+       "value": 0.8676470588235294,
+       "passed": false,
+       "n": 68
       },
       "G2": {
-       "value": 0.9855769230769231,
+       "value": 0.9743589743589743,
        "passed": true,
        "n": 624
       }
@@ -145,9 +145,9 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.992,
+       "value": 1.0,
        "passed": true,
-       "n": 125
+       "n": 108
       },
       "G2": {
        "value": 0.9829317269076305,
@@ -169,12 +169,12 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.0033333333333333335,
+       "value": 0.0,
        "passed": true,
        "n": 300
       },
       "G2": {
-       "value": 0.012596899224806201,
+       "value": 0.02131782945736434,
        "passed": true,
        "n": 1032
       }
@@ -186,12 +186,12 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.9759036144578314,
+       "value": 0.9761904761904762,
        "passed": true,
-       "n": 83
+       "n": 84
       },
       "G2": {
-       "value": 0.9386574074074074,
+       "value": 0.9351851851851852,
        "passed": true,
        "n": 864
       }
@@ -210,12 +210,12 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.01,
+       "value": 0.016666666666666666,
        "passed": true,
        "n": 300
       },
       "G2": {
-       "value": 0.0048449612403100775,
+       "value": 0.009689922480620155,
        "passed": true,
        "n": 1032
       }
@@ -227,12 +227,12 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.9518072289156626,
+       "value": 0.9523809523809523,
        "passed": true,
-       "n": 83
+       "n": 84
       },
       "G2": {
-       "value": 0.8458333333333333,
+       "value": 0.84375,
        "passed": true,
        "n": 960
       }
@@ -253,7 +253,7 @@
       "G1": {
        "value": 0.0,
        "passed": true,
-       "n": 44
+       "n": 29
       },
       "G2": {
        "value": 0.0,
@@ -273,7 +273,7 @@
        "n": 0
       },
       "G2": {
-       "value": 0.125,
+       "value": 0.19791666666666666,
        "passed": false,
        "n": 96
       }
@@ -311,10 +311,10 @@
       "G1": {
        "value": 1.0,
        "passed": true,
-       "n": 63
+       "n": 65
       },
       "G2": {
-       "value": 0.8875502008032129,
+       "value": 0.891566265060241,
        "passed": false,
        "n": 249
       }
@@ -333,7 +333,7 @@
      "passed": false,
      "gens": {
       "G3": {
-       "value": "5/6 sane",
+       "value": "4/6 sane",
        "passed": false,
        "n": 6
       }
@@ -348,8 +348,8 @@
       {
        "file": "analog_FM_France",
        "crashed": false,
-       "sanity_ok": true,
-       "note": "all checks passed"
+       "sanity_ok": false,
+       "note": "1 detections < 2; 1 detections with 99% bandwidth >= 100000 Hz < 2"
       },
       {
        "file": "pulsed_ASK",
@@ -400,21 +400,42 @@
   },
   {
    "name": "Docs",
-   "passed": 1,
+   "passed": 0,
    "total": 1,
    "criteria": [
     {
      "id": "X1",
      "desc": "README, PROJECT_STATUS and CLAIMS agree with readiness.json",
-     "passed": true,
+     "passed": false,
      "gens": {
       "G3": {
-       "value": 0,
-       "passed": true,
+       "value": 20,
+       "passed": false,
        "n": null
       }
      },
-     "problems": []
+     "problems": [
+      "CLAIMS.md marker stats.verify.G1.label.published_wrong: says 0.3%, readiness.json has 0.0%",
+      "CLAIMS.md marker stats.verify.G2.label.published_wrong: says 1.3%, readiness.json has 2.1%",
+      "CLAIMS.md marker stats.verify.G2.label.published_correct_in_library: says 93.9%, readiness.json has 93.5%",
+      "CLAIMS.md marker stats.verify.G2.confidence.ool_wrong: says 12.5%, readiness.json has 19.8%",
+      "CLAIMS.md marker stats.verify.G1.rate.published_wrong: says 1.0%, readiness.json has 1.7%",
+      "CLAIMS.md marker stats.verify.G2.rate.published_wrong: says 0.5%, readiness.json has 1.0%",
+      "CLAIMS.md marker stats.verify.G2.rate.published_correct_digital: says 84.6%, readiness.json has 84.4%",
+      "CLAIMS.md marker stats.verify.G1.params.cf_ok: says 97.0%, readiness.json has 98.5%",
+      "CLAIMS.md marker stats.verify.G2.params.cf_ok: says 99.2%, readiness.json has 98.7%",
+      "CLAIMS.md marker stats.verify.G1.params.bw3_ok: says 92.4%, readiness.json has 86.8%",
+      "CLAIMS.md marker stats.verify.G2.params.bw3_ok: says 98.6%, readiness.json has 97.4%",
+      "CLAIMS.md marker stats.verify.G1.params.snr_ok: says 99.2%, readiness.json has 100.0%",
+      "CLAIMS.md marker stats.shipped.G1.detect.fragmentation: says 10.6%, readiness.json has 8.3%",
+      "CLAIMS.md marker stats.shipped.G2.detect.fragmentation: says 1.3%, readiness.json has 1.4%",
+      "CLAIMS.md marker stats.verify.G2.speed.within: says 88.8%, readiness.json has 89.2%",
+      "CLAIMS.md marker stats.verify.G1.confidence.fm_labelled: says 17.9%, readiness.json has 23.1%",
+      "CLAIMS.md marker stats.verify.G2.confidence.fm_labelled: says 100.0%, readiness.json has 94.4%",
+      "CLAIMS.md marker stats.shipped.G1.label.published_wrong: says 16.3%, readiness.json has 13.3%",
+      "LIMITATIONS_AND_ROADMAP.md marker stats.verify.G1.confidence.fm_labelled: says 17.9%, readiness.json has 23.1%",
+      "docs/PROJECT_STATUS.md does not embed the current readiness bars"
+     ]
     }
    ]
   }
@@ -432,12 +453,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.16333333333333333,
+        "value": 0.13333333333333333,
         "passed": false,
         "n": 300
        },
        "G2": {
-        "value": 0.06298449612403101,
+        "value": 0.06201550387596899,
         "passed": false,
         "n": 1032
        }
@@ -449,12 +470,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.3253012048192771,
+        "value": 0.30952380952380953,
         "passed": false,
-        "n": 83
+        "n": 84
        },
        "G2": {
-        "value": 0.6111111111111112,
+        "value": 0.6226851851851852,
         "passed": true,
         "n": 864
        }
@@ -473,12 +494,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.08,
+        "value": 0.04,
         "passed": false,
         "n": 300
        },
        "G2": {
-        "value": 0.06298449612403101,
+        "value": 0.06201550387596899,
         "passed": false,
         "n": 1032
        }
@@ -490,12 +511,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.0963855421686747,
+        "value": 0.14285714285714285,
         "passed": false,
-        "n": 83
+        "n": 84
        },
        "G2": {
-        "value": 0.378125,
+        "value": 0.3854166666666667,
         "passed": false,
         "n": 960
        }
@@ -516,7 +537,7 @@
        "G1": {
         "value": 0.0,
         "passed": true,
-        "n": 44
+        "n": 29
        },
        "G2": {
         "value": 0.0,
@@ -574,7 +595,7 @@
        "G1": {
         "value": 1.0,
         "passed": true,
-        "n": 254
+        "n": 265
        },
        "G2": {
         "value": 1.0,
@@ -592,66 +613,66 @@
    "G1": {
     "label": {
      "n": 300,
-     "published_wrong": 0.16333333333333333,
-     "n_in_library": 83,
-     "published_correct_in_library": 0.3253012048192771,
-     "published": 0.25666666666666665
+     "published_wrong": 0.13333333333333333,
+     "n_in_library": 84,
+     "published_correct_in_library": 0.30952380952380953,
+     "published": 0.24
     },
     "rate": {
      "n": 300,
-     "published_wrong": 0.08,
-     "n_digital": 83,
-     "published_correct_digital": 0.0963855421686747,
+     "published_wrong": 0.04,
+     "n_digital": 84,
+     "published_correct_digital": 0.14285714285714285,
      "harmonic_errors": 0.0
     },
     "confidence": {
-     "n_noise": 44,
+     "n_noise": 29,
      "noise_labelled": 0.0,
      "n_ool": 0,
      "ool_wrong": null,
-     "n_fm": 39,
+     "n_fm": 26,
      "fm_labelled": 0.0,
      "calibration_claims": 0
     },
     "speed": {
-     "n": 254,
+     "n": 265,
      "within": 1.0,
-     "p50_s": 0.006124770501628518,
-     "p95_s": 0.012472035201790277,
-     "max_s": 0.016359125002054498
+     "p50_s": 0.005766916990978643,
+     "p95_s": 0.011096716191968881,
+     "max_s": 0.014868874990497716
     },
     "detect": {
-     "n_strong": 125,
+     "n_strong": 108,
      "recall": 1.0,
-     "n_noise": 44,
+     "n_noise": 29,
      "noise_false": 0.0,
-     "n_found": 254,
-     "fragmentation": 0.1062992125984252
+     "n_found": 265,
+     "fragmentation": 0.0830188679245283
     },
     "params": {
-     "n_linear": 66,
-     "cf_ok": 0.8939393939393939,
-     "bw3_ok": 0.9242424242424242,
-     "n_signal": 125,
-     "snr_ok": 0.68,
-     "median_bw3_ratio": 0.9593670893975519,
-     "median_snr_err_db": -0.4601190092213123
+     "n_linear": 68,
+     "cf_ok": 0.9411764705882353,
+     "bw3_ok": 0.8676470588235294,
+     "n_signal": 108,
+     "snr_ok": 0.7222222222222222,
+     "median_bw3_ratio": 0.9482180411985113,
+     "median_snr_err_db": -0.47973309784962437
     }
    },
    "G2": {
     "label": {
      "n": 1032,
-     "published_wrong": 0.06298449612403101,
+     "published_wrong": 0.06201550387596899,
      "n_in_library": 864,
-     "published_correct_in_library": 0.6111111111111112,
-     "published": 0.6201550387596899
+     "published_correct_in_library": 0.6226851851851852,
+     "published": 0.6298449612403101
     },
     "rate": {
      "n": 1032,
-     "published_wrong": 0.06298449612403101,
+     "published_wrong": 0.06201550387596899,
      "n_digital": 960,
-     "published_correct_digital": 0.378125,
-     "harmonic_errors": 0.06770833333333333
+     "published_correct_digital": 0.3854166666666667,
+     "harmonic_errors": 0.06666666666666667
     },
     "confidence": {
      "n_noise": 36,
@@ -665,9 +686,9 @@
     "speed": {
      "n": 996,
      "within": 1.0,
-     "p50_s": 0.029300208007043693,
-     "p95_s": 0.0425241872544575,
-     "max_s": 0.05331899999873713
+     "p50_s": 0.029226000006019603,
+     "p95_s": 0.04142190649508848,
+     "max_s": 0.05005687499942724
     },
     "detect": {
      "n_strong": 996,
@@ -675,16 +696,16 @@
      "n_noise": 36,
      "noise_false": 0.0,
      "n_found": 996,
-     "fragmentation": 0.013052208835341365
+     "fragmentation": 0.014056224899598393
     },
     "params": {
      "n_linear": 624,
-     "cf_ok": 0.9471153846153846,
-     "bw3_ok": 0.9855769230769231,
+     "cf_ok": 0.9342948717948718,
+     "bw3_ok": 0.9743589743589743,
      "n_signal": 996,
      "snr_ok": 0.9829317269076305,
-     "median_bw3_ratio": 0.9590650926114732,
-     "median_snr_err_db": -0.08266270702335987
+     "median_bw3_ratio": 0.9536722118645418,
+     "median_snr_err_db": -0.0862986457840833
     }
    }
   },
@@ -692,83 +713,83 @@
    "G1": {
     "label": {
      "n": 300,
-     "published_wrong": 0.0033333333333333335,
-     "n_in_library": 83,
-     "published_correct_in_library": 0.9759036144578314,
-     "published": 0.44666666666666666
+     "published_wrong": 0.0,
+     "n_in_library": 84,
+     "published_correct_in_library": 0.9761904761904762,
+     "published": 0.5033333333333333
     },
     "rate": {
      "n": 300,
-     "published_wrong": 0.01,
-     "n_digital": 83,
-     "published_correct_digital": 0.9518072289156626,
-     "harmonic_errors": 0.012048192771084338
+     "published_wrong": 0.016666666666666666,
+     "n_digital": 84,
+     "published_correct_digital": 0.9523809523809523,
+     "harmonic_errors": 0.011904761904761904
     },
     "confidence": {
-     "n_noise": 44,
+     "n_noise": 29,
      "noise_labelled": 0.0,
      "n_ool": 0,
      "ool_wrong": null,
-     "n_fm": 39,
-     "fm_labelled": 0.1794871794871795,
+     "n_fm": 26,
+     "fm_labelled": 0.23076923076923078,
      "calibration_claims": 0
     },
     "speed": {
-     "n": 63,
+     "n": 65,
      "within": 1.0,
-     "p50_s": 0.30986737499188166,
-     "p95_s": 0.4644662542006699,
-     "max_s": 0.47644054199918173,
+     "p50_s": 0.31667637499049306,
+     "p95_s": 0.4207478586002253,
+     "max_s": 0.4777739580022171,
      "measured": "sequential, every 4th capture"
     },
     "detect": {
-     "n_strong": 125,
+     "n_strong": 108,
      "recall": 1.0,
-     "n_noise": 44,
+     "n_noise": 29,
      "noise_false": 0.0,
-     "n_found": 254,
-     "fragmentation": 0.1062992125984252
+     "n_found": 265,
+     "fragmentation": 0.0830188679245283
     },
     "params": {
-     "n_linear": 66,
-     "cf_ok": 0.9696969696969697,
-     "bw3_ok": 0.9242424242424242,
-     "n_signal": 125,
-     "snr_ok": 0.992,
-     "median_bw3_ratio": 0.9593670893975519,
-     "median_snr_err_db": -0.04857876853635368
+     "n_linear": 68,
+     "cf_ok": 0.9852941176470589,
+     "bw3_ok": 0.8676470588235294,
+     "n_signal": 108,
+     "snr_ok": 1.0,
+     "median_bw3_ratio": 0.9482180411985113,
+     "median_snr_err_db": -0.12696978160474126
     }
    },
    "G2": {
     "label": {
      "n": 1032,
-     "published_wrong": 0.012596899224806201,
+     "published_wrong": 0.02131782945736434,
      "n_in_library": 864,
-     "published_correct_in_library": 0.9386574074074074,
-     "published": 0.8333333333333334
+     "published_correct_in_library": 0.9351851851851852,
+     "published": 0.8372093023255814
     },
     "rate": {
      "n": 1032,
-     "published_wrong": 0.0048449612403100775,
+     "published_wrong": 0.009689922480620155,
      "n_digital": 960,
-     "published_correct_digital": 0.8458333333333333,
-     "harmonic_errors": 0.005208333333333333
+     "published_correct_digital": 0.84375,
+     "harmonic_errors": 0.010416666666666666
     },
     "confidence": {
      "n_noise": 36,
      "noise_labelled": 0.0,
      "n_ool": 96,
-     "ool_wrong": 0.125,
+     "ool_wrong": 0.19791666666666666,
      "n_fm": 36,
-     "fm_labelled": 1.0,
+     "fm_labelled": 0.9444444444444444,
      "calibration_claims": 0
     },
     "speed": {
      "n": 249,
-     "within": 0.8875502008032129,
-     "p50_s": 0.3502380839927355,
-     "p95_s": 0.5386108252045233,
-     "max_s": 0.6176558330043918,
+     "within": 0.891566265060241,
+     "p50_s": 0.3513160419970518,
+     "p95_s": 0.5432123585924273,
+     "max_s": 0.6836941670044325,
      "measured": "sequential, every 4th capture"
     },
     "detect": {
@@ -777,16 +798,16 @@
      "n_noise": 36,
      "noise_false": 0.0,
      "n_found": 996,
-     "fragmentation": 0.013052208835341365
+     "fragmentation": 0.014056224899598393
     },
     "params": {
      "n_linear": 624,
-     "cf_ok": 0.9919871794871795,
-     "bw3_ok": 0.9855769230769231,
+     "cf_ok": 0.9871794871794872,
+     "bw3_ok": 0.9743589743589743,
      "n_signal": 996,
      "snr_ok": 0.9829317269076305,
-     "median_bw3_ratio": 0.9590650926114732,
-     "median_snr_err_db": 0.009214628492003385
+     "median_bw3_ratio": 0.9536722118645418,
+     "median_snr_err_db": 0.009732865322050088
     }
    }
   }

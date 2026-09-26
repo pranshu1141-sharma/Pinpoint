@@ -1,37 +1,41 @@
 {
  "thresholds": {
   "m_fam": 0.167533,
-  "m_rate": 0.028403,
-  "unexplained_max": 0.11960748231255786,
+  "m_rate": 0.004518,
+  "unexplained_max": 0.11922221951364399,
   "min_usage": 0.01,
-  "m_fm_digital": 0.711137
+  "m_fm_digital": 0.711137,
+  "m_label": 0.183238
  },
  "margin_unit": "sample",
- "provenance": "margin thresholds fit on a cross-generator calibration split (G1 seed 4, G2 calibration seeds; 860 captures): >= 95% precision on each generator; margins are nats per sample, not probabilities",
+ "provenance": "margin thresholds fit on a cross-generator calibration split (G1 seed 4, G2 calibration seeds; 860 captures): >= 97% precision on each generator; margins are nats per sample, not probabilities",
  "candidates": [
   {
    "unit": "sample",
    "m_fam": 0.167533,
-   "m_rate": 0.028403,
-   "unexplained_max": 0.11960748231255786,
+   "m_rate": 0.004518,
+   "unexplained_max": 0.11922221951364399,
    "m_fm_digital": 0.711137,
-   "coverage": 1058
+   "m_label": 0.183238,
+   "coverage": 1018
   },
   {
    "unit": "symbol",
    "m_fam": 1.4530185,
-   "m_rate": 0.181536,
+   "m_rate": 0.165633,
    "unexplained_max": 0.11238103351174035,
    "m_fm_digital": 0.0,
-   "coverage": 1006
+   "m_label": 2.356183,
+   "coverage": 962
   },
   {
    "unit": "total",
    "m_fam": 375.183516,
-   "m_rate": 58.169967,
-   "unexplained_max": 0.11929927207342673,
+   "m_rate": 18.506056,
+   "unexplained_max": 0.1181721634400803,
    "m_fm_digital": 3289.927415,
-   "coverage": 1057
+   "m_label": 592.359561,
+   "coverage": 996
   }
  ],
  "n_captures": 860,

@@ -111,13 +111,20 @@ def robust_noise_floor(iq: np.ndarray, fs: float) -> float:
     occupies a large share of the band, which biased SNR low by 3-6 dB on
     wideband captures. For noise alone, each Welch bin averages K Hann segments
     with 50% overlap: approximately gamma-distributed with shape K/1.056, so the
-    20th percentile is divided by that distribution's 20% quantile / mean.
+    20th percentile is divided by that distribution's 20% quantile / mean. Stopband
+    bins (> 10 dB under the median) are excluded, and the result is bounded to within
+    6 dB under the median.
     """
-    _, psd, _ = estimate_noise_floor(iq, fs)
+    _, psd, median = estimate_noise_floor(iq, fs)
     k = max(1, (len(iq) - NFFT // 2) // (NFFT // 2))
     shape = k / 1.056
     q = gamma.ppf(FLOOR_PERCENTILE / 100, shape) / shape
-    return float(max(np.percentile(psd, FLOOR_PERCENTILE) / q, EPS))
+    # A receiver anti-alias stopband holds bins far below the in-band noise; they are not
+    # noise samples of the band of interest (they sent SNR to +70 dB). Ignore bins more than
+    # 10 dB under the median, and never go more than 6 dB under the median.
+    usable = psd[psd >= median / 10]
+    floor = np.percentile(usable if usable.size >= 16 else psd, FLOOR_PERCENTILE) / q
+    return float(max(floor, median / 10 ** 0.6, EPS))
 
 
 def half_power_width(frequencies, excess):

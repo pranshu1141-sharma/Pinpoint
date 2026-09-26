@@ -184,3 +184,21 @@ def test_verify_mode_does_not_publish_the_legacy_refinement_when_it_is_wrong(cid
     assert out["estimate_tier"] == "labelled"
     assert abs(out["center_frequency_refined_hz"] - cap.truth["fc"]) <= 0.1 * cap.truth["bw3"]
     assert "verify" in out["refinement_status"]
+
+
+def test_snr_is_not_inflated_by_a_receiver_stopband():
+    # 25% of the band in an anti-alias stopband pulled the percentile floor far below the in-band noise
+    from scipy import signal
+    from experiments.readiness.synth_wide import make_signal as wide
+    rng = np.random.default_rng(0)
+    n = 48000
+    _, clean = wide("qpsk", 200, 3000, 48, 1, n)
+    w = signal.lfilter(signal.firwin(255, 0.75), 1, (rng.standard_normal(n) + 1j * rng.standard_normal(n)) / np.sqrt(2))
+    w = w / np.sqrt(np.mean(np.abs(w) ** 2))
+    x = clean / np.sqrt(np.mean(np.abs(clean) ** 2)) * np.sqrt(10) + w
+    c = Capture(np.asarray(x, np.complex64), FS, {"source_kind": "iq", "filename": "t",
+                                                 "wav_disambiguation": {"result": "declared_iq"}})
+    r = analyze_capture(c)
+    d = next(d for d in r.response["detections"] if d["freq_lower_hz"] < 3000 < d["freq_upper_hz"])
+    e = estimate.estimate_candidate(c, d, noise_floor=r.noise_floor)
+    assert e["snr_db"] == pytest.approx(10.0, abs=3.0)

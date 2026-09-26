@@ -7,9 +7,8 @@ Calibration data never overlaps the scoreboard's test data:
   (test uses G2_TEST_SEED_BASE...). Held-out families (8-FSK, 8-QAM) are excluded.
 Each capture goes through the product path (Detect -> matched candidate -> verify window).
 
-Rule (the spike's): a rate is only published for a digital winner whose family margin passes;
-the smallest margin reaching >= 95% precision on >= 8 captures, found on
-EACH generator separately; the larger (stricter) of the two is kept. The margin unit is chosen
+Rule: a rate is only published beside a published label; the smallest margin reaching >= 97% precision on >= 8 captures, found on
+EACH generator separately; the larger (stricter) of the two is kept (97% precision: see PRECISION). The margin unit is chosen
 on calibration data too: per-sample nats (the spike's), per-symbol nats (x samples/symbol) or
 total nats (x samples) -- whichever publishes the most correct answers at that precision.
 """
@@ -90,7 +89,7 @@ def unknown_wrong(rows, th, unit):
             continue
         n += 1
         for c, m in zip(r["cands"], margins(r)):
-            g = gate(m["d"], m["usage"], th, unit, c["n"], c["fs"], m["m_dig"])
+            g = gate(m["d"], m["usage"], th, unit, c["n"], c["fs"], m["m_dig"], m["m_lab"])
             bad += bool(g["label"])
     return bad / n if n else None
 
@@ -105,38 +104,41 @@ def margins(row):
         best = min(_hyps(c), key=lambda h: h.score)
         dig = [h.score for h in _hyps(c) if h.expert in DIGITAL_EXPERTS]
         m_dig = (min(dig) - best.score) if dig else np.inf
-        out.append(dict(d=d, usage=best.usage, scale=scale, m_dig=m_dig))
+        other = [h.score for h in _hyps(c) if h.label != best.label]
+        m_lab = (min(other) - best.score) if other else np.inf
+        out.append(dict(d=d, usage=best.usage, scale=scale, m_dig=m_dig, m_lab=m_lab))
     return out
 
 
 def fit(rows, unit, min_usage):
-    """Thresholds for one margin unit; coverage = published-correct labels + rates on calibration."""
-    per_gen = {}
+    """Thresholds for one margin unit, fitted in stages (each on the candidates that pass the
+    earlier gates): family margin -> FM-over-digital margin -> unexplained power -> margin
+    over any other label -> rate margin (only where the label is published). Coverage =
+    published-correct labels + rates on calibration."""
     M = {gen: [(r, m) for r in rows if r["gen"] == gen and r["truth"]["label"] not in UNKNOWN
                for m in margins(r)] for gen in ("G1", "G2")}
-    for gen, pairs in M.items():
-        L = [(m["d"].m_fam * m["scale"][unit], label_matches(m["d"].label, r["truth"]["label"]), m["d"].unexplained)
-             for r, m in pairs if m["d"].family not in ("none", UNKNOWN_CE) and m["usage"] >= min_usage]
-        per_gen[gen] = [_pick(L), None, L, None]
-    t_fam = max(per_gen[g][0] for g in per_gen)
-    # a rate is published only for a digital winner whose family margin also passes
-    for gen, pairs in M.items():
-        T = [(m["d"].m_rate * m["scale"][unit], rate_matches(m["d"].rate, r["truth"]["rate"]))
-             for r, m in pairs if m["d"].expert in DIGITAL_EXPERTS and m["d"].m_fam * m["scale"][unit] >= t_fam]
-        per_gen[gen][1], per_gen[gen][3] = _pick(T), T
-    t_rate = max(per_gen[g][1] for g in per_gen)
-    # FM needs its own margin over the best digital hypothesis (plan WP3): FM-labelled
-    # captures whose family margin passes; smallest digital margin reaching the precision
-    t_fm = max(_pick([(m["m_dig"] * m["scale"][unit], label_matches("FM", r["truth"]["label"]))
-                      for r, m in pairs if m["d"].label == "FM" and m["d"].m_fam * m["scale"][unit] >= t_fam],
-                     empty=0.0)
-               for pairs in M.values())
-    good = [u for g in per_gen for m, ok, u in per_gen[g][2] if ok and m >= t_fam and np.isfinite(u)]
+    sc = lambda m, key: m[key] * m["scale"][unit]
+    fam = lambda m: m["d"].family not in ("none", UNKNOWN_CE) and m["usage"] >= min_usage
+    t_fam = max(_pick([(m["d"].m_fam * m["scale"][unit], label_matches(m["d"].label, r["truth"]["label"]))
+                       for r, m in pairs if fam(m)]) for pairs in M.values())
+    passed = lambda m: fam(m) and m["d"].m_fam * m["scale"][unit] >= t_fam
+    t_fm = max(_pick([(sc(m, "m_dig"), label_matches("FM", r["truth"]["label"]))
+                      for r, m in pairs if passed(m) and m["d"].label == "FM"], empty=0.0) for pairs in M.values())
+    passed_fm = lambda m: passed(m) and (m["d"].label != "FM" or sc(m, "m_dig") >= t_fm)
+    good = [m["d"].unexplained for pairs in M.values() for r, m in pairs
+            if passed_fm(m) and label_matches(m["d"].label, r["truth"]["label"]) and np.isfinite(m["d"].unexplained)]
     t_unexp = float(np.percentile(good, 95)) if good else 1.0
-    cover = sum(ok for g in per_gen for m, ok, u in per_gen[g][2] if m >= t_fam and u <= t_unexp) + \
-        sum(ok for g in per_gen for m, ok in per_gen[g][3] if m >= t_rate)
+    passed_u = lambda m: passed_fm(m) and m["d"].unexplained <= t_unexp
+    t_lab = max(_pick([(sc(m, "m_lab"), label_matches(m["d"].label, r["truth"]["label"]))
+                       for r, m in pairs if passed_u(m)], empty=0.0) for pairs in M.values())
+    published = lambda m: passed_u(m) and sc(m, "m_lab") >= t_lab
+    T = {g: [(m["d"].m_rate * m["scale"][unit], rate_matches(m["d"].rate, r["truth"]["rate"]))
+             for r, m in pairs if published(m) and m["d"].expert in DIGITAL_EXPERTS] for g, pairs in M.items()}
+    t_rate = max(_pick(t) for t in T.values())
+    cover = sum(label_matches(m["d"].label, r["truth"]["label"]) for pairs in M.values() for r, m in pairs
+                if published(m)) + sum(ok for t in T.values() for v, ok in t if v >= t_rate)
     return dict(unit=unit, m_fam=t_fam, m_rate=t_rate, unexplained_max=t_unexp, m_fm_digital=t_fm,
-                coverage=int(cover))
+                m_label=t_lab, coverage=int(cover))
 
 
 def _pick(pairs, empty=float("inf")):
@@ -174,10 +176,10 @@ def main(argv=None):
     best = max(fits, key=lambda f: f["coverage"])
     blob = dict(thresholds=dict(m_fam=best["m_fam"], m_rate=best["m_rate"],
                                 unexplained_max=best["unexplained_max"], min_usage=min_usage,
-                                m_fm_digital=best["m_fm_digital"]),
+                                m_fm_digital=best["m_fm_digital"], m_label=best["m_label"]),
                 margin_unit=best["unit"],
                 provenance=(f"margin thresholds fit on a cross-generator calibration split (G1 seed 4, "
-                            f"G2 calibration seeds; {len(rows)} captures): >= 95% precision on each generator; "
+                            f"G2 calibration seeds; {len(rows)} captures): >= 97% precision on each generator; "
                             f"margins are nats per {best['unit']}, not probabilities"),
                 candidates=fits, n_captures=len(rows))
     th = Thresholds(**blob["thresholds"])

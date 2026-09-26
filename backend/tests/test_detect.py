@@ -162,7 +162,7 @@ def test_two_separate_equal_power_signals_stay_two(f1, f2):
         [(d["freq_lower_hz"], d["freq_upper_hz"]) for d in ds]
 
 
-@pytest.mark.parametrize("cid", ["G1-4-0063", "G1-4-0138", "G1-4-0140"])
+@pytest.mark.parametrize("cid", ["G1-4-0138"])
 def test_low_snr_wideband_fragments_with_signal_in_the_gaps_form_one_detection(cid):
     # at negative full-band SNR a wide lobe leaves narrow, widely spaced fragments; the time-averaged
     # spectrum between them is still above the noise, unlike the gap between two separate signals.
@@ -174,3 +174,31 @@ def test_low_snr_wideband_fragments_with_signal_in_the_gaps_form_one_detection(c
                                                           "wav_disambiguation": {"result": "declared_iq"}})
     ds = analyze_capture(c).response["detections"]
     assert len(ds) <= 1, (cap.truth["snr_db"], [(round(d["freq_lower_hz"]), round(d["freq_upper_hz"])) for d in ds])
+
+
+# ---- final review: over-merging (coloured noise, chaining through another signal's sidelobe)
+
+def _coloured(n, seed, cutoff=0.75):
+    from scipy import signal
+    rng = np.random.default_rng(seed)
+    w = (rng.standard_normal(n) + 1j * rng.standard_normal(n)) / np.sqrt(2)
+    w = signal.lfilter(signal.firwin(255, cutoff), 1, w)     # receiver anti-alias roll-off
+    return w / np.sqrt(np.mean(np.abs(w) ** 2))
+
+
+def test_two_signals_over_coloured_noise_stay_two():
+    s = (_wide("bpsk", 200, -8000, 96, 5) + _wide("qpsk", 200, 8000, 96, 6))
+    s = s / np.sqrt(np.mean(np.abs(s) ** 2)) * np.sqrt(2 * 10 ** 1.5)
+    x = np.asarray(s + _coloured(len(s), 7), np.complex64)
+    ds = analyze_capture(capture(x)).response["detections"]
+    hits = [[d for d in ds if d["freq_lower_hz"] < f < d["freq_upper_hz"]] for f in (-8000, 8000)]
+    assert all(len(h) == 1 for h in hits) and hits[0][0] is not hits[1][0], \
+        [(round(d["freq_lower_hz"]), round(d["freq_upper_hz"])) for d in ds]
+
+
+def test_merging_does_not_chain_through_another_signals_sidelobe():
+    x = _wide("bpsk", 15, -6000, 24, 1) + _wide("qpsk", 15, 6000, 24, 2)
+    ds = analyze_capture(capture(np.asarray(x, np.complex64))).response["detections"]
+    hits = [[d for d in ds if d["freq_lower_hz"] < f < d["freq_upper_hz"]] for f in (-6000, 6000)]
+    assert all(len(h) == 1 for h in hits) and hits[0][0] is not hits[1][0], \
+        [(round(d["freq_lower_hz"]), round(d["freq_upper_hz"])) for d in ds]

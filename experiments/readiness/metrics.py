@@ -56,10 +56,12 @@ def rate_stats(rows):
 def confidence_stats(rows):
     noise = [r for r in rows if r["truth"]["label"] == "noise"]
     ool = [r for r in rows if r["truth"]["out_of_library"]]
+    fm = [r for r in rows if r["truth"]["label"] == "FM"]
     ool_wrong = sum(r["out"]["label"] is not None and not label_matches(r["out"]["label"], r["truth"]["label"])
                     for r in ool)
     return dict(n_noise=len(noise), noise_labelled=_frac(sum(r["out"]["label"] is not None for r in noise), len(noise)),
                 n_ool=len(ool), ool_wrong=_frac(ool_wrong, len(ool)),
+                n_fm=len(fm), fm_labelled=_frac(sum(r["out"]["label"] == "FM" for r in fm), len(fm)),
                 calibration_claims=sum(bool(r["out"].get("calibration_claim")) and r["out"]["label"] is not None
                                        for r in rows))
 

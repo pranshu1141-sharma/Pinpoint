@@ -43,9 +43,17 @@ def fm_digital_margin(hypotheses, fm_score: float) -> float:
     return (min(dig) - fm_score) if dig else float("inf")
 
 
-def gate(d, usage: float, th: Thresholds, unit: str, n: int, fs: float, m_dig: float = float("inf")) -> dict:
+def label_margin(hypotheses, best) -> float:
+    """Per-sample score gap from the winner to the best hypothesis with a different label."""
+    other = [h.score for h in hypotheses if h.label != best.label]
+    return (min(other) - best.score) if other else float("inf")
+
+
+def gate(d, usage: float, th: Thresholds, unit: str, n: int, fs: float, m_dig: float = float("inf"),
+         m_label: float = float("inf")) -> dict:
     """Publication decision from raw margins (per-sample nats) rescaled to the calibrated unit.
-    FM additionally needs its margin over the best digital hypothesis (plan WP3)."""
+    FM additionally needs its margin over the best digital hypothesis (plan WP3); every label
+    needs its margin over any other label (m_label); a rate needs a published label."""
     sps = fs / d.rate if d.rate else float("nan")
     scale = {"sample": 1.0, "symbol": sps, "total": float(n)}[unit]
     m_fam, m_rate = d.m_fam * scale, d.m_rate * scale
@@ -53,9 +61,9 @@ def gate(d, usage: float, th: Thresholds, unit: str, n: int, fs: float, m_dig: f
     if d.label == "FM" and m_dig * scale < th.m_fm_digital:
         fam_pass = False
     label = bool(fam_pass and d.unexplained <= th.unexplained_max and d.family != UNKNOWN_CE
-                 and usage >= th.min_usage)
-    # a rate means "this is digital at R": only when the family margin passes too
-    rate = bool(fam_pass and d.expert in DIGITAL_EXPERTS and np.isfinite(m_rate) and m_rate >= th.m_rate)
+                 and usage >= th.min_usage and m_label * scale >= th.m_label)
+    # a rate means "this is digital at R": only beside a published label
+    rate = bool(label and d.expert in DIGITAL_EXPERTS and np.isfinite(m_rate) and m_rate >= th.m_rate)
     tier = "labelled" if label else ("unknown_family" if fam_pass else "abstain")
     return dict(label=label, rate=rate, tier=tier, m_fam=m_fam, m_rate=m_rate)
 
@@ -114,7 +122,8 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
     d = decide(r.hypotheses, r.noise_var, r.total_power, raw)
     usage = min(r.hypotheses, key=lambda h: h.score).usage
     best = min(r.hypotheses, key=lambda h: h.score)
-    g = gate(d, usage, th, unit, len(x), fs, fm_digital_margin(r.hypotheses, best.score))
+    g = gate(d, usage, th, unit, len(x), fs, fm_digital_margin(r.hypotheses, best.score),
+             label_margin(r.hypotheses, best))
     out.update(
         modulation_label=d.label if g["label"] else None,
         verify_family=(d.family if g["tier"] == "labelled" else

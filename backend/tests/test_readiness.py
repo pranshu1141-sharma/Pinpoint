@@ -192,3 +192,23 @@ def test_real_recording_checks_apply_the_manifest_rules():
     assert not ok and any("QPSK" in n for n in notes) and any("rate" in n for n in notes)
     assert not sanity(entry, [])[0]
     assert not sanity(entry, [dict(good[0], is_pulsed=False)])[0]
+
+
+def test_docs_check_flags_stale_status_prose_and_a_wrong_window_cap(tmp_path):
+    from experiments.readiness import docs_check
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "backend/pipeline").mkdir(parents=True)
+    (tmp_path / "backend/pipeline/verify_estimator.py").write_text("MAX_SAMPLES = 4096      # cap\\n")
+    (tmp_path / "docs/CLAIMS.md").write_text("x\\n")
+    (tmp_path / "docs/PROJECT_STATUS.md").write_text("<!-- readiness:start -->\\n```\\n```\\n<!-- readiness:end -->\\n")
+    (tmp_path / "docs/LIMITATIONS_AND_ROADMAP.md").write_text("An experimental alternative is under test in `backend/experimental/`.\\n")
+    (tmp_path / "README.md").write_text("It caps the window at 8,192 samples.\\n")
+    ok, problems = docs_check.check({"bars": "```\\n```"}, tmp_path)
+    assert any("LIMITATIONS" in p and "under test" in p for p in problems)
+    assert any("8,192" in p and "4,096" in p for p in problems)
+
+
+def test_fm_label_share_is_reported():
+    from experiments.readiness import metrics
+    rows = [_row("FM", "FM"), _row("FM", None), _row("FM", "BPSK"), _row("BPSK", "BPSK", 1e3)]
+    assert metrics.confidence_stats(rows)["fm_labelled"] == pytest.approx(1 / 3)

@@ -17,6 +17,9 @@ class Thresholds:
     min_usage: float = 0.01
     # FM is published only if it beats the best digital hypothesis by this margin (0 = off)
     m_fm_digital: float = 0.0
+    # the label also needs this margin over the best hypothesis with a different label (the
+    # family margin never separated QPSK from 8PSK or FSK2 from FSK4); 0 = off
+    m_label: float = 0.0
 
 
 @dataclass(frozen=True)

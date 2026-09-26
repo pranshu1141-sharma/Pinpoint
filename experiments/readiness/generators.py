@@ -105,8 +105,8 @@ def g1_captures(count: int = G1_TEST_N, seed: int = G1_TEST_SEED, fs: float = RE
 
 # ---------------------------------------------------------------- G2
 
-def g2_specs() -> list[dict]:
-    specs, s = [], G2_TEST_SEED_BASE
+def g2_specs(seed_base: int = G2_TEST_SEED_BASE) -> list[dict]:
+    specs, s = [], seed_base
     for kind in G2_KINDS_DIGITAL:
         for fc in G2_CARRIERS:
             for sps in G2_SPS:

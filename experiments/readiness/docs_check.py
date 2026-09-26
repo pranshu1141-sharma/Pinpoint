@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DOCS = ("README.md", "docs/PROJECT_STATUS.md", "docs/CLAIMS.md")
+DOCS = ("README.md", "docs/PROJECT_STATUS.md", "docs/CLAIMS.md", "docs/LIMITATIONS_AND_ROADMAP.md")
 MARKER = re.compile(r"<!--rj:([\w.\-]+)-->[ ]?([^\s|<]+)")
 
 # phrase (lower-case) -> file whose existence makes the phrase false
@@ -19,10 +19,22 @@ CONTRADICTIONS = {
     "does not classify modulation": "backend/pipeline/classify.py",
     "no demodulation or decoding exists": "backend/pipeline/decode.py",
     "it is **not** wired into the api": "backend/pipeline/verify_estimator.py",
+    # stale status prose about the estimate spike, false once it is the product path
+    "methodology under test": "backend/pipeline/verify_estimator.py",
+    "is under test in `backend/experimental": "backend/pipeline/verify_estimator.py",
+    "is not imported by detect": "backend/pipeline/verify_estimator.py",
 }
+MARKED = ("docs/CLAIMS.md", "docs/LIMITATIONS_AND_ROADMAP.md")   # files whose rj markers are synced
+WINDOW_CLAIM = re.compile(r"caps the window at ([\d,]+) samples")
 # claims that must carry their fixture conditions on the same line
 CONDITIONAL = ("30/30",)
 CONDITION_WORDS = ("fixture", "synth_gen", "synthetic")
+
+
+def _max_samples(root):
+    p = root / "backend" / "pipeline" / "verify_estimator.py"
+    m = re.search(r"^MAX_SAMPLES = (\d+)", p.read_text(), re.M) if p.exists() else None
+    return int(m.group(1)) if m else None
 
 
 def lookup(obj, path):
@@ -47,16 +59,19 @@ def fmt(v):
 
 def check(readiness: dict, root: Path = ROOT):
     problems = []
-    claims = root / "docs" / "CLAIMS.md"
-    if not claims.exists():
+    if not (root / "docs" / "CLAIMS.md").exists():
         problems.append("docs/CLAIMS.md is missing")
-    else:
-        for path, shown in MARKER.findall(claims.read_text()):
+    for rel in MARKED:
+        doc = root / rel
+        if not doc.exists():
+            continue
+        name = Path(rel).name
+        for path, shown in MARKER.findall(doc.read_text()):
             want = lookup(readiness, path)
             if want is None:
-                problems.append(f"CLAIMS.md marker {path}: no such readiness.json value")
+                problems.append(f"{name} marker {path}: no such readiness.json value")
             elif fmt(want) != shown:
-                problems.append(f"CLAIMS.md marker {path}: says {shown}, readiness.json has {fmt(want)}")
+                problems.append(f"{name} marker {path}: says {shown}, readiness.json has {fmt(want)}")
     status = root / "docs" / "PROJECT_STATUS.md"
     embedded = _block(status.read_text()) if status.exists() else None
     if embedded is None or _comparable(embedded) != _comparable(readiness.get("bars", "")):
@@ -70,6 +85,10 @@ def check(readiness: dict, root: Path = ROOT):
         for phrase, code in CONTRADICTIONS.items():
             if phrase in low and (root / code).exists():
                 problems.append(f"{rel}: says '{phrase}' but {code} exists")
+        cap = _max_samples(root)
+        for claimed in WINDOW_CLAIM.findall(text):
+            if cap is not None and int(claimed.replace(",", "")) != cap:
+                problems.append(f"{rel}: says the window is capped at {claimed} samples, code has {cap:,}")
         for line in text.splitlines():
             if any(c in line for c in CONDITIONAL) and not any(w in line.lower() for w in CONDITION_WORDS):
                 problems.append(f"{rel}: unconditional claim: {line.strip()[:90]}")
@@ -97,9 +116,10 @@ def sync(readiness: dict, root: Path = ROOT):
         text = status.read_text()
         head, tail = text[:text.index(START) + len(START)], text[text.index(END):]
         status.write_text(f"{head}\n{readiness['bars'].strip()}\n{tail}")
-    claims = root / "docs" / "CLAIMS.md"
-    if claims.exists():
-        def repl(m):
-            want = lookup(readiness, m.group(1))
-            return m.group(0) if want is None else f"<!--rj:{m.group(1)}--> {fmt(want)}"
-        claims.write_text(MARKER.sub(repl, claims.read_text()))
+    def repl(m):
+        want = lookup(readiness, m.group(1))
+        return m.group(0) if want is None else f"<!--rj:{m.group(1)}--> {fmt(want)}"
+    for rel in MARKED:
+        doc = root / rel
+        if doc.exists():
+            doc.write_text(MARKER.sub(repl, doc.read_text()))

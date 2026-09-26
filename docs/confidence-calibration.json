@@ -1,56 +1,91 @@
 {
   "corpus": {
-    "train_n": 228,
-    "test_n": 228,
-    "train_positive_rate": 0.9473684210526315,
-    "test_positive_rate": 0.9473684210526315,
+    "train_n": 682,
+    "test_n": 736,
+    "train_positive_rate": 0.844574780058651,
+    "test_positive_rate": 0.782608695652174,
     "origin": "synthetic (backend/pipeline/calibration_corpus.py); no real-file calibration performed in this pass"
   },
   "confidence": {
-    "raw_ece_held_out": 0.13588508771929825,
-    "calibrated_ece_held_out": 0.006861912846632977,
+    "raw_ece_held_out": 0.22795380434782606,
+    "calibrated_ece_held_out": 0.007017183547907549,
     "raw_reliability_diagram": [
+      {
+        "bin_lower": 0.5,
+        "bin_upper": 0.6000000000000001,
+        "mean_confidence": 0.5566626373626374,
+        "empirical_accuracy": 0.01098901098901099,
+        "count": 91
+      },
       {
         "bin_lower": 0.6000000000000001,
         "bin_upper": 0.7000000000000001,
-        "mean_confidence": 0.6619057142857141,
-        "empirical_accuracy": 0.6571428571428571,
-        "count": 35
+        "mean_confidence": 0.6650672727272725,
+        "empirical_accuracy": 0.36363636363636365,
+        "count": 110
       },
       {
         "bin_lower": 0.7000000000000001,
         "bin_upper": 0.8,
-        "mean_confidence": 0.7573142857142857,
+        "mean_confidence": 0.7577736486486486,
         "empirical_accuracy": 1.0,
-        "count": 56
+        "count": 148
       },
       {
         "bin_lower": 0.8,
         "bin_upper": 0.9,
-        "mean_confidence": 0.8513408163265306,
+        "mean_confidence": 0.8505507194244605,
         "empirical_accuracy": 1.0,
-        "count": 98
+        "count": 278
       },
       {
         "bin_lower": 0.9,
         "bin_upper": 1.0,
-        "mean_confidence": 0.9318948717948717,
+        "mean_confidence": 0.9306064220183485,
         "empirical_accuracy": 1.0,
-        "count": 39
+        "count": 109
       }
     ],
     "calibrated_reliability_diagram": [
       {
+        "bin_lower": 0.0,
+        "bin_upper": 0.1,
+        "mean_confidence": 0.002230462542169702,
+        "empirical_accuracy": 0.0,
+        "count": 89
+      },
+      {
+        "bin_lower": 0.1,
+        "bin_upper": 0.2,
+        "mean_confidence": 0.17369727047146274,
+        "empirical_accuracy": 0.5,
+        "count": 2
+      },
+      {
+        "bin_lower": 0.30000000000000004,
+        "bin_upper": 0.4,
+        "mean_confidence": 0.3225806451612904,
+        "empirical_accuracy": 0.32978723404255317,
+        "count": 94
+      },
+      {
         "bin_lower": 0.6000000000000001,
         "bin_upper": 0.7000000000000001,
-        "mean_confidence": 0.6129032258064517,
-        "empirical_accuracy": 0.6206896551724138,
-        "count": 29
+        "mean_confidence": 0.7,
+        "empirical_accuracy": 0.3333333333333333,
+        "count": 9
+      },
+      {
+        "bin_lower": 0.7000000000000001,
+        "bin_upper": 0.8,
+        "mean_confidence": 0.747222222222221,
+        "empirical_accuracy": 0.75,
+        "count": 4
       },
       {
         "bin_lower": 0.8,
         "bin_upper": 0.9,
-        "mean_confidence": 0.8306451612902923,
+        "mean_confidence": 0.837500000000018,
         "empirical_accuracy": 1.0,
         "count": 2
       },
@@ -58,94 +93,115 @@
         "bin_lower": 0.9,
         "bin_upper": 1.0,
         "mean_confidence": 1.0,
-        "empirical_accuracy": 0.9949238578680203,
-        "count": 197
+        "empirical_accuracy": 1.0,
+        "count": 536
       }
     ],
     "calibrator_file": "calibration-confidence.json"
   },
   "confidence_evidence_based": {
-    "raw_ece_held_out": 0.3001438596491228,
-    "calibrated_ece_held_out": 0.05938271604938277,
+    "raw_ece_held_out": 0.22537282608695652,
+    "calibrated_ece_held_out": 0.11400274597132379,
     "raw_reliability_diagram": [
       {
         "bin_lower": 0.4,
         "bin_upper": 0.5,
-        "mean_confidence": 0.490848275862069,
-        "empirical_accuracy": 0.7241379310344828,
-        "count": 29
+        "mean_confidence": 0.4898298850574714,
+        "empirical_accuracy": 0.3448275862068966,
+        "count": 87
       },
       {
         "bin_lower": 0.5,
         "bin_upper": 0.6000000000000001,
-        "mean_confidence": 0.5304152777777777,
-        "empirical_accuracy": 0.9444444444444444,
-        "count": 72
+        "mean_confidence": 0.5295347826086956,
+        "empirical_accuracy": 0.927536231884058,
+        "count": 207
       },
       {
         "bin_lower": 0.6000000000000001,
         "bin_upper": 0.7000000000000001,
-        "mean_confidence": 0.6542642857142856,
-        "empirical_accuracy": 1.0,
-        "count": 70
+        "mean_confidence": 0.6486554112554113,
+        "empirical_accuracy": 0.8571428571428571,
+        "count": 231
       },
       {
         "bin_lower": 0.7000000000000001,
         "bin_upper": 0.8,
-        "mean_confidence": 0.7481428571428571,
-        "empirical_accuracy": 1.0,
-        "count": 14
+        "mean_confidence": 0.7479704225352112,
+        "empirical_accuracy": 0.4507042253521127,
+        "count": 71
       },
       {
         "bin_lower": 0.8,
         "bin_upper": 0.9,
-        "mean_confidence": 0.8648833333333333,
-        "empirical_accuracy": 1.0,
-        "count": 18
+        "mean_confidence": 0.861280882352941,
+        "empirical_accuracy": 0.8529411764705882,
+        "count": 68
       },
       {
         "bin_lower": 0.9,
         "bin_upper": 1.0,
-        "mean_confidence": 0.9320920000000001,
-        "empirical_accuracy": 1.0,
-        "count": 25
+        "mean_confidence": 0.931101388888889,
+        "empirical_accuracy": 0.9166666666666666,
+        "count": 72
       }
     ],
     "calibrated_reliability_diagram": [
       {
+        "bin_lower": 0.0,
+        "bin_upper": 0.1,
+        "mean_confidence": 0.0,
+        "empirical_accuracy": 0.16666666666666666,
+        "count": 6
+      },
+      {
         "bin_lower": 0.2,
         "bin_upper": 0.30000000000000004,
-        "mean_confidence": 0.20000000000000004,
-        "empirical_accuracy": 0.75,
-        "count": 12
+        "mean_confidence": 0.2916666666666667,
+        "empirical_accuracy": 0.14814814814814814,
+        "count": 27
       },
       {
         "bin_lower": 0.30000000000000004,
         "bin_upper": 0.4,
-        "mean_confidence": 0.3199999999999867,
-        "empirical_accuracy": 1.0,
-        "count": 1
+        "mean_confidence": 0.3407638888888879,
+        "empirical_accuracy": 0.5,
+        "count": 8
+      },
+      {
+        "bin_lower": 0.4,
+        "bin_upper": 0.5,
+        "mean_confidence": 0.4780701754385968,
+        "empirical_accuracy": 0.3157894736842105,
+        "count": 19
       },
       {
         "bin_lower": 0.5,
         "bin_upper": 0.6000000000000001,
         "mean_confidence": 0.5,
-        "empirical_accuracy": 1.0,
-        "count": 4
+        "empirical_accuracy": 0.2857142857142857,
+        "count": 7
       },
       {
-        "bin_lower": 0.8,
-        "bin_upper": 0.9,
-        "mean_confidence": 0.8518518518518519,
-        "empirical_accuracy": 0.71875,
-        "count": 32
+        "bin_lower": 0.6000000000000001,
+        "bin_upper": 0.7000000000000001,
+        "mean_confidence": 0.6346153846153848,
+        "empirical_accuracy": 0.8591549295774648,
+        "count": 71
+      },
+      {
+        "bin_lower": 0.7000000000000001,
+        "bin_upper": 0.8,
+        "mean_confidence": 0.761904761904762,
+        "empirical_accuracy": 0.8846153846153846,
+        "count": 26
       },
       {
         "bin_lower": 0.9,
         "bin_upper": 1.0,
-        "mean_confidence": 1.0,
-        "empirical_accuracy": 1.0,
-        "count": 179
+        "mean_confidence": 0.9248968792480563,
+        "empirical_accuracy": 0.8304195804195804,
+        "count": 572
       }
     ],
     "calibrator_file": "calibration-confidence-evidence-based.json"

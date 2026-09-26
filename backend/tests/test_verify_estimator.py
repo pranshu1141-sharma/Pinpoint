@@ -81,3 +81,28 @@ def test_no_calibration_claim_appears_beside_a_published_label():
     d, ds = _primary(c, 7000, 9000)
     out = classify.analyze_candidate(c, d, noise_floor=ds.noise_floor)
     assert out["modulation_label"] is not None and not claims_calibration(out)
+
+
+def _decision(label="QPSK", family="PSK", expert="lsp", rate=1000.0, m_fam=5.0, m_rate=5.0, unexplained=0.01):
+    from backend.experimental.estimate_spike.decide import Decision
+    return Decision(expert, family, label, rate, m_fam, 5.0, m_rate, unexplained, "labelled", True, True)
+
+
+def test_label_needs_a_margin_over_other_labels_of_the_same_family():
+    # QPSK vs 8PSK share the PSK family, so the family margin alone never separated them
+    from backend.experimental.estimate_spike import Thresholds
+    from backend.pipeline.verify_estimator import gate
+    th = Thresholds(m_fam=0.1, m_rate=0.01, unexplained_max=0.1, min_usage=0.01, m_label=0.05)
+    g = gate(_decision(), 1.0, th, "sample", 4096, 16000.0, m_label=0.01)
+    assert not g["label"] and not g["rate"]
+    assert gate(_decision(), 1.0, th, "sample", 4096, 16000.0, m_label=0.2)["label"]
+
+
+def test_rate_is_not_published_when_the_label_is_withheld():
+    from backend.experimental.estimate_spike import Thresholds
+    from backend.pipeline.verify_estimator import gate
+    th = Thresholds(m_fam=0.1, m_rate=0.01, unexplained_max=0.1, min_usage=0.01)
+    g = gate(_decision(), 0.0, th, "sample", 4096, 16000.0)          # usage test fails
+    assert not g["label"] and not g["rate"]
+    g = gate(_decision(unexplained=0.5), 1.0, th, "sample", 4096, 16000.0)
+    assert not g["label"] and not g["rate"]
