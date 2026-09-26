@@ -1,6 +1,6 @@
 {
  "meta": {
-  "commit": "f883170",
+  "commit": "2e8497a",
   "date": "2026-09-26",
   "thresholds": {
    "min_snr_db": 5.0,
@@ -385,7 +385,7 @@
   "verify": [
    {
     "name": "Modulation label",
-    "passed": 0,
+    "passed": 1,
     "total": 2,
     "criteria": [
      {
@@ -399,7 +399,7 @@
         "n": 300
        },
        "G2": {
-        "value": 0.29914529914529914,
+        "value": 0.14957264957264957,
         "passed": false,
         "n": 936
        }
@@ -408,7 +408,7 @@
      {
       "id": "L2",
       "desc": "published-correct >= 60% of in-library digital at >= 5 dB",
-      "passed": false,
+      "passed": true,
       "gens": {
        "G1": {
         "value": 0.8857142857142857,
@@ -416,8 +416,8 @@
         "n": 70
        },
        "G2": {
-        "value": 0.4583333333333333,
-        "passed": false,
+        "value": 0.9027777777777778,
+        "passed": true,
         "n": 432
        }
       }
@@ -435,12 +435,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.0033333333333333335,
+        "value": 0.006666666666666667,
         "passed": true,
         "n": 300
        },
        "G2": {
-        "value": 0.08226495726495726,
+        "value": 0.16773504273504272,
         "passed": false,
         "n": 936
        }
@@ -452,12 +452,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.6265060240963856,
+        "value": 0.6144578313253012,
         "passed": true,
         "n": 83
        },
        "G2": {
-        "value": 0.032407407407407406,
+        "value": 0.06712962962962964,
         "passed": false,
         "n": 864
        }
@@ -498,7 +498,7 @@
         "n": 31
        },
        "G2": {
-        "value": 0.4618055555555556,
+        "value": 0.2951388888888889,
         "passed": false,
         "n": 288
        }
@@ -534,7 +534,7 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.34,
+        "value": 0.2833333333333333,
         "passed": false,
         "n": 300
        },
@@ -657,10 +657,10 @@
     },
     "rate": {
      "n": 300,
-     "published_wrong": 0.0033333333333333335,
+     "published_wrong": 0.006666666666666667,
      "n_digital": 83,
-     "published_correct_digital": 0.6265060240963856,
-     "harmonic_errors": 0.012048192771084338
+     "published_correct_digital": 0.6144578313253012,
+     "harmonic_errors": 0.024096385542168676
     },
     "confidence": {
      "n_noise": 44,
@@ -671,40 +671,40 @@
     },
     "speed": {
      "n": 300,
-     "within": 0.34,
-     "p50_s": 0.5156272915046429,
-     "p95_s": 0.5867933524103137,
-     "max_s": 0.6475775829894701
+     "within": 0.2833333333333333,
+     "p50_s": 0.5197974999973667,
+     "p95_s": 0.6243976931051293,
+     "max_s": 0.7169077919970732
     }
    },
    "G2": {
     "label": {
      "n": 936,
-     "published_wrong": 0.29914529914529914,
+     "published_wrong": 0.14957264957264957,
      "n_in_library": 432,
-     "published_correct_in_library": 0.4583333333333333,
-     "published": 0.5427350427350427
+     "published_correct_in_library": 0.9027777777777778,
+     "published": 0.5918803418803419
     },
     "rate": {
      "n": 936,
-     "published_wrong": 0.08226495726495726,
+     "published_wrong": 0.16773504273504272,
      "n_digital": 864,
-     "published_correct_digital": 0.032407407407407406,
-     "harmonic_errors": 0.08564814814814815
+     "published_correct_digital": 0.06712962962962964,
+     "harmonic_errors": 0.17592592592592593
     },
     "confidence": {
      "n_noise": 36,
      "noise_labelled": 0.0,
      "n_ool": 288,
-     "ool_wrong": 0.4618055555555556,
+     "ool_wrong": 0.2951388888888889,
      "calibration_claims": 0
     },
     "speed": {
      "n": 936,
      "within": 0.0,
-     "p50_s": 2.5327129585057264,
-     "p95_s": 2.7891045937467425,
-     "max_s": 3.5664457920065615
+     "p50_s": 2.545339812495513,
+     "p95_s": 2.7930150312495243,
+     "max_s": 3.1863462920009624
     }
    }
   }

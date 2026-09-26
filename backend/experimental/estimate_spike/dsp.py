@@ -82,6 +82,32 @@ def mth_power_carrier(x: np.ndarray, fs: float, nfft: int, power: int = 4) -> fl
     return f / power
 
 
+def occupied_centroid(x: np.ndarray, fs: float) -> float:
+    """Coarse carrier: power centroid of the PSD bins more than 3 dB above the noise floor.
+
+    Floor = 20th percentile of the two-sided Welch PSD (robust when the signal
+    occupies most of the band). Used when no Detect band is available.
+    """
+    f, psd = welch(x, fs=fs, nperseg=min(1024, len(x)), return_onesided=False)
+    floor = np.percentile(psd, 20)
+    excess = np.where(psd > 2 * floor, psd - floor, 0.0)
+    if not np.any(excess > 0):
+        return 0.0
+    return float(np.sum(f * excess) / np.sum(excess))
+
+
+def carrier_estimate(x: np.ndarray, fs: float, nfft: int, power: int = 4,
+                     coarse: float | None = None) -> float:
+    """Carrier = coarse (Detect band centre, else occupied centroid) + M-th power fine residual.
+
+    The M-th power line alone aliases once |carrier| > fs/(2M); after derotating by
+    the coarse value the residual is small, and the fine search is restricted to
+    |residual| < fs/(2M), where the M-th power line cannot alias.
+    """
+    c = occupied_centroid(x, fs) if coarse is None else float(coarse)
+    return c + mth_power_carrier(derotate(x, c, fs), fs, nfft, power)
+
+
 def derotate(x: np.ndarray, f: float, fs: float) -> np.ndarray:
     return x * np.exp(-2j * np.pi * f * np.arange(len(x)) / fs)
 

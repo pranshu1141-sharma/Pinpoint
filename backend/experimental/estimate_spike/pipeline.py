@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from .config import DEFAULT, SpikeConfig
-from .dsp import derotate, mth_power_carrier, noise_variance, rate_band
+from .dsp import carrier_estimate, derotate, noise_variance, rate_band
 from .expert_analog import AnalogExpert, null_hypothesis
 from .expert_fsk import FskExpert
 from .experts_psk import NrzPskExpert, RrcPskExpert
@@ -36,12 +36,14 @@ class SpikeResult:
 
 
 def analyze_segment(x: np.ndarray, fs: float, cfg: SpikeConfig = DEFAULT,
-                    experts: tuple[str, ...] = ALL_EXPERTS) -> SpikeResult:
+                    experts: tuple[str, ...] = ALL_EXPERTS,
+                    carrier_hint: float | None = None) -> SpikeResult:
     """Score every proposed hypothesis for one complex-baseband segment.
 
     Deterministic: no randomness. `experts` restricts which experts run
     (the null model always runs). Wall-clock timings are recorded but never
-    influence the result.
+    influence the result. `carrier_hint` is a coarse carrier (e.g. the Detect
+    band centre); without it the occupied-PSD centroid is used.
     """
     x = np.asarray(x)
     if not np.iscomplexobj(x) or x.ndim != 1:
@@ -65,7 +67,7 @@ def analyze_segment(x: np.ndarray, fs: float, cfg: SpikeConfig = DEFAULT,
     feats = timed("features", lambda: router_features(x))
 
     def screen_psk():
-        f = mth_power_carrier(x, fs, cfg.nfft, cfg.carrier_power)
+        f = carrier_estimate(x, fs, cfg.nfft, cfg.carrier_power, carrier_hint)
         xc = derotate(x, f, fs)
         props = psk_proposals(xc, fs, band, cfg)
         fin = needle_refine(xc, fs, rank_psk(xc, fs, props, cfg), band, cfg)

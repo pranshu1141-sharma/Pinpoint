@@ -177,3 +177,31 @@ def test_isolated_from_product_path_and_rng_free():
             assert "experimental" not in f.read_text(), f
     for f in (BACKEND / "experimental").rglob("*.py"):
         assert not re.search(r"\brandom\b|default_rng|np\.random", f.read_text()), f
+
+
+# ---- WP1: carrier aliasing (the 4th-power line aliases once |carrier| > fs/8)
+
+@pytest.mark.parametrize("carrier", [8000, 15000, -11000])
+def test_coarse_carrier_is_not_aliased_above_fs_over_8(carrier):
+    from backend.experimental.estimate_spike.dsp import carrier_estimate
+    from backend.pipeline.synth_gen import make_signal
+    x, _ = make_signal("qpsk", 15, duration=0.5, seed=5, frequency=carrier)
+    assert abs(carrier_estimate(np.asarray(x, complex), 48000, DEFAULT.nfft, 4) - carrier) < 20
+
+
+@pytest.mark.parametrize("kind,label", [("bpsk", "BPSK"), ("qpsk", "QPSK")])
+def test_shipped_fixture_at_8khz_is_not_labelled_fm(kind, label):
+    from backend.pipeline.synth_gen import make_signal
+    x, _ = make_signal(kind, 15, duration=0.5, seed=3, frequency=8000)
+    r = analyze_segment(np.asarray(x, complex), 48000)
+    d = _decide(r)
+    assert d.label != "FM"
+    assert d.label == label
+    assert abs(r.carrier_hz - 8000) < 20
+
+
+def test_carrier_hint_is_used_as_the_coarse_estimate():
+    from backend.pipeline.synth_gen import make_signal
+    x, _ = make_signal("bpsk", 15, duration=0.5, seed=3, frequency=15000)
+    r = analyze_segment(np.asarray(x, complex), 48000, carrier_hint=14900.0)
+    assert abs(r.carrier_hz - 15000) < 20

@@ -246,6 +246,7 @@ def bars_block(md: str) -> str:
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--reuse", action="store_true", help="re-score cached rows")
+    ap.add_argument("--fresh", default="", help="with --reuse: systems to recompute anyway (comma list)")
     ap.add_argument("--systems", default="shipped,verify")
     ap.add_argument("--gens", default="G1,G2")
     ap.add_argument("--workers", type=int, default=10)
@@ -257,7 +258,7 @@ def main(argv=None):
     for sysname in args.systems.split(","):
         for gen in args.gens.split(","):
             path = CACHE / f"rows_{sysname}_{gen}.json"
-            if args.reuse and path.exists():
+            if args.reuse and path.exists() and sysname not in args.fresh.split(","):
                 rows = json.loads(path.read_text())
             else:
                 t0 = time.time()
