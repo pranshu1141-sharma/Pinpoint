@@ -53,6 +53,7 @@ class SpikeConfig:
     fsk_rescore_refine: bool = True
     # FSK needle refinement (another deviation; the prototype refined PSK finalists only).
     fsk_needle: bool = True
+    fsk_needle_top: int = 1              # needle-refine only the top-k ranked FSK finalists
     fsk_needle_span: float = 0.0025      # search +-0.25% around each finalist
     fsk_needle_grid_step: float = 0.0005
     fsk_needle_min_step: float = 0.00001

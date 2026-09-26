@@ -138,10 +138,14 @@ _NULL_DOWNSTREAM_FIELDS = {
     "symbol_rate_hz": None, "symbol_rate_status": _TRACK_TOO_LONG_STATUS,
     "qam_symbol_rate_hz": None, "qam_order": None, "qam_order_confidence": None,
     "constellation_family": None, "qam_order_status": _TRACK_TOO_LONG_STATUS,
+    "estimator": None, "modulation_label": None, "verify_family": None, "m_fam": None, "m_rate": None,
+    "unexplained": None, "estimate_tier": "abstain", "label_needs_review": True,
+    "verify_status": _TRACK_TOO_LONG_STATUS, "label_provenance": None, "verify_best_hypothesis": None,
+    "verify_segment": None, "verify_elapsed_ms": None, "verify_thresholds": None,
 }
 
 
-def enrich_track(capture, track):
+def enrich_track(capture, track, estimator="verify"):
     """Bounded per-track re-read plus the existing Estimate/Classify pipeline.
 
     A block-merged track has no contiguous in-memory buffer and no per-block
@@ -170,7 +174,7 @@ def enrich_track(capture, track):
                                      for w in track["pulse_windows"]]}
     try:
         _, _, floor = estimate_noise_floor(local_iq, capture.sample_rate)
-        enriched = analyze_candidate(local_capture, local_track, noise_floor=floor)
+        enriched = analyze_candidate(local_capture, local_track, noise_floor=floor, estimator=estimator)
     except ValueError:
         return {**track, **_NULL_DOWNSTREAM_FIELDS}
     # Only genuinely new (downstream) fields are merged back; track's own
@@ -193,7 +197,7 @@ class AnalysisCancelled(Exception):
 
 
 def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_db=None, progress=None,
-                         block_samples=BLOCK_SAMPLES, cancel_check=None):
+                         block_samples=BLOCK_SAMPLES, cancel_check=None, estimator="verify"):
     """cancel_check, if given, is polled once per block during the scan and
     once per track during downstream enrichment (see AnalysisCancelled) --
     both phases can take real wall-clock time on a large capture, so a
@@ -311,7 +315,7 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
             d.update(is_pulsed=False, pulse_width_samples=None, pri_samples=None)
         env = envelopes[d["id"]]
         env["waveform"] = [{"time_seconds": float(t), "value": float(v)} for t, v in zip(edges[:-1], env.pop("values"))]
-        tracks[index] = enrich_track(capture, d)
+        tracks[index] = enrich_track(capture, d, estimator)
         if progress and tracks:
             progress(n, n, f"Enriching candidate tracks with Estimate/Classify: {index+1}/{len(tracks)}")
     floor = float(np.median(floors))

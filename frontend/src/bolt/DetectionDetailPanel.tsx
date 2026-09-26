@@ -74,6 +74,43 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
     value == null ? unavailable : `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${unit}`;
   const bandwidth99 = measurement(detection.bandwidth_99pct_hz, 'Hz');
 
+  const tierText: Record<string, string> = {
+    labelled: 'Labelled (margin over every rival passed)',
+    unknown_family: 'Unknown family — structure outside the library; no label published',
+    abstain: 'Abstained — margins below thresholds; nothing published',
+  };
+  const nats = (v: number | null | undefined, th?: number) =>
+    v == null ? 'n/a' : `${v.toFixed(3)} nats${th == null ? '' : ` (publish ≥ ${Number.isFinite(th) ? th.toFixed(3) : '∞'})`}`;
+  const th = detection.verify_thresholds;
+  const verifyRows: Row[] = [
+    { key: 'Modulation', value: detection.modulation_label
+        ?? (detection.estimate_tier === 'unknown_family' ? (detection.verify_family ?? 'Unknown family') : 'Not reliably estimated'),
+      explain: 'Propose → verify: the segment is rebuilt under every hypothesis (PSK/QAM with several pulse models, 2/4-FSK, AM/FM, noise); the lowest description length wins. A label is published only when its margin over every rival family passes a threshold fit on a cross-generator calibration split.' },
+    { key: 'Estimate tier', value: !detection.estimate_tier ? unavailable
+        : detection.estimate_tier === 'abstain' && detection.verify_status ? `Abstained — ${detection.verify_status}; nothing published`
+        : tierText[detection.estimate_tier],
+      color: detection.estimate_tier === 'labelled' ? '#5cb85c' : '#d4d4d4' },
+    { key: 'Label needs review', value: detection.label_needs_review == null ? unavailable : detection.label_needs_review ? 'Yes' : 'No',
+      color: detection.label_needs_review ? '#cc3c34' : '#d4d4d4' },
+    { key: 'Symbol rate', value: measurement(detection.symbol_rate_hz, 'Hz'),
+      explain: 'Rate of the winning digital hypothesis, published only when the family margin passes and the rate margin over rates ≥5% away passes.' },
+    { key: 'Family margin', value: nats(detection.m_fam, th?.m_fam),
+      explain: `Score gap to the best hypothesis of another family, in nats per ${th?.margin_unit ?? 'sample'}. A margin, not a probability. ${th?.provenance ?? ''}` },
+    { key: 'Rate margin', value: nats(detection.m_rate, th?.m_rate) },
+    { key: 'Unexplained power', value: detection.unexplained == null ? 'n/a' : `${(100 * detection.unexplained).toFixed(1)}%`,
+      explain: 'Share of signal power the winning rebuild leaves unexplained; above the calibrated limit no label is published.' },
+    { key: 'Best hypothesis', value: detection.verify_best_hypothesis
+        ? `${detection.verify_best_hypothesis.label} (${detection.verify_best_hypothesis.expert})${detection.verify_best_hypothesis.rate_hz ? ` @ ${detection.verify_best_hypothesis.rate_hz.toFixed(1)} Hz` : ''} — shown for review, not published unless the tier says so`
+        : unavailable },
+  ];
+  const legacyRows: Row[] = [
+    { key: 'Label provenance', value: detection.label_provenance ?? 'legacy (fixture-validated only)', color: '#d4a72c' },
+    { key: 'Fine modulation (legacy)', value: detection.fine_modulation_label ?? 'Not reliably estimated',
+      explain: 'Legacy heuristics validated only on the shipped synthetic fixtures (48 kHz, 96 samples/symbol, one filter). PSK by phase-cluster spread, ASK/FSK by level clustering, QAM as an order-unresolved flag.' },
+    { key: 'Symbol rate (legacy)', value: detection.symbol_rate_hz == null ? 'Not reliably estimated' : measurement(detection.symbol_rate_hz, 'Hz'),
+      explain: 'Lowest spectral peak within 3 dB of the differentiated-and-squared segment’s maximum; fixture-validated only.' },
+  ];
+
   const rows: Row[] = [
     { key: 'ID', value: detection.id },
     { key: 'Method', value: detection.detection_method },
@@ -105,14 +142,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
     { key: 'Family confidence', value: detection.modulation_confidence == null ? unavailable : `${formatConfidence(detection.modulation_confidence)} (heuristic)`,
       explain: 'Heuristic distance from the 0.30 envelope-variation threshold, not a calibrated probability.' },
     { key: 'Refinement status', value: detection.refinement_status ?? unavailable },
-    { key: 'Fine modulation', value: detection.fine_modulation_label ?? 'Not reliably estimated',
-      explain: 'PSK (bpsk/qpsk/8psk) published only when the Mth-power phase-cluster circular spread clears an order-specific threshold. ASK/FSK use discrete-level clustering (envelope for ASK, instantaneous frequency for FSK) instead, since neither produces a PSK raised tone. QAM is published only as a low-confidence, order-unresolved flag — this project has no symbol-timing recovery to determine a specific QAM order. Pulsed candidates are excluded from all of these (a gated carrier has trivially perfect phase concentration).' },
-    { key: 'Envelope levels', value: detection.envelope_level_count == null ? unavailable : String(detection.envelope_level_count),
-      explain: 'Number of clustered amplitude levels found for ASK/QAM candidates (gap-to-within-cluster-spread heuristic).' },
-    { key: 'Frequency levels', value: detection.frequency_level_count == null ? unavailable : String(detection.frequency_level_count),
-      explain: 'Number of clustered instantaneous-frequency levels found for FSK candidates.' },
-    { key: 'Symbol rate', value: detection.symbol_rate_hz == null ? (detection.symbol_rate_status == null || detection.symbol_rate_status.includes('not attempted') ? 'Not attempted' : 'Not reliably estimated') : measurement(detection.symbol_rate_hz, 'Hz'),
-      explain: 'Lowest spectral peak within 3 dB of the differentiated-and-squared segment’s global maximum, excluding the first 4 DC-leakage bins. Requires a confirmed PSK or ASK fine label and SNR ≥ 4.5 dB — not published for FSK (this nonlinearity does not recover its rate) or QAM (no confirmed order).' },
+    ...(detection.estimator === 'legacy' ? legacyRows : verifyRows),
     { key: 'Start Time', value: `${formatTime(startTime)} (${formatSamples(detection.start_sample)})` },
     { key: 'End Time', value: `${formatTime(endTime)} (${formatSamples(detection.end_sample)})` },
     { key: 'Duration', value: `${formatTime(duration)} (${formatSamples(sampleCount)})` },
@@ -195,7 +225,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
       <div className="detail-reveal">
         <button className="detail-reveal-toggle" aria-expanded={symbolRateOpen} onClick={() => setSymbolRateOpen((v) => !v)}>
           {symbolRateOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-          Symbol-rate evidence: spectral harmonic search
+          Symbol-rate evidence: spectral harmonic search (legacy estimator only)
         </button>
         {symbolRateOpen && (
           <SymbolRateEvidence
@@ -221,7 +251,26 @@ function DecisionStep({ label, measured, comparator, threshold, pass, unit }: {
   );
 }
 
+function VerifyEvidence({ detection }: { detection: Detection }) {
+  const th = detection.verify_thresholds;
+  const fin = (v: number | undefined) => (v == null || !Number.isFinite(v) ? '∞' : v.toFixed(3));
+  return (
+    <div className="modulation-evidence">
+      <p className="reveal-note">Publication gates of the verify estimator (margins in nats per {th?.margin_unit ?? 'sample'}; not probabilities).</p>
+      <div className="decision-tree">
+        <DecisionStep label="Family margin" measured={detection.m_fam == null ? 'n/a' : detection.m_fam.toFixed(3)} comparator="≥" threshold={fin(th?.m_fam)} pass={detection.m_fam == null || th == null ? null : detection.m_fam >= th.m_fam} />
+        <DecisionStep label="Unexplained power" measured={detection.unexplained == null ? 'n/a' : detection.unexplained.toFixed(3)} comparator="≤" threshold={fin(th?.unexplained_max)} pass={detection.unexplained == null || th == null ? null : detection.unexplained <= th.unexplained_max} />
+        <DecisionStep label="Rate margin" measured={detection.m_rate == null ? 'n/a' : detection.m_rate.toFixed(3)} comparator="≥" threshold={fin(th?.m_rate)} pass={detection.m_rate == null || th == null ? null : detection.m_rate >= th.m_rate} />
+        <DecisionStep label="Pulsed exclusion" measured={detection.is_pulsed ? 'pulsed' : 'continuous'} comparator="==" threshold="continuous" pass={!detection.is_pulsed} />
+      </div>
+      <p className="reveal-note">Result: <strong className={detection.modulation_label ? 'text-rf-accent' : ''}>{detection.modulation_label ?? detection.verify_status ?? 'not reliably estimated'}</strong></p>
+      {th?.provenance && <p className="reveal-note">{th.provenance}</p>}
+    </div>
+  );
+}
+
 function ModulationEvidence({ detection }: { detection: Detection }) {
+  if (detection.estimator !== 'legacy') return <VerifyEvidence detection={detection} />;
   const envelopeVariation = detection.envelope_variation;
   const spread = detection.phase_cluster_spread_rad;
   const order = detection.refinement_order;

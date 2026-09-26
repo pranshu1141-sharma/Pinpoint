@@ -80,7 +80,9 @@ def analyze_segment(x: np.ndarray, fs: float, cfg: SpikeConfig = DEFAULT,
     fprops, franked = timed("screen_fsk", screen_fsk) if "fsk" in experts else ([], [])
     fsk_targets = [(r, None) for r in franked]
     if cfg.fsk_needle and franked:
-        fsk_targets = timed("needle_fsk", lambda: fsk_needle_refine(x, fs, franked, band, cfg))
+        top = franked[:cfg.fsk_needle_top]
+        fsk_targets = timed("needle_fsk", lambda: fsk_needle_refine(x, fs, top, band, cfg))
+        fsk_targets += [(r, None) for r in franked[cfg.fsk_needle_top:]]
     ffin = [r for r, _ in fsk_targets]
 
     hyps: list[Hypothesis] = []

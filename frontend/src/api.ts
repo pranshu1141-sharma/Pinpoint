@@ -40,6 +40,18 @@ export type Detection = {
   frequency_level_count?: number | null;
   symbol_rate_hz?: number | null;
   symbol_rate_status?: string | null;
+  estimator?: "verify" | "legacy" | null;
+  label_provenance?: string | null;
+  modulation_label?: string | null;
+  verify_family?: string | null;
+  estimate_tier?: "labelled" | "unknown_family" | "abstain" | null;
+  label_needs_review?: boolean | null;
+  m_fam?: number | null;
+  m_rate?: number | null;
+  unexplained?: number | null;
+  verify_status?: string | null;
+  verify_best_hypothesis?: { expert: string; label: string; rate_hz: number | null } | null;
+  verify_thresholds?: { m_fam: number; m_rate: number; unexplained_max: number; margin_unit: string; provenance: string } | null;
 };
 export type Analysis = {
   job_id: string;

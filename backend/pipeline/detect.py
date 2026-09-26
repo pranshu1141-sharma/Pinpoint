@@ -38,8 +38,10 @@ def calibrate_confidence(score_name, raw_value):
         return None, "uncalibrated (no fitted calibrator file present)"
     value = float(calibrator.predict(np.array([raw_value]))[0])
     ece = CALIBRATION_ECE.get(score_name)
-    return value, f"isotonic-calibrated on synthetic corpus (held-out ECE={ece:.4f})" if ece is not None \
-        else "isotonic-calibrated on synthetic corpus"
+    # An isotonic fit on one synthetic generator is not calibration across generators or on
+    # real captures, so it is never presented as a calibrated probability.
+    note = "uncalibrated across generators (isotonic fit on one synthetic corpus"
+    return value, f"{note}, held-out ECE={ece:.4f} on that corpus)" if ece is not None else f"{note})"
 
 
 def db(value):

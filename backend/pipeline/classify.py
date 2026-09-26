@@ -351,6 +351,9 @@ def symbol_rate_diagnostic(capture: Capture, candidate: dict) -> dict:
     """The Welch PSD behind estimate_symbol_rate's harmonic pick, recomputed
     on demand for evidence-trail display only; never used for the published
     symbol_rate_hz itself, so this cannot drift from the validated pipeline."""
+    if candidate.get("estimator", "legacy") != "legacy":
+        return {"applicable": False, "reason": "the verify estimator does not use this spectral heuristic; "
+                                               "see its rate margin (m_rate)"}
     if candidate.get("symbol_rate_hz") is None:
         return {"applicable": False, "reason": candidate.get("symbol_rate_status") or "not reliably estimated"}
     frequency_hz = candidate.get("center_frequency_refined_hz") or candidate.get("center_frequency_hz")
@@ -377,19 +380,50 @@ def symbol_rate_diagnostic(capture: Capture, candidate: dict) -> dict:
     }
 
 
-def analyze_candidate(capture: Capture, candidate: dict, *, noise_floor=None) -> dict:
-    """Run the validated downstream stages on a copy of one Detect candidate.
+ESTIMATORS = ("verify", "legacy")
+LEGACY_PROVENANCE = "legacy (fixture-validated only)"
+_LEGACY_FIELDS = ("fine_modulation_label", "fine_modulation_confidence", "fine_modulation_status",
+                  "phase_cluster_spread_rad", "envelope_level_count", "frequency_level_count",
+                  "symbol_rate_status", "qam_symbol_rate_hz", "qam_order", "qam_order_confidence",
+                  "constellation_family", "qam_order_status")
 
-    Neither downstream field can accidentally retain an earlier guessed value
-    from the input candidate.
+
+# Both estimators return the same key set (large_capture merges on it).
+_VERIFY_NOT_RUN = {"verify_family": None, "m_fam": None, "m_rate": None, "unexplained": None,
+                   "estimate_tier": None, "label_needs_review": None, "verify_best_hypothesis": None,
+                   "verify_segment": None, "verify_elapsed_ms": None, "verify_thresholds": None,
+                   "verify_status": "not run (estimator=legacy)"}
+
+
+def analyze_candidate(capture: Capture, candidate: dict, *, noise_floor=None, estimator: str = "verify") -> dict:
+    """Run the downstream stages on a copy of one Detect candidate.
+
+    Parameters (centre frequency, bandwidths, SNR, envelope family, carrier
+    refinement) always run. Modulation label and symbol rate come from
+    `estimator`: "verify" (default; propose -> verify with MDL margins, see
+    verify_estimator) or "legacy" (the fixture-validated heuristics, marked
+    as such). Neither downstream field can retain a guessed value from the input.
     """
+    if estimator not in ESTIMATORS:
+        raise ValueError(f"Unknown estimator {estimator!r}; expected one of {ESTIMATORS}.")
     out = estimate_candidate(capture, candidate, noise_floor=noise_floor)
     out = classify_coarse(capture, out)
     out = refine_frequency(capture, out)
-    out = classify_fine(capture, out)
-    out = classify_fine_fsk(capture, out)
-    out = classify_fine_ask(capture, out)
-    out = estimate_symbol_rate(capture, out)
-    from .qam_order import resolve_qam_order  # deferred: qam_order imports classify itself
-    out = resolve_qam_order(capture, out)
+    if estimator == "legacy":
+        out = classify_fine(capture, out)
+        out = classify_fine_fsk(capture, out)
+        out = classify_fine_ask(capture, out)
+        out = estimate_symbol_rate(capture, out)
+        from .qam_order import resolve_qam_order  # deferred: qam_order imports classify itself
+        out = resolve_qam_order(capture, out)
+        label = out.get("fine_modulation_label")
+        return {**out, **_VERIFY_NOT_RUN, "estimator": "legacy", "label_provenance": LEGACY_PROVENANCE,
+                "modulation_label": label.upper() if label else None}
+    from .verify_estimator import verify_candidate  # deferred: keeps the legacy path importable alone
+    skipped = "not run (estimator=verify; legacy heuristics only with estimator=legacy)"
+    out.update({k: None for k in _LEGACY_FIELDS})
+    out.update(fine_modulation_status=skipped, symbol_rate_status=None, qam_order_status=skipped)
+    out.update(verify_candidate(capture, out))
+    out["symbol_rate_status"] = out["verify_status"]
+    out["label_provenance"] = "verify (propose -> verify, MDL margins)"
     return out

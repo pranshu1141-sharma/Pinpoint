@@ -116,7 +116,7 @@ def test_sync_api_preserves_validated_measurements_and_json_export(kind, snr):
     """Wrong input samples, noise units or lost fields must fail at the HTTP boundary."""
     x, _ = make_signal(kind, snr)
     r = client.post("/api/analyze", files={"file": (f"{kind}.iq", x.tobytes())},
-                    data={"sample_rate": FS, "datatype": "cf32_le"})
+                    data={"sample_rate": FS, "datatype": "cf32_le", "estimator": "legacy"})
     assert r.status_code == 200, r.text
     body = r.json()
     d = next(d for d in body["detections"] if d["freq_lower_hz"] < 8000 < d["freq_upper_hz"])
@@ -146,7 +146,7 @@ def test_demo_preserves_detect_layers_and_downstream_fields(kind):
     """The bundled demo mixes a 10 dB BPSK source (now within the validated fine
     classification and symbol-rate range) with FM and a pulsed source, which
     must both stay unlabeled/null."""
-    r = client.post(f"/api/demo?kind={kind}")
+    r = client.post(f"/api/demo?kind={kind}&estimator=legacy")
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["detections"]
@@ -191,7 +191,7 @@ def test_real_large_upload_gets_per_track_downstream_enrichment(tmp_path, monkey
     x, _ = make_signal("bpsk", 10, duration=14)
     assert x.nbytes > main.LARGE_FILE_BYTES
     r = client.post("/api/analyze", files={"file": ("blocks.iq", x.tobytes())},
-                    data={"sample_rate": FS, "datatype": "cf32_le"})
+                    data={"sample_rate": FS, "datatype": "cf32_le", "estimator": "legacy"})
     assert r.status_code == 202, r.text
     job = r.json()["job_id"]
     deadline = time.monotonic()+30
@@ -271,7 +271,7 @@ def test_large_upload_rerun_keeps_downstream_enrichment(tmp_path, monkeypatch):
     monkeypatch.setattr(main, "UPLOADS", tmp_path)
     x, _ = make_signal("bpsk", 10, duration=14)
     r = client.post("/api/analyze", files={"file": ("blocks.iq", x.tobytes())},
-                    data={"sample_rate": FS, "datatype": "cf32_le", "margin_db": 8})
+                    data={"sample_rate": FS, "datatype": "cf32_le", "estimator": "legacy", "margin_db": 8})
     job = r.json()["job_id"]
     deadline = time.monotonic()+30
     while time.monotonic() < deadline:
@@ -281,7 +281,7 @@ def test_large_upload_rerun_keeps_downstream_enrichment(tmp_path, monkeypatch):
         time.sleep(.02)
     assert state["status"] == "complete", state
     try:
-        rerun = client.post(f"/api/jobs/{job}/rerun?margin_db=3")
+        rerun = client.post(f"/api/jobs/{job}/rerun?margin_db=3&estimator=legacy")
         assert rerun.status_code == 200, rerun.text
         detections = rerun.json()["detections"]
         assert detections
@@ -309,7 +309,7 @@ def test_fine_classification_accuracy_curve_reflects_recorded_validation_evidenc
 def test_symbol_rate_diagnostic_marks_the_published_harmonic():
     x, _ = make_signal("bpsk", 20)
     r = client.post("/api/analyze", files={"file": ("bpsk.iq", x.tobytes())},
-                    data={"sample_rate": FS, "datatype": "cf32_le"})
+                    data={"sample_rate": FS, "datatype": "cf32_le", "estimator": "legacy"})
     assert r.status_code == 200, r.text
     body = r.json()
     d = next(d for d in body["detections"] if d["freq_lower_hz"] < 8000 < d["freq_upper_hz"])
@@ -325,7 +325,7 @@ def test_symbol_rate_diagnostic_marks_the_published_harmonic():
 def test_symbol_rate_diagnostic_not_applicable_when_unestimated():
     x, _ = make_signal("fm", 10)
     r = client.post("/api/analyze", files={"file": ("fm.iq", x.tobytes())},
-                    data={"sample_rate": FS, "datatype": "cf32_le"})
+                    data={"sample_rate": FS, "datatype": "cf32_le", "estimator": "legacy"})
     assert r.status_code == 200, r.text
     body = r.json()
     d = next(d for d in body["detections"] if d["freq_lower_hz"] < 8000 < d["freq_upper_hz"])
@@ -333,3 +333,17 @@ def test_symbol_rate_diagnostic_not_applicable_when_unestimated():
     assert d["symbol_rate_hz"] is None
     diag = client.get(f"/api/detections/{body['job_id']}/{idx}/symbol-rate-diagnostic").json()
     assert diag == {"applicable": False, "reason": d["symbol_rate_status"]}
+
+
+def test_demo_defaults_to_the_verify_estimator_and_keeps_legacy_under_the_flag():
+    body = client.post("/api/demo?kind=iq").json()
+    assert body["estimator"] == "verify"
+    for d in body["detections"]:
+        assert d["estimator"] == "verify" and d["fine_modulation_label"] is None
+        assert d["estimate_tier"] in ("labelled", "unknown_family", "abstain")
+        if d["estimate_tier"] != "labelled":
+            assert d["modulation_label"] is None
+    legacy = client.post("/api/demo?kind=iq&estimator=legacy").json()
+    assert legacy["estimator"] == "legacy"
+    assert all(d["label_provenance"] == "legacy (fixture-validated only)" for d in legacy["detections"])
+    assert client.post("/api/demo?kind=iq&estimator=bogus").status_code == 422

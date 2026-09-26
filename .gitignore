@@ -26,3 +26,4 @@ experiments/reference_spike/rows*.json
 
 # Readiness scoreboard row caches (regenerate with experiments/readiness/scoreboard.py)
 artifacts/readiness/rows_*.json
+artifacts/readiness/calibration_rows.json

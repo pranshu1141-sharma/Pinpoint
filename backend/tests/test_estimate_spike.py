@@ -172,9 +172,11 @@ def test_rejects_invalid_input(bad, fs):
 
 
 def test_isolated_from_product_path_and_rng_free():
+    # WP4: the product reaches the estimator only through backend/pipeline/verify_estimator.py
     for sub in ("pipeline", "api"):
         for f in (BACKEND / sub).rglob("*.py"):
-            assert "experimental" not in f.read_text(), f
+            if f.name != "verify_estimator.py":
+                assert "experimental" not in f.read_text(), f
     for f in (BACKEND / "experimental").rglob("*.py"):
         assert not re.search(r"\brandom\b|default_rng|np\.random", f.read_text()), f
 

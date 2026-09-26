@@ -1,0 +1,34 @@
+{
+ "thresholds": {
+  "m_fam": 0.303735,
+  "m_rate": 0.063496,
+  "unexplained_max": 0.113026451624534,
+  "min_usage": 0.01
+ },
+ "margin_unit": "sample",
+ "provenance": "margin thresholds fit on a cross-generator calibration split (G1 seed 4, G2 calibration seeds; 812 captures): >= 95% precision on each generator; margins are nats per sample, not probabilities",
+ "candidates": [
+  {
+   "unit": "sample",
+   "m_fam": 0.303735,
+   "m_rate": 0.063496,
+   "unexplained_max": 0.113026451624534,
+   "coverage": 886
+  },
+  {
+   "unit": "symbol",
+   "m_fam": 2.30034,
+   "m_rate": 7.791471,
+   "unexplained_max": 0.1072441848838228,
+   "coverage": 472
+  },
+  {
+   "unit": "total",
+   "m_fam": 1299.966094,
+   "m_rate": 870.782557,
+   "unexplained_max": 0.06429077877225593,
+   "coverage": 671
+  }
+ ],
+ "n_captures": 812
+}
