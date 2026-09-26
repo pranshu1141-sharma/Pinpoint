@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" font-family="sans-serif">
   <rect width="480" height="360" fill="white" />
-  <text x="240.0" y="20" font-size="13" text-anchor="middle" font-weight="bold">confidence: raw (held-out test, ECE=0.372)</text>
+  <text x="240.0" y="20" font-size="13" text-anchor="middle" font-weight="bold">confidence: raw (held-out test, ECE=0.136)</text>
   <line x1="50" y1="310" x2="50" y2="50" stroke="black" stroke-width="1" />
   <line x1="50" y1="310" x2="430" y2="310" stroke="black" stroke-width="1" />
   <line x1="50.0" y1="310.0" x2="430.0" y2="50.0" stroke="#999" stroke-dasharray="4,4" />
   <text x="50.0" y="326" font-size="10" text-anchor="middle">0.0</text><text x="42" y="313.0" font-size="10" text-anchor="end">0.0</text><text x="126.0" y="326" font-size="10" text-anchor="middle">0.2</text><text x="42" y="261.0" font-size="10" text-anchor="end">0.2</text><text x="202.0" y="326" font-size="10" text-anchor="middle">0.4</text><text x="42" y="209.0" font-size="10" text-anchor="end">0.4</text><text x="278.0" y="326" font-size="10" text-anchor="middle">0.6</text><text x="42" y="157.0" font-size="10" text-anchor="end">0.6</text><text x="354.0" y="326" font-size="10" text-anchor="middle">0.8</text><text x="42" y="105.0" font-size="10" text-anchor="end">0.8</text><text x="430.0" y="326" font-size="10" text-anchor="middle">1.0</text><text x="42" y="53.0" font-size="10" text-anchor="end">1.0</text>
-  <circle cx="236.6" cy="310.0" r="3.0" fill="#2563eb" fill-opacity="0.75" /><circle cx="262.8" cy="310.0" r="10.0" fill="#2563eb" fill-opacity="0.75" /><circle cx="303.9" cy="286.2" r="9.2" fill="#2563eb" fill-opacity="0.75" /><circle cx="341.0" cy="76.0" r="4.0" fill="#2563eb" fill-opacity="0.75" /><circle cx="375.9" cy="50.0" r="7.4" fill="#2563eb" fill-opacity="0.75" /><circle cx="404.7" cy="50.0" r="7.4" fill="#2563eb" fill-opacity="0.75" />
+  <circle cx="301.5" cy="139.1" r="5.5" fill="#2563eb" fill-opacity="0.75" /><circle cx="337.8" cy="50.0" r="7.0" fill="#2563eb" fill-opacity="0.75" /><circle cx="373.5" cy="50.0" r="10.0" fill="#2563eb" fill-opacity="0.75" /><circle cx="404.1" cy="50.0" r="5.8" fill="#2563eb" fill-opacity="0.75" />
   <text x="240.0" y="350" font-size="11" text-anchor="middle">mean predicted confidence</text>
   <text x="14" y="180.0" font-size="11" text-anchor="middle" transform="rotate(-90 14 180.0)">empirical accuracy</text>
 </svg>

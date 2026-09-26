@@ -122,3 +122,55 @@ def test_continuous_signal_is_not_claimed_as_pulse_train(kind):
     x, _ = make_signal(kind, 10)
     ds = analyze_capture(capture(x)).response["detections"]
     assert all(not d["is_pulsed"] for d in ds)
+
+
+# ---- WP6: one signal -> one detection; separate signals stay separate
+
+def _wide(kind, snr, fc, sps, seed, n=24000):
+    from experiments.readiness.synth_wide import make_signal as wide
+    return wide(kind, snr, fc, sps, seed, n)[0]
+
+
+@pytest.mark.parametrize("cid", ["G2-bpsk-0-12-10-100003", "G2-bpsk-0-12-20-100006", "G2-bpsk-0-24-5-100009",
+                                 "G2-bpsk-0-24-10-100012"])
+def test_sidelobes_of_one_signal_form_one_detection(cid):
+    # captures the WP0 scoreboard saw split into 2-3 detections (main lobe + spectral-null-separated sidelobes)
+    from experiments.readiness.generators import g2_capture
+    _, kind, fc, sps, snr, seed = cid.split("-")
+    x = g2_capture(kind, float(snr), float(fc), int(sps), int(seed)).x
+    ds = analyze_capture(capture(x)).response["detections"]
+    assert len(ds) == 1, [(round(d["freq_lower_hz"]), round(d["freq_upper_hz"])) for d in ds]
+    assert ds[0]["freq_lower_hz"] < float(fc) < ds[0]["freq_upper_hz"]
+
+
+@pytest.mark.parametrize("cid", ["G1-7-0003", "G1-7-0004", "G1-7-0005", "G1-7-0006"])
+def test_fragmented_wideband_capture_forms_one_detection(cid):
+    from experiments.readiness.generators import g1_captures
+    cap = next(c for c in g1_captures(int(cid.split("-")[-1]) + 1) if c.id == cid)
+    c = Capture(np.asarray(cap.x, np.complex64), cap.fs, {"source_kind": "iq", "filename": "g1",
+                                                          "wav_disambiguation": {"result": "declared_iq"}})
+    ds = analyze_capture(c).response["detections"]
+    assert len(ds) == 1, (cap.truth["label"], [(round(d["freq_lower_hz"]), round(d["freq_upper_hz"])) for d in ds])
+
+
+@pytest.mark.parametrize("f1,f2", [(-8000, 8000), (0, 3000)])
+def test_two_separate_equal_power_signals_stay_two(f1, f2):
+    x = _wide("bpsk", 15, f1, 96, 5) + _wide("qpsk", 15, f2, 96, 6)
+    ds = analyze_capture(capture(np.asarray(x, np.complex64))).response["detections"]
+    hits = [[d for d in ds if d["freq_lower_hz"] < f < d["freq_upper_hz"]] for f in (f1, f2)]
+    assert all(len(h) == 1 for h in hits) and hits[0][0] is not hits[1][0], \
+        [(d["freq_lower_hz"], d["freq_upper_hz"]) for d in ds]
+
+
+@pytest.mark.parametrize("cid", ["G1-4-0063", "G1-4-0138", "G1-4-0140"])
+def test_low_snr_wideband_fragments_with_signal_in_the_gaps_form_one_detection(cid):
+    # at negative full-band SNR a wide lobe leaves narrow, widely spaced fragments; the time-averaged
+    # spectrum between them is still above the noise, unlike the gap between two separate signals.
+    # Calibration-seed captures (seed 4), not scoreboard test captures; below about -4 dB some
+    # captures still split (known limitation).
+    from experiments.readiness.generators import g1_captures
+    cap = next(c for c in g1_captures(int(cid.split("-")[-1]) + 1, seed=4) if c.id == cid)
+    c = Capture(np.asarray(cap.x, np.complex64), cap.fs, {"source_kind": "iq", "filename": "g1",
+                                                          "wav_disambiguation": {"result": "declared_iq"}})
+    ds = analyze_capture(c).response["detections"]
+    assert len(ds) <= 1, (cap.truth["snr_db"], [(round(d["freq_lower_hz"]), round(d["freq_upper_hz"])) for d in ds])

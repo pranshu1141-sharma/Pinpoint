@@ -18,7 +18,7 @@ _DOCS_DIR = Path(__file__).resolve().parents[2] / "docs"
 # VALIDATION.md's Phase 3 report). Both calibrators are fit on a synthetic
 # corpus only -- no real-file calibration exists yet, so this is a
 # synthetic-validated correction, not a claim about real captures.
-CALIBRATION_ECE = {"confidence": 0.0066, "confidence_evidence_based": 0.0999}
+CALIBRATION_ECE = {"confidence": 0.0069, "confidence_evidence_based": 0.0594}
 
 
 @lru_cache(maxsize=None)
@@ -166,6 +166,66 @@ def adaptive_threshold_detect(power, noise_floor, margin_db=8, fixed_threshold_d
     return mask, smooth, threshold
 
 
+FRAGMENT_GAP_OF_WIDTH = 0.25     # merge co-timed neighbours separated by <= 1/4 of the wider band
+SIDELOBE_GAP_OF_WIDTH = 1.0      # ... or by <= the stronger band's width when the other is >= 6 dB weaker
+SIDELOBE_DB = 6.0
+CO_TIMED = 0.8                   # share of the shorter band's active frames shared with the other
+GAP_EXCESS_DB = 1.5              # ... or by any gap whose time-averaged power stays this far above noise
+
+
+def merge_fragments(bands, mask, smooth, power=None):
+    """Join frequency bands that are fragments of one signal; yield (fa, fb, occupied rows).
+
+    Spectral nulls split one signal into a main lobe and sidelobes (sinc/filtered
+    pulses), and at low SNR a noisy PSD splits a wide lobe into pieces; the WP0
+    scoreboard saw 36% of single-signal captures come back as 2-8 detections.
+    Two neighbours are joined only when they are co-timed (>= CO_TIMED of the
+    shorter band's active frames overlap) and either the gap is small relative to
+    the wider band, or the gap is at most the stronger band's width and the other
+    band is >= SIDELOBE_DB weaker (sidelobe-like), or the gap's power averaged over
+    the co-active frames stays >= GAP_EXCESS_DB above a noise reference (a wide
+    lobe at negative SNR leaves sparse fragments, but signal remains between them;
+    between separate signals the gap falls to the noise). The reference is the
+    20th percentile of the time-averaged spectrum, bias-corrected for averaging.
+    Evidence is later computed over the occupied rows only, not the bridged gap.
+    """
+    noise_ref = None
+    if power is not None and power.shape[1] >= 2:
+        from scipy.stats import gamma
+        k = max(1.0, power.shape[1] / 2)          # 75%-overlap Hann frames: ~half independent
+        q = gamma.ppf(0.2, k) / k
+        noise_ref = float(np.percentile(power.mean(axis=1), 20) / q)
+    items = []
+    for fa, fb in bands:
+        on = np.any(mask[fa:fb], axis=0)
+        peak = float(db(np.max(smooth[fa:fb][:, on]))) if on.any() else -np.inf
+        items.append(dict(fa=fa, fb=fb, rows=list(range(fa, fb)), on=on, peak=peak))
+    changed = True
+    while changed and len(items) > 1:
+        changed = False
+        for i in range(len(items) - 1):
+            a, b = items[i], items[i + 1]
+            gap = b["fa"] - a["fb"]
+            shorter = min(a["on"].sum(), b["on"].sum())
+            if shorter == 0 or (a["on"] & b["on"]).sum() < CO_TIMED * shorter:
+                continue
+            strong, weak = (a, b) if a["peak"] >= b["peak"] else (b, a)
+            wide = max(a["fb"] - a["fa"], b["fb"] - b["fa"])
+            gap_excess = -np.inf
+            if noise_ref and gap > 0:
+                frames = a["on"] | b["on"]
+                gap_excess = float(db(power[a["fb"]:b["fa"]][:, frames].mean()) - db(noise_ref))
+            if gap <= FRAGMENT_GAP_OF_WIDTH * wide or gap_excess >= GAP_EXCESS_DB or (
+                    gap <= SIDELOBE_GAP_OF_WIDTH * (strong["fb"] - strong["fa"])
+                    and strong["peak"] - weak["peak"] >= SIDELOBE_DB):
+                items[i] = dict(fa=a["fa"], fb=b["fb"], rows=a["rows"] + b["rows"], on=a["on"] | b["on"],
+                                peak=max(a["peak"], b["peak"]))
+                del items[i + 1]
+                changed = True
+                break
+    return [(it["fa"], it["fb"], it["rows"]) for it in items]
+
+
 @dataclass
 class DetectionResult:
     response: dict
@@ -201,22 +261,25 @@ def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_thresh
             active[a:b] = True
     detections, envelopes = [], {}
     df = fs/nfft
+    bands = []
     for fa, fb in runs(active):
         if fb-fa < 2:
             continue
-        time_on = np.any(mask[fa:fb], axis=0)
-        ti = np.flatnonzero(time_on)
-        if ti.size < 3 or np.count_nonzero(mask[fa:fb]) < 12:
+        if np.count_nonzero(np.any(mask[fa:fb], axis=0)) < 3 or np.count_nonzero(mask[fa:fb]) < 12:
             continue
+        bands.append((fa, fb))
+    for fa, fb, rows in merge_fragments(bands, mask, smooth, power):
+        time_on = np.any(mask[rows], axis=0)
+        ti = np.flatnonzero(time_on)
         lower = max(0 if real else -fs/2, float(f[fa]-df/2))
         upper = min(fs/2, float(f[fb-1]+df/2))
         start = max(0, int(round(t[ti[0]]*fs-nfft/2)))
         end = min(len(x), int(round(t[ti[-1]]*fs+nfft/2)))
         isolated = isolate_band(x, fs, lower, upper, real)
         pulse = envelope_detect(isolated, fs, floor*(upper-lower))
-        evidence = smooth[fa:fb][:, ti]
+        evidence = smooth[rows][:, ti]
         excess = float(db(np.percentile(evidence, 90))-threshold)
-        occupancy = float(np.mean(mask[fa:fb][:, ti]))
+        occupancy = float(np.mean(mask[rows][:, ti]))
         # This is an explainable evidence score, NOT a calibrated probability or
         # a modulation classifier. Borderline energy gets an explicit review flag.
         confidence = float(np.clip(.48 + .38*(1-np.exp(-max(0, excess)/10)) + .12*occupancy, 0, .99))
@@ -224,7 +287,7 @@ def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_thresh
         # statistic on raw (unsmoothed) power, not an amplitude threshold.
         # Deliberately NOT collapsed into `confidence` above -- no calibration
         # dataset exists to justify combining the two into one number.
-        deviation = power_cv_deviation(power[fa:fb][:, ti])
+        deviation = power_cv_deviation(power[rows][:, ti])
         confidence_evidence_based = float(np.clip(.48+.5*(1-np.exp(-deviation/.2)), 0, .99))
         idx = len(detections)
         if pulse["is_pulsed"]:

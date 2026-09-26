@@ -58,7 +58,8 @@ def test_candidate_window_is_band_isolated_decimated_and_capped():
     (seg, fs2, _), reason = candidate_segment(c, d)
     assert reason is None and len(seg) <= MAX_SAMPLES
     width = d["freq_upper_hz"] - d["freq_lower_hz"]
-    assert 3 * width <= fs2 <= 12 * width
+    # decimation never cuts into the band (after WP6 the band includes the sidelobes)
+    assert min(3 * width, 1e6) <= fs2 <= max(12 * width, 1e6 / 8)
     # the other half of the band is gone: the segment is centred on the candidate
     spec = np.abs(np.fft.fft(seg)) ** 2
     f = np.fft.fftfreq(len(seg), 1 / fs2)

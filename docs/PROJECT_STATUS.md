@@ -8,7 +8,7 @@ Generated from `docs/readiness.json` by `python -m experiments.readiness.scorebo
 
 <!-- readiness:start -->
 ```
-Detect                  ██████░░░░  67%  (2/3 criteria)  [G1 ✗ G2 ✗ G3 –]
+Detect                  ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
 Parameters              ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
 Modulation label        ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
 Symbol rate             ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
@@ -18,7 +18,7 @@ Real data (G3)          ░░░░░░░░░░   0%  (0/1 criteria)  [G1
 Automation              ░░░░░░░░░░   0%  (0/1 criteria)  [G1 – G2 – G3 ✗]
 Docs                    ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 --------------------
-Overall                 ███████░░░  76%  (13/17 criteria)
+Overall                 ████████░░  82%  (14/17 criteria)
 ```
 <!-- readiness:end -->
 

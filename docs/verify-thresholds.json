@@ -1,8 +1,8 @@
 {
  "thresholds": {
-  "m_fam": 0.1662765,
-  "m_rate": 0.04067,
-  "unexplained_max": 0.11576468752647376,
+  "m_fam": 0.165833,
+  "m_rate": 0.032279,
+  "unexplained_max": 0.11890720269157494,
   "min_usage": 0.01,
   "m_fm_digital": 0.8169690000000001
  },
@@ -11,27 +11,27 @@
  "candidates": [
   {
    "unit": "sample",
-   "m_fam": 0.1662765,
-   "m_rate": 0.04067,
-   "unexplained_max": 0.11576468752647376,
+   "m_fam": 0.165833,
+   "m_rate": 0.032279,
+   "unexplained_max": 0.11890720269157494,
    "m_fm_digital": 0.8169690000000001,
-   "coverage": 1071
+   "coverage": 1068
   },
   {
    "unit": "symbol",
-   "m_fam": 1.489621,
-   "m_rate": 0.488031,
-   "unexplained_max": 0.1117581302975335,
+   "m_fam": 1.4530185,
+   "m_rate": 0.20356849999999999,
+   "unexplained_max": 0.11581636480452859,
    "m_fm_digital": 0.0,
-   "coverage": 1015
+   "coverage": 1012
   },
   {
    "unit": "total",
-   "m_fam": 337.8816075,
-   "m_rate": 276.483001,
-   "unexplained_max": 0.11680916261001444,
+   "m_fam": 363.022327,
+   "m_rate": 63.04403550000001,
+   "unexplained_max": 0.11911721390628748,
    "m_fm_digital": 5096.3482185,
-   "coverage": 1052
+   "coverage": 1068
   }
  ],
  "n_captures": 812
