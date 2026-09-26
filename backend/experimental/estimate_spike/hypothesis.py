@@ -9,7 +9,7 @@ import numpy as np
 
 # Hypotheses that only probe for structure outside the library: never published as a label.
 UNKNOWN_CE = "unknown constant-envelope"
-FAMILY = {"BPSK": "PSK", "QPSK": "PSK", "8PSK": "PSK", "QAM16": "QAM16", "FSK2": "FSK", "FSK4": "FSK", "FSK8": UNKNOWN_CE,
+FAMILY = {"BPSK": "PSK", "QPSK": "PSK", "8PSK": "PSK", "QAM16": "QAM16", "FSK2": "FSK", "FSK4": "FSK", "FSK8": UNKNOWN_CE, "ASK2": "ASK",
           "AM": "AM", "FM": "FM", "none": "none"}
 DIGITAL_EXPERTS = ("nrz", "rrc", "lsp", "fsk")
 ALL_EXPERTS = ("nrz", "rrc", "lsp", "fsk", "analog")

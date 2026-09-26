@@ -15,6 +15,8 @@ class Thresholds:
     # Fixed by principle (a 1% test), not fit: a label names an alphabet, so every point must be
     # in use; p < 0.01 that the least-used point is this rare under uniform use -> not published.
     min_usage: float = 0.01
+    # FM is published only if it beats the best digital hypothesis by this margin (0 = off)
+    m_fm_digital: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -30,8 +32,9 @@ class SpikeConfig:
     dedupe_tol: float = 0.02
     refine_dedupe_tol: float = 0.01
     needle_offsets: tuple[float, ...] = (-0.006, -0.003, 0.0, 0.003, 0.006)
-    alphabets: tuple[int, ...] = (2, 4, 8, 16)
+    alphabets: tuple[int, ...] = (2, 4, 8, 16, -2)   # -2: unipolar 2-level ASK
     snap_block: int = 16
+    quick_alphabets: tuple[int, ...] = (4, -2)       # ranking: QPSK alone ranks unipolar ASK badly
     rrc_alpha: float = 0.35
     rrc_span: int = 6
     rrc_phases: int = 8
@@ -41,6 +44,10 @@ class SpikeConfig:
     lsp_drift_chunks: int = 8
     lsp_max_drift: float = 0.002         # larger clock errors are outside the linear regime
     fsk_library_tones: tuple[int, ...] = (2, 4)
+    # rate-multiple check: >= this share of tone changes on one boundary residue mod m (and
+    # enough changes to judge); true-rate 4-FSK spreads changes evenly over residues
+    fsk_multiple_share: float = 0.85
+    fsk_multiple_min_changes: int = 20
     fsk_probe_tones: tuple[int, ...] = (8,)   # probe for discrete IF levels outside the library (FM gate)
     fsk_needle_tones: tuple[int, ...] = (2, 4)  # tone counts whose rate the needle refines
     fsk_search_block: int = 2

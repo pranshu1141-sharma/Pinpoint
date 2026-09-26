@@ -30,7 +30,7 @@ from .metrics import label_matches, rate_matches
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "artifacts" / "readiness" / "calibration_rows.json"
 UNITS = ("sample", "symbol", "total")
-PRECISION, MIN_COUNT = 0.95, 8
+PRECISION, MIN_COUNT = 0.97, 8   # 97%: then wrong answers are <= 3% of published, hence of captures (criteria L1/R1)
 RAW = Thresholds(m_fam=-np.inf, m_rate=-np.inf, unexplained_max=np.inf, min_usage=0.0)
 
 
@@ -79,7 +79,9 @@ def margins(row):
         sps = c["fs"] / d.rate if d.rate else np.nan
         scale = dict(sample=1.0, symbol=sps, total=float(c["n"]))
         best = min(_hyps(c), key=lambda h: h.score)
-        out.append(dict(d=d, usage=best.usage, scale=scale))
+        dig = [h.score for h in _hyps(c) if h.expert in DIGITAL_EXPERTS]
+        m_dig = (min(dig) - best.score) if dig else np.inf
+        out.append(dict(d=d, usage=best.usage, scale=scale, m_dig=m_dig))
     return out
 
 
@@ -98,19 +100,31 @@ def fit(rows, unit, min_usage):
              for r, m in pairs if m["d"].expert in DIGITAL_EXPERTS and m["d"].m_fam * m["scale"][unit] >= t_fam]
         per_gen[gen][1], per_gen[gen][3] = _pick(T), T
     t_rate = max(per_gen[g][1] for g in per_gen)
+    # FM needs its own margin over the best digital hypothesis (plan WP3): FM-labelled
+    # captures whose family margin passes; smallest digital margin reaching the precision
+    t_fm = max(_pick([(m["m_dig"] * m["scale"][unit], label_matches("FM", r["truth"]["label"]))
+                      for r, m in pairs if m["d"].label == "FM" and m["d"].m_fam * m["scale"][unit] >= t_fam],
+                     empty=0.0)
+               for pairs in M.values())
     good = [u for g in per_gen for m, ok, u in per_gen[g][2] if ok and m >= t_fam and np.isfinite(u)]
     t_unexp = float(np.percentile(good, 95)) if good else 1.0
     cover = sum(ok for g in per_gen for m, ok, u in per_gen[g][2] if m >= t_fam and u <= t_unexp) + \
         sum(ok for g in per_gen for m, ok in per_gen[g][3] if m >= t_rate)
-    return dict(unit=unit, m_fam=t_fam, m_rate=t_rate, unexplained_max=t_unexp, coverage=int(cover))
+    return dict(unit=unit, m_fam=t_fam, m_rate=t_rate, unexplained_max=t_unexp, m_fm_digital=t_fm,
+                coverage=int(cover))
 
 
-def _pick(pairs):
+def _pick(pairs, empty=float("inf")):
+    """Threshold giving >= PRECISION on >= MIN_COUNT captures, at the midpoint of the gap below the
+    smallest such margin (max-margin choice); `empty` if there is nothing to judge."""
+    if not pairs:
+        return empty
     vals = sorted({round(p[0], 6) for p in pairs if np.isfinite(p[0])})
-    for th in vals:
+    for i, th in enumerate(vals):
         sel = [p[1] for p in pairs if p[0] >= th]
         if len(sel) >= MIN_COUNT and np.mean(sel) >= PRECISION:
-            return float(th)
+            # any threshold in (previous value, th] selects the same captures: take the midpoint
+            return float(th if i == 0 else (vals[i - 1] + th) / 2)
     return float("inf")
 
 
@@ -134,7 +148,8 @@ def main(argv=None):
         print(f)
     best = max(fits, key=lambda f: f["coverage"])
     blob = dict(thresholds=dict(m_fam=best["m_fam"], m_rate=best["m_rate"],
-                                unexplained_max=best["unexplained_max"], min_usage=min_usage),
+                                unexplained_max=best["unexplained_max"], min_usage=min_usage,
+                                m_fm_digital=best["m_fm_digital"]),
                 margin_unit=best["unit"],
                 provenance=(f"margin thresholds fit on a cross-generator calibration split (G1 seed 4, "
                             f"G2 calibration seeds; {len(rows)} captures): >= 95% precision on each generator; "

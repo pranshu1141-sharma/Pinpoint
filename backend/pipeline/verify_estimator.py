@@ -36,12 +36,21 @@ def thresholds() -> tuple[Thresholds, str, str]:
     return Thresholds(**blob["thresholds"]), blob["provenance"], blob.get("margin_unit", "sample")
 
 
-def gate(d, usage: float, th: Thresholds, unit: str, n: int, fs: float) -> dict:
-    """Publication decision from raw margins (per-sample nats) rescaled to the calibrated unit."""
+def fm_digital_margin(hypotheses, fm_score: float) -> float:
+    """Per-sample score gap from FM to the best digital hypothesis (inf when none)."""
+    dig = [h.score for h in hypotheses if h.expert in DIGITAL_EXPERTS]
+    return (min(dig) - fm_score) if dig else float("inf")
+
+
+def gate(d, usage: float, th: Thresholds, unit: str, n: int, fs: float, m_dig: float = float("inf")) -> dict:
+    """Publication decision from raw margins (per-sample nats) rescaled to the calibrated unit.
+    FM additionally needs its margin over the best digital hypothesis (plan WP3)."""
     sps = fs / d.rate if d.rate else float("nan")
     scale = {"sample": 1.0, "symbol": sps, "total": float(n)}[unit]
     m_fam, m_rate = d.m_fam * scale, d.m_rate * scale
     fam_pass = d.family != "none" and m_fam >= th.m_fam
+    if d.label == "FM" and m_dig * scale < th.m_fm_digital:
+        fam_pass = False
     label = bool(fam_pass and d.unexplained <= th.unexplained_max and d.family != UNKNOWN_CE
                  and usage >= th.min_usage)
     # a rate means "this is digital at R": only when the family margin passes too
@@ -103,7 +112,8 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
     raw = Thresholds(m_fam=-np.inf, m_rate=-np.inf, unexplained_max=np.inf, min_usage=0.0)
     d = decide(r.hypotheses, r.noise_var, r.total_power, raw)
     usage = min(r.hypotheses, key=lambda h: h.score).usage
-    g = gate(d, usage, th, unit, len(x), fs)
+    best = min(r.hypotheses, key=lambda h: h.score)
+    g = gate(d, usage, th, unit, len(x), fs, fm_digital_margin(r.hypotheses, best.score))
     out.update(
         modulation_label=d.label if g["label"] else None,
         verify_family=(d.family if g["tier"] == "labelled" else

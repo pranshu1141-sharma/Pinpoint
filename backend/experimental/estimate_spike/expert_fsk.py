@@ -95,6 +95,30 @@ def _score_at(p: _FskInputs, sps: float, tau: float, blk_syms: int, tones: int =
     return (float(score), float(res))
 
 
+def _rate_multiple(p: _FskInputs, sps: float, tau: float, tones: int, cfg: SpikeConfig) -> int:
+    """m > 1 when the nearest-tone decisions change on (almost) only one residue class of
+    symbol boundaries mod m, i.e. the proposed rate is m x the true one; else 1."""
+    u = p.nn / sps + tau
+    k = np.floor(u).astype(int)
+    k -= k.min()
+    frac = u - np.floor(u)
+    interior = ((frac * sps > 1.0) & ((1 - frac) * sps > 1.0)).astype(float)
+    nk = k.max() + 1
+    sd = np.bincount(k, p.dd.real * interior, nk) + 1j * np.bincount(k, p.dd.imag * interior, nk)
+    mf = np.angle(sd) * p.fs / (2 * np.pi)
+    c = _tone_clusters(mf, sd, p.fs, tones)
+    if c is None:
+        return 1
+    dec = np.argmin(np.abs(mf[1:-1, None] - c[None, :]), axis=1)
+    changes = np.flatnonzero(np.diff(dec) != 0) + 1
+    if len(changes) < cfg.fsk_multiple_min_changes:
+        return 1
+    for m in (3, 2):
+        if np.bincount(changes % m, minlength=m).max() >= cfg.fsk_multiple_share * len(changes):
+            return m
+    return 1
+
+
 class FskExpert:
     """Rebuild the capture as 2-FSK at a proposed rate.
 
@@ -108,7 +132,7 @@ class FskExpert:
         self.cfg = cfg
 
     def _timing(self, p: _FskInputs, rate: float, hint: Optional[float] = None,
-                final_scan: bool = True) -> tuple[float, tuple]:
+                final_scan: bool = True, tones: int = 2) -> tuple[float, tuple]:
         """Best timing phase at `rate` and the scoring-block result there.
 
         `hint` is an extra starting timing (e.g. from the needle search); the
@@ -117,10 +141,10 @@ class FskExpert:
         """
         cfg = self.cfg
         sps = p.fs / rate
-        long_fit = lambda tau: _score_at(p, sps, tau, cfg.fsk_score_block)
+        long_fit = lambda tau: _score_at(p, sps, tau, cfg.fsk_score_block, tones)
         steps = (0.25, 0.125, 0.0625)
         tau0 = spectral_line_timing(p.fi_track, rate, p.fs)
-        short_tau, _ = fine_search(lambda tau: _score_at(p, sps, tau, cfg.fsk_search_block), tau0, sps,
+        short_tau, _ = fine_search(lambda tau: _score_at(p, sps, tau, cfg.fsk_search_block, tones), tau0, sps,
                                    extra_phases=cfg.fsk_search_phases, steps=steps)
         if not cfg.fsk_rescore_refine:
             return short_tau, long_fit(short_tau)
@@ -138,23 +162,33 @@ class FskExpert:
         return best
 
     def fit(self, x: np.ndarray, xc: np.ndarray, fs: float, rate: float,
-            timing_hint: Optional[float] = None, tones_set: Optional[tuple] = None) -> Optional[Hypothesis]:
+            timing_hint: Optional[float] = None, tones_set: Optional[tuple] = None,
+            _depth: int = 0) -> Optional[Hypothesis]:
         """Best of 2-FSK (full timing search) and each higher tone count in `tones_set`
-        (default cfg.fsk_library_tones; timing refined from the 2-FSK optimum)."""
+        (default cfg.fsk_library_tones), each with its own timing search.
+
+        If the tone changes of the winner fall on only every m-th symbol boundary, the
+        rate is an m-th multiple of the true one (shorter symbols let the per-block phase
+        fit absorb more noise, so MDL alone can prefer it); the fit is redone at rate/m.
+        """
         cfg = self.cfg
         p = _prepare(x, fs)
         tau, (score, res) = self._timing(p, rate, timing_hint)
-        best = (score, res, 2)
-        sps = fs / rate
+        best = (score, res, 2, tau)
         for tones in (cfg.fsk_library_tones if tones_set is None else tones_set):
             if tones == 2:
                 continue
-            _, (s_m, r_m) = fine_search(lambda t: _score_at(p, sps, t, cfg.fsk_score_block, tones), tau, sps,
-                                        extra_phases=cfg.fsk_quick_phases, steps=(0.25, 0.125, 0.0625))
+            # its own timing search (the 2-FSK optimum is only an extra start: 2 tones fit 4-FSK badly)
+            tau_m, (s_m, r_m) = self._timing(p, rate, hint=tau, final_scan=False, tones=tones)
             if s_m < best[0]:
-                best = (s_m, r_m, tones)
+                best = (s_m, r_m, tones, tau_m)
         if not np.isfinite(best[0]):
             return None
+        m = _rate_multiple(p, fs / rate, best[3], best[2], cfg) if _depth < 2 else 1
+        if m > 1:
+            sub = self.fit(x, xc, fs, rate / m, tones_set=tones_set, _depth=_depth + 1)
+            if sub is not None:
+                return sub
         return Hypothesis(self.name, f"FSK{best[2]}", float(rate), best[0], best[1])
 
     def refine_rate(self, x: np.ndarray, fs: float, rate: float) -> tuple[float, Optional[float]]:
@@ -180,8 +214,7 @@ class FskExpert:
             # drift makes 2-FSK look m-toned, so the tone count is judged after refinement)
             sps = fs / best[1]
             s2 = _score_at(p, sps, best[2], cfg.fsk_score_block, 2)[0]
-            _, (sm, _) = fine_search(lambda t: _score_at(p, sps, t, cfg.fsk_score_block, m), best[2], sps,
-                                     extra_phases=cfg.fsk_quick_phases)
+            _, (sm, _) = self._timing(p, best[1], hint=best[2], final_scan=False, tones=m)
             if sm < s2:
                 cand = self._needle(p, rate, m)
                 if cand[0] is not None and cand[0] < sm:
@@ -198,8 +231,7 @@ class FskExpert:
             tau, (s0, _) = self._timing(p, rate, final_scan=False)  # the pattern search moves timing itself
         else:
             tau2, _ = self._timing(p, rate, final_scan=False)
-            tau, (s0, _) = fine_search(lambda t: _score_at(p, sps0, t, cfg.fsk_score_block, tones), tau2, sps0,
-                                       extra_phases=cfg.fsk_quick_phases)
+            tau, (s0, _) = self._timing(p, rate, hint=tau2, final_scan=False, tones=tones)
         if not np.isfinite(s0):
             return (None, float(rate), None)
         c0 = centre * rate / fs + tau          # symbol coordinate at the centre

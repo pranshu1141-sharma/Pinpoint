@@ -9,7 +9,7 @@ import numpy as np
 
 from .config import SpikeConfig
 from .dsp import dedupe, line_peaks, moving_average
-from .experts_psk import nrz_quick_score
+from .experts_psk import flat_score, nrz_quick_score
 from .expert_fsk import FskExpert, fsk_quick_score
 
 
@@ -53,7 +53,7 @@ def needle_refine(xc: np.ndarray, fs: float, finalists: list[float], band, cfg: 
     refined = []
     for r0 in finalists:
         rr = r0 * (1 + offsets)
-        qq = [nrz_quick_score(xc, fs, v, cfg) for v in rr]
+        qq = [flat_score(xc, fs, v) for v in rr]      # alphabet-free: QPSK snapping misjudges ASK/QAM
         refined.append(float(rr[int(np.argmin(qq))]))
     if refined:
         refined += [refined[0] / m for m in cfg.subharmonics]

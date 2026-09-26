@@ -38,9 +38,8 @@ OWN_FAMILY = [
     ("QAM16", dict(shaping="NRZ", rate=40e3), "nrz", "QAM16"),
     ("PSK", dict(label="QPSK", shaping="RRC", rate=60e3), "rrc", "QPSK"),
     ("FSK2", dict(h=1.0, rate=80e3), "fsk", "FSK2"),
-    pytest.param("AM", dict(), "analog", "AM", marks=pytest.mark.xfail(strict=True, reason=(
-        "Known weak spot: the analog expert takes the carrier from the FFT-bin argmax (up to ~120 Hz "
-        "off at 4096 samples), so the fixed-phase AM model cannot absorb the residual rotation."))),
+    # was a strict xfail: the analog expert now interpolates the carrier below one FFT bin
+    ("AM", dict(), "analog", "AM"),
     ("FM", dict(), "analog", "FM"),
 ]
 
@@ -69,7 +68,9 @@ def test_fsk_scores_true_rate_below_double_rate(seed):
     x, _ = generate(rng, "FSK2", snr_db=13.0, rate=80e3, h=1.0)
     xc = _xc(x)
     fsk = FskExpert(DEFAULT)
-    assert fsk.fit(x, xc, FS, 80e3).score < fsk.fit(x, xc, FS, 160e3).score
+    true, double = fsk.fit(x, xc, FS, 80e3), fsk.fit(x, xc, FS, 160e3)
+    # 2x never wins: either it scores worse or the rate-multiple check reports the true rate
+    assert true.score < double.score or abs(double.rate - 80e3) / 80e3 < 0.05
 
 
 @pytest.mark.parametrize("h", [0.5, 1.0])
@@ -302,3 +303,44 @@ def test_full_16qam_is_still_published(seed):
     grid = (np.array([-3, -1, 1, 3.0])[:, None] + 1j * np.array([-3, -1, 1, 3.0])[None, :]).ravel()
     d = _decide(analyze_segment(_qam_capture(grid, seed), FS))
     assert d.label == "QAM16" and d.label_shipped, d
+
+
+# ---- WP3b: 2-level ASK (unipolar) joins the library; it must not be published as AM
+
+@pytest.mark.parametrize("sps,fc,seed", [(24, 3000, 1), (48, 8000, 2), (12, 0, 3)])
+def test_unipolar_ask_is_labelled_ask_not_am(sps, fc, seed):
+    d = _wide("ask", 20, fc, sps, seed)
+    assert not (d.label == "AM" and d.label_shipped), d
+    # the winner; publication is decided by the calibrated thresholds (scoreboard), not the spike default
+    assert d.label == "ASK2", d
+    assert abs(d.rate - 48000 / sps) / (48000 / sps) < 0.05
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_am_is_not_labelled_ask(seed):
+    x, _ = generate(np.random.default_rng(seed), "AM", snr_db=13.0)
+    d = _decide(analyze_segment(x, FS))
+    assert d.label != "ASK2" or not d.label_shipped, d
+
+
+@pytest.mark.parametrize("seed", [100582, 100581, 7])
+def test_4fsk_timing_does_not_depend_on_the_2fsk_optimum(seed):
+    # a 2-FSK model fits 4-FSK badly, so its timing optimum is no start for 4 tones
+    from experiments.readiness.synth_wide import make_signal
+    x, _ = make_signal("fsk", 20, 0, 12, seed, 8192)
+    x = np.asarray(x, complex)
+    fsk = FskExpert(DEFAULT)
+    exact = fsk.fit(x, x, 48000, 4000.0)
+    assert exact.label == "FSK4"
+    for rate in (4000 * (1 - 1e-5), 4000 * (1 + 1e-5), 4000 * (1 - 3e-5)):
+        assert fsk.fit(x, x, 48000, rate).score <= exact.score + 0.05
+
+
+@pytest.mark.parametrize("seed,m", [(100600, 3), (100601, 2), (11, 3)])
+def test_fsk_fit_at_a_rate_multiple_reports_the_true_rate(seed, m):
+    # at m x the rate, tone changes only fall on every m-th symbol boundary
+    from experiments.readiness.synth_wide import make_signal
+    x, _ = make_signal("fsk", 20, 0, 48, seed, 8192)
+    x = np.asarray(x, complex)
+    h = FskExpert(DEFAULT).fit(x, x, 48000, 1000.0 * m)
+    assert h is not None and abs(h.rate - 1000) / 1000 < 0.05, h

@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from .alphabets import LABEL, snap_to_alphabet, usage_ratio
+from .alphabets import LABEL, alphabet_size, extra_params, snap_to_alphabet, usage_ratio
 from .config import SpikeConfig
 from .dsp import TINY, rrc_pulse
 from .hypothesis import Hypothesis
@@ -29,16 +29,30 @@ def _nrz_at(xc: np.ndarray, sps: float, tau: float, alphabets, block: int) -> tu
     for order in alphabets:
         rec, idx = snap_to_alphabet(m, order, block, return_index=True)
         res = np.mean(np.abs(xm - rec[kk]) ** 2) + TINY
-        score = np.log(res) + (n_sym * np.log(order) + np.ceil(n_sym / block) * np.log(n_eff)) / n_eff
+        score = np.log(res) + (n_sym * np.log(alphabet_size(order)) + np.ceil(n_sym / block) * np.log(n_eff)
+                               + 0.5 * extra_params(order) * np.log(n_eff)) / n_eff
         if score < best[0]:
-            best = (float(score), order, float(res), usage_ratio(idx, order))
+            best = (float(score), order, float(res), usage_ratio(idx, alphabet_size(order)))
     return best
 
 
-def nrz_quick_score(xc: np.ndarray, fs: float, rate: float, cfg: SpikeConfig) -> float:
-    """Cheap ranking score: QPSK alphabet only, spectral-line timing only."""
+def flat_score(xc: np.ndarray, fs: float, rate: float) -> float:
+    """Alphabet-free local rate score: mean power around flat per-symbol means at the
+    spectral-line timing. Only for comparing nearby rates (a finer grid always lowers it)."""
     sps = fs / rate
-    return _nrz_at(xc, sps, transition_timing(xc, rate, fs), (4,), cfg.snap_block)[0]
+    tau = transition_timing(xc, rate, fs)
+    k = np.floor(np.arange(len(xc)) / sps + tau).astype(int)
+    k -= k.min()
+    msk = (k > 0) & (k < k.max())
+    cnt = np.maximum(np.bincount(k), 1)
+    m = (np.bincount(k, xc.real) + 1j * np.bincount(k, xc.imag)) / cnt
+    return float(np.mean(np.abs(xc[msk] - m[k[msk]]) ** 2))
+
+
+def nrz_quick_score(xc: np.ndarray, fs: float, rate: float, cfg: SpikeConfig) -> float:
+    """Cheap ranking score: cfg.quick_alphabets (QPSK, unipolar ASK), spectral-line timing only."""
+    sps = fs / rate
+    return _nrz_at(xc, sps, transition_timing(xc, rate, fs), cfg.quick_alphabets, cfg.snap_block)[0]
 
 
 class NrzPskExpert:
@@ -98,10 +112,11 @@ class RrcPskExpert:
                 aq[inner], idx = snap_to_alphabet(a[inner], order, cfg.snap_block, return_index=True)
                 rec = sum(aq[k] * p for k, p in zip(ks, ps))
                 res = np.mean(np.abs(xc[msk] - rec[msk]) ** 2) + TINY
-                cost = n_sym * np.log(order) + np.ceil(n_sym / cfg.snap_block) * np.log(n_eff) + np.log(n_eff)
+                cost = n_sym * np.log(alphabet_size(order)) + np.ceil(n_sym / cfg.snap_block) * np.log(n_eff) \
+                    + np.log(n_eff) + 0.5 * extra_params(order) * np.log(n_eff)
                 score = np.log(res) + cost / n_eff
                 if score < best[0]:
-                    best = (float(score), order, float(res), usage_ratio(idx, order))
+                    best = (float(score), order, float(res), usage_ratio(idx, alphabet_size(order)))
         if best[1] is None:
             return None
         return Hypothesis(self.name, LABEL[best[1]], float(rate), best[0], best[2], best[3])
@@ -198,12 +213,12 @@ class LsPulsePskExpert:
             a, idx = snap_to_alphabet(m, order, cfg.snap_block, return_index=True)
             _, rec = _pulse_lstsq(y, a, taps, m_par)
             res = np.mean(np.abs(y - rec) ** 2) + TINY
-            cost = n_sym * np.log(order) + np.ceil(n_sym / cfg.snap_block) * np.log(n_eff) \
-                + 0.5 * m_par * np.log(n_eff)
+            cost = n_sym * np.log(alphabet_size(order)) + np.ceil(n_sym / cfg.snap_block) * np.log(n_eff) \
+                + 0.5 * (m_par + extra_params(order)) * np.log(n_eff)
             score = np.log(res) + cost / n_eff
             if score < best[0]:
                 sel = (k[inner].min() <= np.arange(len(idx))) & (np.arange(len(idx)) <= k[inner].max())
-                best = (float(score), order, float(res), rec, inner, usage_ratio(idx[sel], order))
+                best = (float(score), order, float(res), rec, inner, usage_ratio(idx[sel], alphabet_size(order)))
         return best
 
     def fit(self, x: np.ndarray, xc: np.ndarray, fs: float, rate: float) -> Optional[Hypothesis]:
