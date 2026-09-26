@@ -6,6 +6,14 @@ An offline RF capture detector and dashboard for the Smart India Hackathon NTRO 
 
 `analyze_candidate(..., estimator="verify")` (API: `estimator=verify`, the default) takes one Detect candidate, isolates its band, mixes it to the band centre, decimates to ~4× the band and caps the window at 8,192 samples. The propose → verify (MDL) estimator in `backend/experimental/estimate_spike/` then rebuilds the segment under competing hypotheses — BPSK/QPSK/8PSK/16-QAM/unipolar 2-ASK with flat, RRC and least-squares pulses; 2/4-FSK; AM/FM; noise — and publishes the winner only when its margin over every rival family (and, for FM, over every digital hypothesis) passes the thresholds in `docs/verify-thresholds.json`. Margins are nats, not probabilities. An 8-level FSK probe and an alphabet-usage test turn structure outside the library into *unknown family* rather than a wrong label. The older fixture-validated heuristics remain available with `estimator=legacy` and are marked `legacy (fixture-validated only)`. Measured on held-out synthetic data (not field performance): see [docs/CLAIMS.md](docs/CLAIMS.md). Reproduce with `python -m experiments.readiness.calibrate` (thresholds, calibration seeds only) and `python -m experiments.readiness.scoreboard` (test seeds).
 
+## Batch analysis (offline CLI)
+
+```bash
+.venv/bin/python -m backend.cli analyze path/to/captures --out results/
+```
+
+Analyses a file or every capture in a folder (`.sigmf-data` + `.sigmf-meta`, `.wav`, or raw `.iq` with `--sample-rate` and `--datatype`) through the same pipeline as the API and writes one JSON and one SigMF meta per file plus `summary.csv`, rows needing review first. Deterministic (no timings in the files); exit status 2 if any input is malformed or ambiguous (still listed in the summary). `--estimator legacy` selects the fixture-validated heuristics.
+
 ## Complete project documentation
 
 The structured documentation starts at [`docs/README.md`](docs/README.md). It includes requirement-by-requirement completion status, architecture, every authored file and artifact family, detector formulas, input rules, the full API contract, dashboard behavior, Signal Breakdown provenance, 1 GiB processing evidence, tests, operations, limitations, roadmap, judge-defense answers, and a glossary.
