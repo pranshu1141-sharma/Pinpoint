@@ -392,6 +392,7 @@ _LEGACY_FIELDS = ("fine_modulation_label", "fine_modulation_confidence", "fine_m
 _VERIFY_NOT_RUN = {"verify_family": None, "m_fam": None, "m_rate": None, "unexplained": None,
                    "estimate_tier": None, "label_needs_review": None, "verify_best_hypothesis": None,
                    "verify_segment": None, "verify_elapsed_ms": None, "verify_thresholds": None,
+                   "verify_model_snr_db": None, "verify_carrier_hz": None,
                    "verify_status": "not run (estimator=legacy)"}
 
 
@@ -425,5 +426,20 @@ def analyze_candidate(capture: Capture, candidate: dict, *, noise_floor=None, es
     out.update(fine_modulation_status=skipped, symbol_rate_status=None, qam_order_status=skipped)
     out.update(verify_candidate(capture, out))
     out["symbol_rate_status"] = out["verify_status"]
+    # The legacy M-th power refinement is fixture-validated only (it mis-refined wideband 8PSK
+    # by 12-26 kHz); in verify mode the refined centre is verify's carrier for a published
+    # linear label, and otherwise not published.
+    if out["verify_carrier_hz"] is not None:
+        out.update(center_frequency_refined_hz=out["verify_carrier_hz"] + tuning_frequency(capture),
+                   refinement_status="refined (verify M-th power carrier, published linear label)")
+    else:
+        out.update(center_frequency_refined_hz=None, refinement_order=None, refinement_sharpness=None,
+                   refinement_status="not refined (verify: no published linear label)")
+    model = out["verify_model_snr_db"]
+    if model is not None and (out["snr_db"] is None or model > out["snr_db"]):
+        # Both estimates are biased low: signal sidelobes can only raise the spectral floor, and
+        # model misfit can only raise the rebuild residual, so the larger SNR is kept. The model
+        # wins on wideband/short captures whose sidelobes leave no noise-only spectral region.
+        out.update(snr_db=model, snr_method="model residual (published verify rebuild)")
     out["label_provenance"] = "verify (propose -> verify, MDL margins)"
     return out

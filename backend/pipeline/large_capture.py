@@ -142,6 +142,7 @@ _NULL_DOWNSTREAM_FIELDS = {
     "unexplained": None, "estimate_tier": "abstain", "label_needs_review": True,
     "verify_status": _TRACK_TOO_LONG_STATUS, "label_provenance": None, "verify_best_hypothesis": None,
     "verify_segment": None, "verify_elapsed_ms": None, "verify_thresholds": None,
+    "verify_model_snr_db": None, "snr_method": None, "verify_carrier_hz": None,
 }
 
 

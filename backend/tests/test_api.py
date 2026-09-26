@@ -174,7 +174,7 @@ def test_sync_pulses_and_sigmf_absolute_frequency():
     r = client.post("/api/analyze", files={
         "file": ("pulse.sigmf-data", x.tobytes()),
         "metadata": ("pulse.sigmf-meta", json.dumps(metadata).encode()),
-    })
+    }, data={"estimator": "legacy"})   # the refined centre of a gated carrier is a legacy measurement
     assert r.status_code == 200, r.text
     d = next(d for d in r.json()["detections"] if d["freq_lower_hz"] < 8000 < d["freq_upper_hz"])
     assert d["center_frequency_hz"]-100000000 == pytest.approx(8000, rel=.02)

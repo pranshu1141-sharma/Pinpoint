@@ -24,6 +24,7 @@ from .ingest import Capture
 OVERSAMPLE = 4          # decimated rate ~ OVERSAMPLE x the candidate bandwidth (plan: 4-8x)
 MAX_SAMPLES = 8192      # window cap after decimation
 MIN_SAMPLES = 2000      # the estimator's minimum segment
+LINEAR_LABELS = {"BPSK", "QPSK", "8PSK", "QAM16", "ASK2"}
 THRESHOLDS_FILE = Path(__file__).resolve().parents[2] / "docs" / "verify-thresholds.json"
 
 
@@ -84,7 +85,7 @@ def candidate_segment(capture: Capture, candidate: dict):
     if len(x) > MAX_SAMPLES:
         s = (len(x) - MAX_SAMPLES) // 2
         x = x[s:s + MAX_SAMPLES]
-    return (x, fs / decim), None
+    return (x, fs / decim, centre), None
 
 
 def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = False) -> dict:
@@ -93,7 +94,7 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
     out = {"estimator": "verify", "modulation_label": None, "verify_family": None, "symbol_rate_hz": None,
            "m_fam": None, "m_rate": None, "unexplained": None, "estimate_tier": "abstain",
            "label_needs_review": True, "verify_best_hypothesis": None, "verify_segment": None,
-           "verify_elapsed_ms": None,
+           "verify_elapsed_ms": None, "verify_model_snr_db": None, "verify_carrier_hz": None,
            "verify_thresholds": {**th.__dict__, "margin_unit": unit, "provenance": provenance},
            "verify_status": "not reliably estimated"}
     if capture.metadata.get("source_kind") != "iq":
@@ -106,7 +107,7 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
     if seg is None:
         out["verify_status"] = f"not reliably estimated ({reason})"
         return out
-    x, fs = seg
+    x, fs, centre = seg
     t0 = perf_counter()
     r = analyze_segment(x, fs, carrier_hint=0.0)
     raw = Thresholds(m_fam=-np.inf, m_rate=-np.inf, unexplained_max=np.inf, min_usage=0.0)
@@ -125,12 +126,26 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
         verify_best_hypothesis={"expert": d.expert, "label": d.label, "rate_hz": d.rate},
         verify_segment={"sample_rate_hz": fs, "samples": int(len(x))},
         verify_elapsed_ms=round(1e3 * (perf_counter() - t0), 1),
+        verify_model_snr_db=_model_snr(r, best, capture.sample_rate / fs) if g["label"] else None,
+        # the M-th power carrier (relative to the band centre the segment was mixed to) is only
+        # meaningful for a published linear label
+        verify_carrier_hz=float(centre + r.carrier_hz) if g["label"] and d.label in LINEAR_LABELS else None,
         verify_status={"labelled": "estimated (label margin passed)",
                        "unknown_family": "unknown family (structure outside the library)",
                        "abstain": "not reliably estimated (margins below thresholds)"}[g["tier"]])
     if return_raw:
         out["_raw"] = (r, d)
     return out
+
+
+def _model_snr(r, best, decim: float):
+    """Full-band SNR from a published rebuild: its residual is the noise in the decimated band
+    (white noise scales by the decimation factor); the rest of the segment power is signal."""
+    noise = best.residual * decim
+    signal_power = r.total_power - best.residual
+    if not (noise > 0 and signal_power > 0):
+        return None
+    return float(10 * np.log10(signal_power / noise))
 
 
 def _num(v):

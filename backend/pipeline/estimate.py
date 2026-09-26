@@ -5,6 +5,7 @@ otherwise baseband. SNR uses full-band complex noise power, as synth_gen does.
 All intervals are end-exclusive. These functions do not read synthetic truth.
 """
 import numpy as np
+from scipy.stats import gamma
 
 from .detect import EPS, estimate_noise_floor
 from .ingest import Capture
@@ -100,6 +101,58 @@ def measure_bandwidths(frequencies, power):
     return width, occupied
 
 
+FLOOR_PERCENTILE = 20
+
+
+def robust_noise_floor(iq: np.ndarray, fs: float) -> float:
+    """Noise density from a low percentile of the Welch PSD, bias-corrected.
+
+    The frequency median over-estimates noise once a signal (and its sidelobes)
+    occupies a large share of the band, which biased SNR low by 3-6 dB on
+    wideband captures. For noise alone, each Welch bin averages K Hann segments
+    with 50% overlap: approximately gamma-distributed with shape K/1.056, so the
+    20th percentile is divided by that distribution's 20% quantile / mean.
+    """
+    _, psd, _ = estimate_noise_floor(iq, fs)
+    k = max(1, (len(iq) - NFFT // 2) // (NFFT // 2))
+    shape = k / 1.056
+    q = gamma.ppf(FLOOR_PERCENTILE / 100, shape) / shape
+    return float(max(np.percentile(psd, FLOOR_PERCENTILE) / q, EPS))
+
+
+def half_power_width(frequencies, excess):
+    """-3 dB width of a noise-subtracted PSD, smoothed across frequency first.
+
+    A 1024-point Welch PSD of a short capture is spiky; the connected half-power
+    lobe of the raw estimate stops at the first dip (3 kHz for a 121 kHz lobe).
+    Smooth with a box of ~1/8 of the current width estimate (starting from 1/16
+    of the candidate band, at least 3 bins, three updates), then take the
+    connected half-power lobe (measure_bandwidths).
+    """
+    df = frequencies[1] - frequencies[0]
+    top = max(3, len(excess) // 4)
+    w = int(np.clip(len(excess) // 16, 3, top))
+    width = None
+    for _ in range(3):
+        width, _ = measure_bandwidths(frequencies, np.convolve(excess, np.ones(w | 1) / (w | 1), mode="same"))
+        if width is None:
+            break
+        w = int(np.clip(round(width / df / 8), 3, top))
+    return width
+
+
+def width_psd(capture: Capture, windows: list[tuple[int, int]]):
+    """Welch PSD for the -3 dB width: segment length chosen for >= ~16 averages per window
+    (64..1024 points), so short captures are not measured on a 7-average spiky estimate."""
+    shortest = min(b - a for a, b in windows)
+    nper = int(np.clip(1 << int(np.floor(np.log2(max(shortest // 16, 1)))), 64, NFFT))
+    total = None
+    for a, b in windows:
+        f, p, _ = estimate_noise_floor(capture.iq[a:b], capture.sample_rate, nperseg=nper)
+        total = p if total is None else total + p
+    return f, total / len(windows)
+
+
 def tuning_frequency(capture: Capture) -> float:
     """Ingest stores validated SigMF core:frequency under this metadata key."""
     offset = capture.metadata.get("center_frequency_hz")
@@ -120,7 +173,7 @@ def estimate_candidate(capture: Capture, candidate: dict, *, noise_floor=None) -
     """
     out = {**candidate, "center_frequency_hz": None, "bandwidth_3db_hz": None,
            "bandwidth_99pct_hz": None, "bandwidth_99pct_caveat": None,
-           "snr_db": None, "estimate_status": "not reliably estimated"}
+           "snr_db": None, "snr_method": None, "estimate_status": "not reliably estimated"}
     if capture.metadata.get("source_kind") != "iq":
         out["estimate_status"] = "not reliably estimated (requires complex IQ)"
         return out
@@ -139,6 +192,8 @@ def estimate_candidate(capture: Capture, candidate: dict, *, noise_floor=None) -
         _, _, noise_floor = estimate_noise_floor(capture.iq, fs)
     if not np.isfinite(noise_floor) or noise_floor <= 0:
         raise ValueError("Noise floor must be a positive finite power density.")
+    # SNR and the -3 dB width use the percentile floor; Detect's median floor is kept for Detect.
+    noise_floor = min(noise_floor, robust_noise_floor(capture.iq, fs))
     f, p = occupied_psd(capture, windows)
     in_band = (f >= lo) & (f <= hi)
     f, p = f[in_band], p[in_band]
@@ -151,7 +206,11 @@ def estimate_candidate(capture: Capture, candidate: dict, *, noise_floor=None) -
         return out
     out["center_frequency_hz"] = float(np.sum(f*excess)/np.sum(excess)+offset)
     out["snr_db"] = float(10*np.log10((on_power-off_power)/off_power))
-    bw3, bw99 = measure_bandwidths(f, p)
+    out["snr_method"] = "spectral (occupied power vs percentile noise floor)"
+    _, bw99 = measure_bandwidths(f, p)
+    fw, pw = width_psd(capture, windows)
+    sel = (fw >= lo) & (fw <= hi)
+    bw3 = half_power_width(fw[sel], np.maximum(pw[sel] - noise_floor, 0)) if sel.sum() >= 3 else None
     out.update(bandwidth_3db_hz=bw3, bandwidth_99pct_hz=bw99)
     if bw3 is not None and bw99 > 5*bw3:
         out["bandwidth_99pct_caveat"] = "unshaped-pulse-sidelobes"

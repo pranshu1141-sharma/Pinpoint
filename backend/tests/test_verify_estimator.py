@@ -55,7 +55,7 @@ def test_candidate_window_is_band_isolated_decimated_and_capped():
         (rng.standard_normal(n) + 1j * rng.standard_normal(n)) / np.sqrt(2)
     c = _cap(x, fs)
     d, _ = _primary(c, 150e3, 250e3)
-    (seg, fs2), reason = candidate_segment(c, d)
+    (seg, fs2, _), reason = candidate_segment(c, d)
     assert reason is None and len(seg) <= MAX_SAMPLES
     width = d["freq_upper_hz"] - d["freq_lower_hz"]
     assert 3 * width <= fs2 <= 12 * width
