@@ -46,6 +46,13 @@ def calibration_captures(g1_n=500):
         for fc in generators.G2_CARRIERS:
             for snr in generators.G2_SNRS:
                 yield generators.g2_capture(kind, snr, fc, 96, next(seeds))
+    # calibration-only unknown families: never used to fit thresholds, only to report how often
+    # a configuration publishes a wrong label on structure outside the library
+    for kind in generators.CALIBRATION_UNKNOWN:
+        for fc in (0, 8000):
+            for sps in generators.G2_SPS:
+                for snr in generators.G2_SNRS:
+                    yield generators.g2_capture(kind, snr, fc, sps, next(seeds))
 
 
 def _row(cap):
@@ -71,6 +78,23 @@ def _hyps(c):
     return [Hypothesis(e, lab, rate, s, res, u) for e, lab, rate, s, res, u in c["hyps"]]
 
 
+UNKNOWN = {"FSK6", "PSK16"}
+
+
+def unknown_wrong(rows, th, unit):
+    """Share of calibration-only unknown-family captures given a published (necessarily wrong) label."""
+    from backend.pipeline.verify_estimator import gate
+    n = bad = 0
+    for r in rows:
+        if r["truth"]["label"] not in UNKNOWN:
+            continue
+        n += 1
+        for c, m in zip(r["cands"], margins(r)):
+            g = gate(m["d"], m["usage"], th, unit, c["n"], c["fs"], m["m_dig"])
+            bad += bool(g["label"])
+    return bad / n if n else None
+
+
 def margins(row):
     """Per candidate: raw decision and margins in each unit."""
     out = []
@@ -88,7 +112,8 @@ def margins(row):
 def fit(rows, unit, min_usage):
     """Thresholds for one margin unit; coverage = published-correct labels + rates on calibration."""
     per_gen = {}
-    M = {gen: [(r, m) for r in rows if r["gen"] == gen for m in margins(r)] for gen in ("G1", "G2")}
+    M = {gen: [(r, m) for r in rows if r["gen"] == gen and r["truth"]["label"] not in UNKNOWN
+               for m in margins(r)] for gen in ("G1", "G2")}
     for gen, pairs in M.items():
         L = [(m["d"].m_fam * m["scale"][unit], label_matches(m["d"].label, r["truth"]["label"]), m["d"].unexplained)
              for r, m in pairs if m["d"].family not in ("none", UNKNOWN_CE) and m["usage"] >= min_usage]
@@ -155,8 +180,10 @@ def main(argv=None):
                             f"G2 calibration seeds; {len(rows)} captures): >= 95% precision on each generator; "
                             f"margins are nats per {best['unit']}, not probabilities"),
                 candidates=fits, n_captures=len(rows))
+    th = Thresholds(**blob["thresholds"])
+    blob["validation_unknown_wrong"] = unknown_wrong(rows, th, best["unit"])
     THRESHOLDS_FILE.write_text(json.dumps(blob, indent=1, default=float) + "\n")
-    print("wrote", THRESHOLDS_FILE.relative_to(ROOT), best)
+    print("wrote", THRESHOLDS_FILE.relative_to(ROOT), best, "unknown-family wrong:", blob["validation_unknown_wrong"])
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ from .estimate import occupied_windows
 from .ingest import Capture
 
 OVERSAMPLE = 4          # decimated rate ~ OVERSAMPLE x the candidate bandwidth (plan: 4-8x)
-MAX_SAMPLES = 8192      # window cap after decimation
+MAX_SAMPLES = 4096      # window cap after decimation
 MIN_SAMPLES = 2000      # the estimator's minimum segment
 LINEAR_LABELS = {"BPSK", "QPSK", "8PSK", "QAM16", "ASK2"}
 THRESHOLDS_FILE = Path(__file__).resolve().parents[2] / "docs" / "verify-thresholds.json"

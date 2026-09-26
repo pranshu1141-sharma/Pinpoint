@@ -55,6 +55,28 @@ def compute_rows(system, gen, workers, g1_n, cached=()):
     return [have[i] for i in ids]
 
 
+SPEED_STRIDE = 4   # every 4th capture of each generator, timed one at a time
+
+
+def speed_rows(system, gen, g1_n):
+    """Per-candidate estimator time measured sequentially (one process, nothing else running in
+    this program): the row pass runs 10 workers at once, which measures a loaded machine."""
+    if gen == "G1":
+        caps = list(generators.g1_captures(g1_n))[::SPEED_STRIDE]
+    elif gen == "G2":
+        caps = [generators.g2_capture(**s) for s in generators.g2_specs()[::SPEED_STRIDE]]
+    else:
+        return []
+    out = []
+    for cap in caps:
+        if cap.truth["label"] == "noise":
+            continue
+        row = systems.run(system, cap)
+        if row["out"].get("time_s") is not None:
+            out.append(dict(id=cap.id, out=dict(time_s=row["out"]["time_s"])))
+    return out
+
+
 def refresh_library_flags(rows):
     """Library membership can change (WP3); cached truth rows carry the flags of their run."""
     for r in rows:
@@ -81,8 +103,9 @@ def _ge(v, lim):
     return None if v is None else v >= lim
 
 
-def evaluate(rows_by, product, extra):
-    """rows_by[system][gen] -> list of rows. Returns phases (list of dicts) and raw stats."""
+def evaluate(rows_by, product, extra, speed_by=None):
+    """rows_by[system][gen] -> list of rows. Returns phases (list of dicts) and raw stats.
+    speed_by[(system, gen)], when given, replaces the speed stats with the sequential timings."""
     stats = {}
     for sysname, by_gen in rows_by.items():
         for gen, rows in by_gen.items():
@@ -90,6 +113,8 @@ def evaluate(rows_by, product, extra):
                 continue
             s = dict(label=metrics.label_stats(rows), rate=metrics.rate_stats(rows),
                      confidence=metrics.confidence_stats(rows), speed=metrics.speed_stats(rows))
+            if speed_by and (sysname, gen) in speed_by:
+                s["speed"] = dict(metrics.speed_stats(speed_by[(sysname, gen)]), measured="sequential, every 4th capture")
             if rows[0]["detect"] is not None:
                 s["detect"] = metrics.detect_stats(rows)
                 s["params"] = metrics.param_stats(rows)
@@ -273,7 +298,7 @@ def main(argv=None):
                     help="rewrite the bars in PROJECT_STATUS and the rj-marked numbers in CLAIMS first")
     args = ap.parse_args(argv)
     CACHE.mkdir(parents=True, exist_ok=True)
-    rows_by = {}
+    rows_by, speed_by = {}, {}
     for sysname in args.systems.split(","):
         for gen in args.gens.split(","):
             path = CACHE / f"rows_{sysname}_{gen}.json"
@@ -285,13 +310,21 @@ def main(argv=None):
                 path.write_text(json.dumps(rows, default=float))
                 print(f"{sysname} {gen}: {len(rows) - len(cached)} new rows in {time.time() - t0:.0f} s", flush=True)
             rows_by.setdefault(sysname, {})[gen] = refresh_library_flags(rows)
+            if sysname == systems.product_estimator():
+                sp_path = CACHE / f"speed_{sysname}_{gen}.json"
+                if args.reuse and sp_path.exists() and sysname not in args.fresh.split(","):
+                    sp = json.loads(sp_path.read_text())
+                else:
+                    sp = speed_rows(sysname, gen, args.g1_n)
+                    sp_path.write_text(json.dumps(sp))
+                speed_by[(sysname, gen)] = sp
     product = systems.product_estimator()
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
                             text=True).stdout.strip()
     meta = dict(commit=commit, date=time.strftime("%Y-%m-%d"), thresholds=TH.__dict__,
                 in_library=sorted(config.IN_LIBRARY), out_of_library=sorted(config.OUT_OF_LIBRARY))
     extra = dict(real=real_criterion(), cli=cli_criterion(), docs=_crit("X1", "docs agree", {}))
-    phases, candidate, stats = evaluate(rows_by, product, extra)
+    phases, candidate, stats = evaluate(rows_by, product, extra, speed_by)
     # docs are checked against the readiness numbers computed in this run
     draft = dict(meta=meta, product=product, phases=[dict(name=n, criteria=c) for n, c in phases], stats=stats)
     draft["bars"] = bars_block(render(phases, candidate, stats, product, meta))
@@ -299,7 +332,7 @@ def main(argv=None):
         from . import docs_check
         docs_check.sync(draft)
     extra["docs"] = docs_criterion(draft)
-    phases, candidate, stats = evaluate(rows_by, product, extra)
+    phases, candidate, stats = evaluate(rows_by, product, extra, speed_by)
     md = render(phases, candidate, stats, product, meta)
     out = dict(meta=meta, product=product, bars=bars_block(md),
                phases=[dict(name=n, passed=sum(c["passed"] for c in cr), total=len(cr), criteria=cr) for n, cr in phases],

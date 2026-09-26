@@ -12,13 +12,13 @@ Detect                  ██████████  100%  (3/3 criteria)  [G
 Parameters              ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
 Modulation label        ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
 Symbol rate             ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
-Confidence/abstention   ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
-Speed                   ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✗ G2 ✗ G3 –]
+Confidence/abstention   ██████░░░░  67%  (2/3 criteria)  [G1 ✓ G2 ✗ G3 –]
+Speed                   ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✓ G2 ✗ G3 –]
 Real data (G3)          ░░░░░░░░░░   0%  (0/1 criteria)  [G1 – G2 – G3 –]
 Automation              ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 Docs                    ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 --------------------
-Overall                 ████████░░  88%  (15/17 criteria)
+Overall                 ████████░░  82%  (14/17 criteria)
 ```
 <!-- readiness:end -->
 

@@ -63,7 +63,7 @@ def needle_refine(xc: np.ndarray, fs: float, finalists: list[float], band, cfg: 
 def rank_fsk(x: np.ndarray, fs: float, props: list[float], cfg: SpikeConfig) -> list[float]:
     """Keep the finalists whose per-symbol frequencies split most cleanly into two clusters."""
     q = [fsk_quick_score(x, fs, r, cfg) for r in props]
-    return [props[i] for i in np.argsort(q)[::-1][:cfg.finalists]]
+    return [props[i] for i in np.argsort(q)[::-1][:cfg.fsk_finalists]]
 
 
 def fsk_needle_refine(x: np.ndarray, fs: float, finalists: list[float], band,

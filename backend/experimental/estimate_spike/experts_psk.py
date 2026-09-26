@@ -55,6 +55,15 @@ def nrz_quick_score(xc: np.ndarray, fs: float, rate: float, cfg: SpikeConfig) ->
     return _nrz_at(xc, sps, transition_timing(xc, rate, fs), cfg.quick_alphabets, cfg.snap_block)[0]
 
 
+def ranked_orders(xc: np.ndarray, fs: float, rate: float, cfg: SpikeConfig) -> tuple:
+    """The cfg.pulse_orders alphabets with the best flat-block score at `rate` (spectral-line
+    timing): the pulse-shaped experts only rebuild these (a rebuild per alphabet is costly)."""
+    sps = fs / rate
+    tau = transition_timing(xc, rate, fs)
+    scores = [(_nrz_at(xc, sps, tau, (o,), cfg.snap_block)[0], i, o) for i, o in enumerate(cfg.alphabets)]
+    return tuple(o for _, _, o in sorted(scores)[:cfg.pulse_orders])
+
+
 class NrzPskExpert:
     name = "nrz"
 
@@ -93,6 +102,7 @@ class RrcPskExpert:
         if n_eff < 256:
             return None
         best = (np.inf, None, np.nan, 0.0)
+        orders = ranked_orders(xc, fs, rate, cfg)
         for phi in np.arange(cfg.rrc_phases) / cfg.rrc_phases:
             u = nn / sps - phi
             k0 = np.floor(u).astype(int)
@@ -107,7 +117,7 @@ class RrcPskExpert:
             a = num / den
             inner = slice(span + 1, nk - span - 1)
             n_sym = inner.stop - inner.start
-            for order in cfg.alphabets:
+            for order in orders:
                 aq = a.copy()
                 aq[inner], idx = snap_to_alphabet(a[inner], order, cfg.snap_block, return_index=True)
                 rec = sum(aq[k] * p for k, p in zip(ks, ps))
@@ -199,7 +209,7 @@ class LsPulsePskExpert:
         edge = int(np.ceil((span + 1) * sps))
         if len(xc) - 2 * edge < 256:
             return (np.inf, None, np.nan, None, None, 0.0)
-        tau, _ = fine_search(lambda t: _nrz_at(xc, sps, t, cfg.alphabets, cfg.snap_block),
+        tau, _ = fine_search(lambda t: _nrz_at(xc, sps, t, orders, cfg.snap_block),
                              transition_timing(xc, rate, fs), sps)
         u, k, _, m = _block_means(xc, sps, tau)
         inner = slice(edge, len(xc) - edge)
@@ -231,7 +241,7 @@ class LsPulsePskExpert:
         grow linearly, s_j = eps * n_j, when the true rate is rate * (1 + eps).
         """
         cfg = self.cfg
-        best = self._fit(xc, fs, rate, cfg.alphabets)
+        best = self._fit(xc, fs, rate, ranked_orders(xc, fs, rate, cfg))
         if best[1] is None:
             return None
         for _ in range(cfg.lsp_rate_iters):

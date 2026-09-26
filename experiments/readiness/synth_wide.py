@@ -8,13 +8,15 @@ Differences from the original, all parameters rather than new shapes:
     +-200/+-600 Hz were at 500 Bd.
   * held-out families for the abstention criterion: rectangular 8-QAM ("qam8",
     I in {-3,-1,1,3}, Q in {-1,1}) and 8-FSK ("fsk8", deviations (m - 3.5) * 0.4 Rs).
+  * calibration-only unknown families (never in the test grid): 16-PSK ("psk16") and
+    6-FSK ("fsk6", deviations (m - 2.5) * 0.5 Rs), to judge abstention without the test's held-out set.
   * returns the noiseless signal too, for ground truth (never given to a system).
 """
 import numpy as np
 from scipy import signal
 
 FS = 48000
-LINEAR = ("bpsk", "qpsk", "8psk", "qam", "qam8")
+LINEAR = ("bpsk", "qpsk", "8psk", "qam", "qam8", "psk16")
 
 
 def smoothing_taps(sps: int) -> np.ndarray:
@@ -31,8 +33,8 @@ def make_signal(kind: str, snr_db: float, carrier_hz: float, sps: int, seed: int
     k = n // sps + 1
     rate = FS / sps
     if kind in LINEAR or kind == "ask":
-        if kind in ("bpsk", "qpsk", "8psk"):
-            order = {"bpsk": 2, "qpsk": 4, "8psk": 8}[kind]
+        if kind in ("bpsk", "qpsk", "8psk", "psk16"):
+            order = {"bpsk": 2, "qpsk": 4, "8psk": 8, "psk16": 16}[kind]
             symbols = np.exp(2j * np.pi * rng.integers(0, order, k) / order)
         elif kind == "qam":
             levels = np.array([-1., -.45, .45, 1.])
@@ -42,10 +44,9 @@ def make_signal(kind: str, snr_db: float, carrier_hz: float, sps: int, seed: int
         else:
             symbols = np.array([.4, 1.])[rng.integers(0, 2, k)]
         base = signal.fftconvolve(np.repeat(symbols, sps)[:n], smoothing_taps(sps), mode="same")
-    elif kind in ("fsk", "fsk8"):
-        levels = 4 if kind == "fsk" else 8
-        deviations = rate * (np.arange(levels) - (levels - 1) / 2) * 0.8 if levels == 4 else \
-            rate * (np.arange(levels) - 3.5) * 0.4
+    elif kind in ("fsk", "fsk8", "fsk6"):
+        levels = {"fsk": 4, "fsk8": 8, "fsk6": 6}[kind]
+        deviations = rate * (np.arange(levels) - (levels - 1) / 2) * {4: 0.8, 8: 0.4, 6: 0.5}[levels]
         freq_seq = np.repeat(deviations[rng.integers(0, levels, k)], sps)[:n]
         base = np.exp(1j * 2 * np.pi * np.cumsum(freq_seq) / FS)
     elif kind == "fm":

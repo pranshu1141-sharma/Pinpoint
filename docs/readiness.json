@@ -1,6 +1,6 @@
 {
  "meta": {
-  "commit": "6493c2a",
+  "commit": "4bcf47a",
   "date": "2026-09-26",
   "thresholds": {
    "min_snr_db": 5.0,
@@ -36,7 +36,7 @@
   ]
  },
  "product": "verify",
- "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nModulation label        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSymbol rate             \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSpeed                   \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2717 G2 \u2717 G3 \u2013]\nReal data (G3)          \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013]\nAutomation              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nDocs                    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\n--------------------\nOverall                 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591  88%  (15/17 criteria)\n```",
+ "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nModulation label        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSymbol rate             \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nSpeed                   \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nReal data (G3)          \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013]\nAutomation              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nDocs                    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\n--------------------\nOverall                 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591  82%  (14/17 criteria)\n```",
  "phases": [
   {
    "name": "Detect",
@@ -112,7 +112,7 @@
        "n": 66
       },
       "G2": {
-       "value": 0.9871794871794872,
+       "value": 0.9903846153846154,
        "passed": true,
        "n": 624
       }
@@ -170,7 +170,7 @@
        "n": 300
       },
       "G2": {
-       "value": 0.006782945736434108,
+       "value": 0.013565891472868217,
        "passed": true,
        "n": 1032
       }
@@ -187,7 +187,7 @@
        "n": 83
       },
       "G2": {
-       "value": 0.9537037037037037,
+       "value": 0.9444444444444444,
        "passed": true,
        "n": 864
       }
@@ -211,7 +211,7 @@
        "n": 300
       },
       "G2": {
-       "value": 0.0048449612403100775,
+       "value": 0.009689922480620155,
        "passed": true,
        "n": 1032
       }
@@ -223,12 +223,12 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.9156626506024096,
+       "value": 0.9397590361445783,
        "passed": true,
        "n": 83
       },
       "G2": {
-       "value": 0.928125,
+       "value": 0.9125,
        "passed": true,
        "n": 960
       }
@@ -238,7 +238,7 @@
   },
   {
    "name": "Confidence/abstention",
-   "passed": 3,
+   "passed": 2,
    "total": 3,
    "criteria": [
     {
@@ -261,7 +261,7 @@
     {
      "id": "C2",
      "desc": "out-of-library families -> <= 10% wrong labels",
-     "passed": true,
+     "passed": false,
      "gens": {
       "G1": {
        "value": null,
@@ -269,8 +269,8 @@
        "n": 0
       },
       "G2": {
-       "value": 0.07291666666666667,
-       "passed": true,
+       "value": 0.13541666666666666,
+       "passed": false,
        "n": 96
       }
      }
@@ -305,14 +305,14 @@
      "passed": false,
      "gens": {
       "G1": {
-       "value": 0.25196850393700787,
-       "passed": false,
-       "n": 254
+       "value": 1.0,
+       "passed": true,
+       "n": 63
       },
       "G2": {
-       "value": 0.01706827309236948,
+       "value": 0.8995983935742972,
        "passed": false,
-       "n": 996
+       "n": 249
       }
      }
     }
@@ -650,13 +650,13 @@
      "published_wrong": 0.0033333333333333335,
      "n_in_library": 83,
      "published_correct_in_library": 0.9759036144578314,
-     "published": 0.44333333333333336
+     "published": 0.45
     },
     "rate": {
      "n": 300,
      "published_wrong": 0.016666666666666666,
      "n_digital": 83,
-     "published_correct_digital": 0.9156626506024096,
+     "published_correct_digital": 0.9397590361445783,
      "harmonic_errors": 0.012048192771084338
     },
     "confidence": {
@@ -667,11 +667,12 @@
      "calibration_claims": 0
     },
     "speed": {
-     "n": 254,
-     "within": 0.25196850393700787,
-     "p50_s": 0.5823845209961291,
-     "p95_s": 0.9078494852939911,
-     "max_s": 1.181803375002346
+     "n": 63,
+     "within": 1.0,
+     "p50_s": 0.3071377919986844,
+     "p95_s": 0.45987315830716397,
+     "max_s": 0.4713823750062147,
+     "measured": "sequential, every 4th capture"
     },
     "detect": {
      "n_strong": 125,
@@ -694,31 +695,32 @@
    "G2": {
     "label": {
      "n": 1032,
-     "published_wrong": 0.006782945736434108,
+     "published_wrong": 0.013565891472868217,
      "n_in_library": 864,
-     "published_correct_in_library": 0.9537037037037037,
-     "published": 0.8381782945736435
+     "published_correct_in_library": 0.9444444444444444,
+     "published": 0.8391472868217055
     },
     "rate": {
      "n": 1032,
-     "published_wrong": 0.0048449612403100775,
+     "published_wrong": 0.009689922480620155,
      "n_digital": 960,
-     "published_correct_digital": 0.928125,
-     "harmonic_errors": 0.005208333333333333
+     "published_correct_digital": 0.9125,
+     "harmonic_errors": 0.010416666666666666
     },
     "confidence": {
      "n_noise": 36,
      "noise_labelled": 0.0,
      "n_ool": 96,
-     "ool_wrong": 0.07291666666666667,
+     "ool_wrong": 0.13541666666666666,
      "calibration_claims": 0
     },
     "speed": {
-     "n": 996,
-     "within": 0.01706827309236948,
-     "p50_s": 1.3464059789985185,
-     "p95_s": 2.0253203329993994,
-     "max_s": 2.9189117909991182
+     "n": 249,
+     "within": 0.8995983935742972,
+     "p50_s": 0.3481659579992993,
+     "p95_s": 0.5362569251941749,
+     "max_s": 0.6134115829918301,
+     "measured": "sequential, every 4th capture"
     },
     "detect": {
      "n_strong": 996,
@@ -730,12 +732,12 @@
     },
     "params": {
      "n_linear": 624,
-     "cf_ok": 0.9871794871794872,
+     "cf_ok": 0.9903846153846154,
      "bw3_ok": 0.9855769230769231,
      "n_signal": 996,
      "snr_ok": 0.9829317269076305,
      "median_bw3_ratio": 0.9590650926114732,
-     "median_snr_err_db": 0.013131034350074344
+     "median_snr_err_db": 0.009195925326309862
     }
    }
   }

@@ -15,23 +15,23 @@ Every number below comes from `docs/readiness.json`, written by `python -m exper
 
 | Claim | G1 | G2 |
 |---|---|---|
-| Captures with a **wrong** label published (all captures, including noise and held-out families) | <!--rj:stats.verify.G1.label.published_wrong--> 0.3% | <!--rj:stats.verify.G2.label.published_wrong--> 0.7% |
-| In-library digital captures at ≥ 5 dB labelled **correctly** (BPSK, QPSK, 8PSK, 16-QAM, 2-FSK, 4-FSK, 2-ASK present in that generator) | <!--rj:stats.verify.G1.label.published_correct_in_library--> 97.6% | <!--rj:stats.verify.G2.label.published_correct_in_library--> 95.4% |
+| Captures with a **wrong** label published (all captures, including noise and held-out families) | <!--rj:stats.verify.G1.label.published_wrong--> 0.3% | <!--rj:stats.verify.G2.label.published_wrong--> 1.4% |
+| In-library digital captures at ≥ 5 dB labelled **correctly** (BPSK, QPSK, 8PSK, 16-QAM, 2-FSK, 4-FSK, 2-ASK present in that generator) | <!--rj:stats.verify.G1.label.published_correct_in_library--> 97.6% | <!--rj:stats.verify.G2.label.published_correct_in_library--> 94.4% |
 | Noise-only captures given a label | <!--rj:stats.verify.G1.confidence.noise_labelled--> 0.0% | <!--rj:stats.verify.G2.confidence.noise_labelled--> 0.0% |
-| Held-out families (8-FSK, rectangular 8-QAM; G2 only) given a **wrong** label | – | <!--rj:stats.verify.G2.confidence.ool_wrong--> 7.3% |
+| Held-out families (8-FSK, rectangular 8-QAM; G2 only) given a **wrong** label | – | <!--rj:stats.verify.G2.confidence.ool_wrong--> 13.5% |
 
 ## Symbol rate
 
 | Claim | G1 | G2 |
 |---|---|---|
-| Captures with a **wrong** rate published (> 5% error) | <!--rj:stats.verify.G1.rate.published_wrong--> 1.7% | <!--rj:stats.verify.G2.rate.published_wrong--> 0.5% |
-| Digital captures at ≥ 5 dB with a **correct** rate published (within 5%) | <!--rj:stats.verify.G1.rate.published_correct_digital--> 91.6% | <!--rj:stats.verify.G2.rate.published_correct_digital--> 92.8% |
+| Captures with a **wrong** rate published (> 5% error) | <!--rj:stats.verify.G1.rate.published_wrong--> 1.7% | <!--rj:stats.verify.G2.rate.published_wrong--> 1.0% |
+| Digital captures at ≥ 5 dB with a **correct** rate published (within 5%) | <!--rj:stats.verify.G1.rate.published_correct_digital--> 94.0% | <!--rj:stats.verify.G2.rate.published_correct_digital--> 91.2% |
 
 ## Parameters (linear modulations for frequency and bandwidth; all signals for SNR; ≥ 5 dB)
 
 | Claim | G1 | G2 |
 |---|---|---|
-| Centre frequency within 10% of the true −3 dB bandwidth | <!--rj:stats.verify.G1.params.cf_ok--> 97.0% | <!--rj:stats.verify.G2.params.cf_ok--> 98.7% |
+| Centre frequency within 10% of the true −3 dB bandwidth | <!--rj:stats.verify.G1.params.cf_ok--> 97.0% | <!--rj:stats.verify.G2.params.cf_ok--> 99.0% |
 | −3 dB bandwidth within ±25% of the pulse-shape truth | <!--rj:stats.verify.G1.params.bw3_ok--> 92.4% | <!--rj:stats.verify.G2.params.bw3_ok--> 98.6% |
 | SNR within 2 dB | <!--rj:stats.verify.G1.params.snr_ok--> 99.2% | <!--rj:stats.verify.G2.params.snr_ok--> 98.3% |
 
@@ -45,7 +45,7 @@ Every number below comes from `docs/readiness.json`, written by `python -m exper
 
 ## What we do not claim
 
-- **Speed:** the verify estimator does not yet meet 0.5 s per candidate. The share of candidates within 0.5 s is <!--rj:stats.verify.G1.speed.within--> 25.2% on G1 and <!--rj:stats.verify.G2.speed.within--> 1.7% on G2.
+- **Speed:** the verify estimator does not yet meet 0.5 s per candidate. The share of candidates within 0.5 s is <!--rj:stats.verify.G1.speed.within--> 100.0% on G1 and <!--rj:stats.verify.G2.speed.within--> 90.0% on G2.
 - **FM coverage on G1:** the FM-over-digital margin gate needed to stop 8-FSK/4-FSK being published as FM also withholds most G1 FM labels.
 - **Real recordings:** none processed yet (G3 empty).
 - **Calibrated probabilities:** margins are nats, not probabilities. Detect's isotonic confidence was fit on one synthetic corpus and is labelled "uncalibrated across generators".

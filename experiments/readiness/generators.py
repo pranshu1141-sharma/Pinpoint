@@ -20,8 +20,10 @@ RRC_BW3 = 1.0          # |RRC|^2 = raised cosine: half power at +-Rs/2 for any r
 
 G2_KINDS_DIGITAL = ("bpsk", "qpsk", "8psk", "qam", "fsk", "ask")
 G2_LABEL = {"bpsk": "BPSK", "qpsk": "QPSK", "8psk": "8PSK", "qam": "QAM16", "fsk": "FSK4",
-            "ask": "ASK2", "fm": "FM", "noise": "noise", "fsk8": "FSK8", "qam8": "QAM8"}
+            "ask": "ASK2", "fm": "FM", "noise": "noise", "fsk8": "FSK8", "qam8": "QAM8",
+            "fsk6": "FSK6", "psk16": "PSK16"}
 G2_HELD_OUT = ("fsk8", "qam8")   # appended after WP3 (1 seed per cell)
+CALIBRATION_UNKNOWN = ("fsk6", "psk16")   # calibration-only unknown families (validation of abstention)
 G2_CARRIERS = (0, 3000, 8000, 15000)
 G2_SPS = (12, 24, 48, 96)
 G2_SNRS = (5, 10, 20)
@@ -140,12 +142,13 @@ def g2_capture(kind: str, snr_db: float, carrier_hz: float, sps: int, seed: int,
     x, clean = synth_wide.make_signal(kind, snr_db, carrier_hz, sps, seed, n)
     fs = synth_wide.FS
     label = G2_LABEL[kind]
-    rate = fs / sps if kind in G2_KINDS_DIGITAL + G2_HELD_OUT else None
+    rate = fs / sps if kind in G2_KINDS_DIGITAL + G2_HELD_OUT + CALIBRATION_UNKNOWN else None
     linear = kind in synth_wide.LINEAR
     if kind == "noise":
         truth = _truth("noise", None, None, None, None, None, False)
     else:
         width = {"fsk": 3.4 * rate if rate else None, "fsk8": 3.8 * rate if rate else None,
+                 "fsk6": 3.5 * rate if rate else None,
                  "fm": 2200.0}.get(kind, 3.6 * rate if rate else None)
         truth = _truth(label, float(snr_db), rate, float(carrier_hz), pulse_bw3(sps) if linear else None,
                        width, linear)
