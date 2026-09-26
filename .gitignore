@@ -23,3 +23,6 @@ __MACOSX/
 # Estimate spike evaluation rows (regenerate with experiments/estimate_spike/run_eval.py)
 artifacts/estimate_spike/rows_*.json
 experiments/reference_spike/rows*.json
+
+# Readiness scoreboard row caches (regenerate with experiments/readiness/scoreboard.py)
+artifacts/readiness/rows_*.json

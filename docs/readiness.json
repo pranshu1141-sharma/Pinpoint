@@ -1,0 +1,712 @@
+{
+ "meta": {
+  "commit": "f883170",
+  "date": "2026-09-26",
+  "thresholds": {
+   "min_snr_db": 5.0,
+   "detect_recall_min": 0.95,
+   "detect_noise_false_max": 0.05,
+   "detect_fragmentation_max": 0.05,
+   "cf_err_frac_bw": 0.1,
+   "bw3_tol": 0.25,
+   "snr_err_db": 2.0,
+   "param_pass_fraction": 0.9,
+   "label_wrong_max": 0.03,
+   "label_correct_min": 0.6,
+   "rate_wrong_max": 0.03,
+   "rate_correct_min": 0.5,
+   "rate_rel_tol": 0.05,
+   "ool_wrong_max": 0.1,
+   "speed_s": 0.5,
+   "speed_pass_fraction": 0.95,
+   "real_min_recordings": 5
+  },
+  "in_library": [
+   "BPSK",
+   "FSK2",
+   "QAM16",
+   "QPSK"
+  ],
+  "out_of_library": [
+   "8PSK",
+   "FSK4"
+  ]
+ },
+ "product": "shipped",
+ "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2717 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2591\u2591\u2591\u2591\u2591\u2591\u2591  33%  (1/3 criteria)  [G1 \u2717 G2 \u2717 G3 \u2013]\nModulation label        \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/2 criteria)  [G1 \u2717 G2 \u2717 G3 \u2013]\nSymbol rate             \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/2 criteria)  [G1 \u2717 G2 \u2717 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2717 G3 \u2013]\nSpeed                   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nReal data (G3)          \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013]\nAutomation              \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2717]\nDocs                    \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2717]\n--------------------\nOverall                 \u2588\u2588\u2588\u2591\u2591\u2591\u2591\u2591\u2591\u2591  35%  (6/17 criteria)\n```",
+ "phases": [
+  {
+   "name": "Detect",
+   "passed": 2,
+   "total": 3,
+   "criteria": [
+    {
+     "id": "D1",
+     "desc": "recall >= 95% at >= 5 dB",
+     "passed": true,
+     "gens": {
+      "G1": {
+       "value": 1.0,
+       "passed": true,
+       "n": 125
+      },
+      "G2": {
+       "value": 1.0,
+       "passed": true,
+       "n": 900
+      }
+     }
+    },
+    {
+     "id": "D2",
+     "desc": "<= 5% false detections on noise",
+     "passed": true,
+     "gens": {
+      "G1": {
+       "value": 0.0,
+       "passed": true,
+       "n": 44
+      },
+      "G2": {
+       "value": 0.0,
+       "passed": true,
+       "n": 36
+      }
+     }
+    },
+    {
+     "id": "D3",
+     "desc": "fragmentation (single signal -> >= 2 detections) <= 5%",
+     "passed": false,
+     "gens": {
+      "G1": {
+       "value": 0.36220472440944884,
+       "passed": false,
+       "n": 254
+      },
+      "G2": {
+       "value": 0.3711111111111111,
+       "passed": false,
+       "n": 900
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Parameters",
+   "passed": 1,
+   "total": 3,
+   "criteria": [
+    {
+     "id": "P1",
+     "desc": "centre-frequency error <= 10% of true bandwidth (>= 90% of captures)",
+     "passed": true,
+     "gens": {
+      "G1": {
+       "value": 0.9090909090909091,
+       "passed": true,
+       "n": 66
+      },
+      "G2": {
+       "value": 0.9236111111111112,
+       "passed": true,
+       "n": 576
+      }
+     }
+    },
+    {
+     "id": "P2",
+     "desc": "-3 dB bandwidth within +-25% of truth (>= 90% of captures)",
+     "passed": false,
+     "gens": {
+      "G1": {
+       "value": 0.015151515151515152,
+       "passed": false,
+       "n": 66
+      },
+      "G2": {
+       "value": 0.6336805555555556,
+       "passed": false,
+       "n": 576
+      }
+     }
+    },
+    {
+     "id": "P3",
+     "desc": "SNR error <= 2 dB at >= 5 dB (>= 90% of captures)",
+     "passed": false,
+     "gens": {
+      "G1": {
+       "value": 0.632,
+       "passed": false,
+       "n": 125
+      },
+      "G2": {
+       "value": 0.9688888888888889,
+       "passed": true,
+       "n": 900
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Modulation label",
+   "passed": 0,
+   "total": 2,
+   "criteria": [
+    {
+     "id": "L1",
+     "desc": "published-wrong labels <= 3% of captures",
+     "passed": false,
+     "gens": {
+      "G1": {
+       "value": 0.20666666666666667,
+       "passed": false,
+       "n": 300
+      },
+      "G2": {
+       "value": 0.1527777777777778,
+       "passed": false,
+       "n": 936
+      }
+     }
+    },
+    {
+     "id": "L2",
+     "desc": "published-correct >= 60% of in-library digital at >= 5 dB",
+     "passed": false,
+     "gens": {
+      "G1": {
+       "value": 0.24285714285714285,
+       "passed": false,
+       "n": 70
+      },
+      "G2": {
+       "value": 0.5347222222222222,
+       "passed": false,
+       "n": 432
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Symbol rate",
+   "passed": 0,
+   "total": 2,
+   "criteria": [
+    {
+     "id": "R1",
+     "desc": "published-wrong rates <= 3% of captures",
+     "passed": false,
+     "gens": {
+      "G1": {
+       "value": 0.07666666666666666,
+       "passed": false,
+       "n": 300
+      },
+      "G2": {
+       "value": 0.03739316239316239,
+       "passed": false,
+       "n": 936
+      }
+     }
+    },
+    {
+     "id": "R2",
+     "desc": "published-correct >= 50% of digital at >= 5 dB",
+     "passed": false,
+     "gens": {
+      "G1": {
+       "value": 0.012048192771084338,
+       "passed": false,
+       "n": 83
+      },
+      "G2": {
+       "value": 0.3506944444444444,
+       "passed": false,
+       "n": 864
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Confidence/abstention",
+   "passed": 2,
+   "total": 3,
+   "criteria": [
+    {
+     "id": "C1",
+     "desc": "noise -> 0% labels published",
+     "passed": true,
+     "gens": {
+      "G1": {
+       "value": 0.0,
+       "passed": true,
+       "n": 44
+      },
+      "G2": {
+       "value": 0.0,
+       "passed": true,
+       "n": 36
+      }
+     }
+    },
+    {
+     "id": "C2",
+     "desc": "out-of-library families -> <= 10% wrong labels",
+     "passed": true,
+     "gens": {
+      "G1": {
+       "value": 0.03225806451612903,
+       "passed": true,
+       "n": 31
+      },
+      "G2": {
+       "value": 0.06944444444444445,
+       "passed": true,
+       "n": 288
+      }
+     }
+    },
+    {
+     "id": "C3",
+     "desc": "no 'calibrated' wording beside a published label",
+     "passed": false,
+     "gens": {
+      "G1": {
+       "value": 80,
+       "passed": false,
+       "n": null
+      },
+      "G2": {
+       "value": 570,
+       "passed": false,
+       "n": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Speed",
+   "passed": 1,
+   "total": 1,
+   "criteria": [
+    {
+     "id": "S1",
+     "desc": ">= 95% of candidates analysed in <= 0.5 s",
+     "passed": true,
+     "gens": {
+      "G1": {
+       "value": 1.0,
+       "passed": true,
+       "n": 254
+      },
+      "G2": {
+       "value": 1.0,
+       "passed": true,
+       "n": 900
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Real data (G3)",
+   "passed": 0,
+   "total": 1,
+   "criteria": [
+    {
+     "id": "RD1",
+     "desc": ">= 5 public recordings end to end, no crash, sanity check on each",
+     "passed": false,
+     "gens": {
+      "G3": {
+       "value": null,
+       "passed": null,
+       "n": 0
+      }
+     },
+     "files": []
+    }
+   ]
+  },
+  {
+   "name": "Automation",
+   "passed": 0,
+   "total": 1,
+   "criteria": [
+    {
+     "id": "A1",
+     "desc": "batch CLI exists and its test passes",
+     "passed": false,
+     "gens": {
+      "G3": {
+       "value": false,
+       "passed": false,
+       "n": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Docs",
+   "passed": 0,
+   "total": 1,
+   "criteria": [
+    {
+     "id": "X1",
+     "desc": "README, PROJECT_STATUS and CLAIMS agree with readiness.json",
+     "passed": false,
+     "gens": {
+      "G3": {
+       "value": 5,
+       "passed": false,
+       "n": null
+      }
+     },
+     "problems": [
+      "docs/CLAIMS.md is missing",
+      "docs/PROJECT_STATUS.md does not embed the current readiness bars",
+      "README.md: says 'no demodulation or decoding exists' but backend/pipeline/decode.py exists",
+      "docs/PROJECT_STATUS.md: unconditional claim: | Symbol rate | Implemented and gated \u2014 estimated only with a confirmed bpsk/qpsk/8psk/ask",
+      "docs/PROJECT_STATUS.md: unconditional claim: - Fine phase-cluster rule (circular spread <0.8 rad): BPSK and QPSK both now pass 5/5 at 2"
+     ]
+    }
+   ]
+  }
+ ],
+ "candidate": {
+  "verify": [
+   {
+    "name": "Modulation label",
+    "passed": 0,
+    "total": 2,
+    "criteria": [
+     {
+      "id": "L1",
+      "desc": "published-wrong labels <= 3% of captures",
+      "passed": false,
+      "gens": {
+       "G1": {
+        "value": 0.03333333333333333,
+        "passed": false,
+        "n": 300
+       },
+       "G2": {
+        "value": 0.29914529914529914,
+        "passed": false,
+        "n": 936
+       }
+      }
+     },
+     {
+      "id": "L2",
+      "desc": "published-correct >= 60% of in-library digital at >= 5 dB",
+      "passed": false,
+      "gens": {
+       "G1": {
+        "value": 0.8857142857142857,
+        "passed": true,
+        "n": 70
+       },
+       "G2": {
+        "value": 0.4583333333333333,
+        "passed": false,
+        "n": 432
+       }
+      }
+     }
+    ]
+   },
+   {
+    "name": "Symbol rate",
+    "passed": 0,
+    "total": 2,
+    "criteria": [
+     {
+      "id": "R1",
+      "desc": "published-wrong rates <= 3% of captures",
+      "passed": false,
+      "gens": {
+       "G1": {
+        "value": 0.0033333333333333335,
+        "passed": true,
+        "n": 300
+       },
+       "G2": {
+        "value": 0.08226495726495726,
+        "passed": false,
+        "n": 936
+       }
+      }
+     },
+     {
+      "id": "R2",
+      "desc": "published-correct >= 50% of digital at >= 5 dB",
+      "passed": false,
+      "gens": {
+       "G1": {
+        "value": 0.6265060240963856,
+        "passed": true,
+        "n": 83
+       },
+       "G2": {
+        "value": 0.032407407407407406,
+        "passed": false,
+        "n": 864
+       }
+      }
+     }
+    ]
+   },
+   {
+    "name": "Confidence/abstention",
+    "passed": 2,
+    "total": 3,
+    "criteria": [
+     {
+      "id": "C1",
+      "desc": "noise -> 0% labels published",
+      "passed": true,
+      "gens": {
+       "G1": {
+        "value": 0.0,
+        "passed": true,
+        "n": 44
+       },
+       "G2": {
+        "value": 0.0,
+        "passed": true,
+        "n": 36
+       }
+      }
+     },
+     {
+      "id": "C2",
+      "desc": "out-of-library families -> <= 10% wrong labels",
+      "passed": false,
+      "gens": {
+       "G1": {
+        "value": 0.22580645161290322,
+        "passed": false,
+        "n": 31
+       },
+       "G2": {
+        "value": 0.4618055555555556,
+        "passed": false,
+        "n": 288
+       }
+      }
+     },
+     {
+      "id": "C3",
+      "desc": "no 'calibrated' wording beside a published label",
+      "passed": true,
+      "gens": {
+       "G1": {
+        "value": 0,
+        "passed": true,
+        "n": null
+       },
+       "G2": {
+        "value": 0,
+        "passed": true,
+        "n": null
+       }
+      }
+     }
+    ]
+   },
+   {
+    "name": "Speed",
+    "passed": 0,
+    "total": 1,
+    "criteria": [
+     {
+      "id": "S1",
+      "desc": ">= 95% of candidates analysed in <= 0.5 s",
+      "passed": false,
+      "gens": {
+       "G1": {
+        "value": 0.34,
+        "passed": false,
+        "n": 300
+       },
+       "G2": {
+        "value": 0.0,
+        "passed": false,
+        "n": 936
+       }
+      }
+     }
+    ]
+   }
+  ]
+ },
+ "stats": {
+  "shipped": {
+   "G1": {
+    "label": {
+     "n": 300,
+     "published_wrong": 0.20666666666666667,
+     "n_in_library": 70,
+     "published_correct_in_library": 0.24285714285714285,
+     "published": 0.26666666666666666
+    },
+    "rate": {
+     "n": 300,
+     "published_wrong": 0.07666666666666666,
+     "n_digital": 83,
+     "published_correct_digital": 0.012048192771084338,
+     "harmonic_errors": 0.0
+    },
+    "confidence": {
+     "n_noise": 44,
+     "noise_labelled": 0.0,
+     "n_ool": 31,
+     "ool_wrong": 0.03225806451612903,
+     "calibration_claims": 80
+    },
+    "speed": {
+     "n": 254,
+     "within": 1.0,
+     "p50_s": 0.00461972899211105,
+     "p95_s": 0.01058947939745849,
+     "max_s": 0.015563125009066425
+    },
+    "detect": {
+     "n_strong": 125,
+     "recall": 1.0,
+     "n_noise": 44,
+     "noise_false": 0.0,
+     "n_found": 254,
+     "fragmentation": 0.36220472440944884
+    },
+    "params": {
+     "n_linear": 66,
+     "cf_ok": 0.9090909090909091,
+     "bw3_ok": 0.015151515151515152,
+     "n_signal": 125,
+     "snr_ok": 0.632,
+     "median_bw3_ratio": 0.05930894061214522,
+     "median_snr_err_db": -0.550890032077664
+    }
+   },
+   "G2": {
+    "label": {
+     "n": 936,
+     "published_wrong": 0.1527777777777778,
+     "n_in_library": 432,
+     "published_correct_in_library": 0.5347222222222222,
+     "published": 0.6089743589743589
+    },
+    "rate": {
+     "n": 936,
+     "published_wrong": 0.03739316239316239,
+     "n_digital": 864,
+     "published_correct_digital": 0.3506944444444444,
+     "harmonic_errors": 0.04050925925925926
+    },
+    "confidence": {
+     "n_noise": 36,
+     "noise_labelled": 0.0,
+     "n_ool": 288,
+     "ool_wrong": 0.06944444444444445,
+     "calibration_claims": 570
+    },
+    "speed": {
+     "n": 900,
+     "within": 1.0,
+     "p50_s": 0.023388708505081013,
+     "p95_s": 0.03437461009962135,
+     "max_s": 0.042303541995352134
+    },
+    "detect": {
+     "n_strong": 900,
+     "recall": 1.0,
+     "n_noise": 36,
+     "noise_false": 0.0,
+     "n_found": 900,
+     "fragmentation": 0.3711111111111111
+    },
+    "params": {
+     "n_linear": 576,
+     "cf_ok": 0.9236111111111112,
+     "bw3_ok": 0.6336805555555556,
+     "n_signal": 900,
+     "snr_ok": 0.9688888888888889,
+     "median_bw3_ratio": 0.8088924126388064,
+     "median_snr_err_db": -0.10809232229850352
+    }
+   }
+  },
+  "verify": {
+   "G1": {
+    "label": {
+     "n": 300,
+     "published_wrong": 0.03333333333333333,
+     "n_in_library": 70,
+     "published_correct_in_library": 0.8857142857142857,
+     "published": 0.3466666666666667
+    },
+    "rate": {
+     "n": 300,
+     "published_wrong": 0.0033333333333333335,
+     "n_digital": 83,
+     "published_correct_digital": 0.6265060240963856,
+     "harmonic_errors": 0.012048192771084338
+    },
+    "confidence": {
+     "n_noise": 44,
+     "noise_labelled": 0.0,
+     "n_ool": 31,
+     "ool_wrong": 0.22580645161290322,
+     "calibration_claims": 0
+    },
+    "speed": {
+     "n": 300,
+     "within": 0.34,
+     "p50_s": 0.5156272915046429,
+     "p95_s": 0.5867933524103137,
+     "max_s": 0.6475775829894701
+    }
+   },
+   "G2": {
+    "label": {
+     "n": 936,
+     "published_wrong": 0.29914529914529914,
+     "n_in_library": 432,
+     "published_correct_in_library": 0.4583333333333333,
+     "published": 0.5427350427350427
+    },
+    "rate": {
+     "n": 936,
+     "published_wrong": 0.08226495726495726,
+     "n_digital": 864,
+     "published_correct_digital": 0.032407407407407406,
+     "harmonic_errors": 0.08564814814814815
+    },
+    "confidence": {
+     "n_noise": 36,
+     "noise_labelled": 0.0,
+     "n_ool": 288,
+     "ool_wrong": 0.4618055555555556,
+     "calibration_claims": 0
+    },
+    "speed": {
+     "n": 936,
+     "within": 0.0,
+     "p50_s": 2.5327129585057264,
+     "p95_s": 2.7891045937467425,
+     "max_s": 3.5664457920065615
+    }
+   }
+  }
+ }
+}
