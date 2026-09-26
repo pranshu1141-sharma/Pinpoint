@@ -176,3 +176,19 @@ def test_docs_sync_rewrites_bars_and_claim_values_and_check_ignores_the_docs_lin
     # the Docs and Overall lines may differ (the docs criterion itself changes them)
     readiness["bars"] = "```\nDetect ██\nDocs ██\n--\nOverall ███\n```"
     assert docs_check.check(readiness, tmp_path) == (True, [])
+
+
+def test_real_recording_checks_apply_the_manifest_rules():
+    from experiments.readiness.real import sanity
+    entry = {"allowed_labels": ["BPSK"], "expected_rate_hz": 50000, "min_detections": 1,
+             "overlap_band_hz": [-1000, 1000], "require_pulsed": True,
+             "bandwidth_99pct_range_hz": [100, 5000], "min_wide_detections": {"count": 1, "bandwidth_99pct_hz": 200}}
+    good = [{"modulation_label": "BPSK", "symbol_rate_hz": 50500, "freq_lower_hz": -800, "freq_upper_hz": 900,
+             "is_pulsed": True, "bandwidth_99pct_hz": 1500}]
+    ok, notes = sanity(entry, good)
+    assert ok, notes
+    bad = [dict(good[0], modulation_label="QPSK"), dict(good[0], symbol_rate_hz=100000)]
+    ok, notes = sanity(entry, bad)
+    assert not ok and any("QPSK" in n for n in notes) and any("rate" in n for n in notes)
+    assert not sanity(entry, [])[0]
+    assert not sanity(entry, [dict(good[0], is_pulsed=False)])[0]

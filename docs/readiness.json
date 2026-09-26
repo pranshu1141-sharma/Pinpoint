@@ -1,6 +1,6 @@
 {
  "meta": {
-  "commit": "4bcf47a",
+  "commit": "3524716",
   "date": "2026-09-26",
   "thresholds": {
    "min_snr_db": 5.0,
@@ -36,7 +36,7 @@
   ]
  },
  "product": "verify",
- "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nModulation label        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSymbol rate             \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nSpeed                   \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nReal data (G3)          \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013]\nAutomation              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nDocs                    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\n--------------------\nOverall                 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591  82%  (14/17 criteria)\n```",
+ "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nModulation label        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSymbol rate             \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nSpeed                   \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nReal data (G3)          \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2717]\nAutomation              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nDocs                    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\n--------------------\nOverall                 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591  82%  (14/17 criteria)\n```",
  "phases": [
   {
    "name": "Detect",
@@ -329,12 +329,49 @@
      "passed": false,
      "gens": {
       "G3": {
-       "value": null,
-       "passed": null,
-       "n": 0
+       "value": "4/6 sane",
+       "passed": false,
+       "n": 6
       }
      },
-     "files": []
+     "files": [
+      {
+       "file": "bpsk_rect_20sps",
+       "crashed": false,
+       "sanity_ok": true,
+       "note": "all checks passed"
+      },
+      {
+       "file": "analog_FM_France",
+       "crashed": false,
+       "sanity_ok": false,
+       "note": "1 detections < 2; 1 detections with 99% bandwidth >= 100000 Hz < 2"
+      },
+      {
+       "file": "pulsed_ASK",
+       "crashed": false,
+       "sanity_ok": true,
+       "note": "all checks passed"
+      },
+      {
+       "file": "dect6",
+       "crashed": false,
+       "sanity_ok": false,
+       "note": "no detection with 99% bandwidth in [500000, 2500000] Hz"
+      },
+      {
+       "file": "iridium_cf32",
+       "crashed": false,
+       "sanity_ok": true,
+       "note": "all checks passed"
+      },
+      {
+       "file": "AIS-Collection-Fort-Smallwood-Pt1-161M975CF-240K0FS-20260730",
+       "crashed": false,
+       "sanity_ok": true,
+       "note": "all checks passed"
+      }
+     ]
     }
    ]
   },

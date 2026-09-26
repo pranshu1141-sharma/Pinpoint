@@ -14,7 +14,7 @@ Modulation label        ██████████  100%  (2/2 criteria)  [G
 Symbol rate             ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
 Confidence/abstention   ██████░░░░  67%  (2/3 criteria)  [G1 ✓ G2 ✗ G3 –]
 Speed                   ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✓ G2 ✗ G3 –]
-Real data (G3)          ░░░░░░░░░░   0%  (0/1 criteria)  [G1 – G2 – G3 –]
+Real data (G3)          ░░░░░░░░░░   0%  (0/1 criteria)  [G1 – G2 – G3 ✗]
 Automation              ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 Docs                    ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 --------------------

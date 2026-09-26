@@ -1,0 +1,329 @@
+[
+ {
+  "file": "bpsk_rect_20sps",
+  "known": "one BPSK signal, rectangular pulses, 50 kBd",
+  "crashed": false,
+  "sanity_ok": true,
+  "note": "all checks passed",
+  "detections": [
+   {
+    "id": 0,
+    "freq_lower_hz": -29785.15625,
+    "freq_upper_hz": 476074.21875,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": 45417.24626484711,
+    "bandwidth_99pct_hz": 355468.75,
+    "snr_db": 56.99120667140409,
+    "modulation_label": "BPSK",
+    "estimate_tier": "labelled",
+    "symbol_rate_hz": 50000.0939591267,
+    "verify_status": "estimated (label margin passed)"
+   }
+  ]
+ },
+ {
+  "file": "analog_FM_France",
+  "known": "two broadcast WFM stations (~150-200 kHz occupied each)",
+  "crashed": false,
+  "sanity_ok": false,
+  "note": "1 detections < 2; 1 detections with 99% bandwidth >= 100000 Hz < 2",
+  "detections": [
+   {
+    "id": 0,
+    "freq_lower_hz": -784687.5,
+    "freq_upper_hz": 885937.5,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": 91898.94320198364,
+    "bandwidth_99pct_hz": 1556250.0,
+    "snr_db": 10.354767684889723,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   }
+  ]
+ },
+ {
+  "file": "pulsed_ASK",
+  "known": "short on/off-keyed bursts",
+  "crashed": false,
+  "sanity_ok": true,
+  "note": "all checks passed",
+  "detections": [
+   {
+    "id": 0,
+    "freq_lower_hz": -85546.875,
+    "freq_upper_hz": -69140.625,
+    "is_pulsed": true,
+    "bandwidth_3db_hz": 7056.665786946294,
+    "bandwidth_99pct_hz": 11718.75,
+    "snr_db": -3.1826134231419645,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (pulsed bursts not validated)"
+   },
+   {
+    "id": 1,
+    "freq_lower_hz": -85546.875,
+    "freq_upper_hz": -73828.125,
+    "is_pulsed": true,
+    "bandwidth_3db_hz": 7054.845084507368,
+    "bandwidth_99pct_hz": 9375.0,
+    "snr_db": -3.0466575102667957,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (pulsed bursts not validated)"
+   }
+  ]
+ },
+ {
+  "file": "dect6",
+  "known": "DECT TDMA bursts, GFSK 1.152 Mb/s, 1.728 MHz channel (annotated band -750..+750 kHz)",
+  "crashed": false,
+  "sanity_ok": false,
+  "note": "no detection with 99% bandwidth in [500000, 2500000] Hz",
+  "detections": [
+   {
+    "id": 0,
+    "freq_lower_hz": -1283203.125,
+    "freq_upper_hz": 1255859.375,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": null,
+    "bandwidth_99pct_hz": null,
+    "snr_db": null,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (track exceeds the bounded re-analysis limit for large-capture blocks)"
+   }
+  ]
+ },
+ {
+  "file": "iridium_cf32",
+  "known": "Iridium downlink bursts: DE-QPSK at 25 ksym/s on 41.67 kHz channels",
+  "crashed": false,
+  "sanity_ok": true,
+  "note": "all checks passed",
+  "detections": [
+   {
+    "id": 0,
+    "freq_lower_hz": -3509765.625,
+    "freq_upper_hz": -3205078.125,
+    "is_pulsed": true,
+    "bandwidth_3db_hz": 35561.06746903621,
+    "bandwidth_99pct_hz": 292968.75,
+    "snr_db": -2.860160838443514,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (pulsed bursts not validated)"
+   },
+   {
+    "id": 1,
+    "freq_lower_hz": -2818359.375,
+    "freq_upper_hz": -2701171.875,
+    "is_pulsed": true,
+    "bandwidth_3db_hz": 76801.98795431992,
+    "bandwidth_99pct_hz": 105468.75,
+    "snr_db": -2.532149598973772,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (pulsed bursts not validated)"
+   },
+   {
+    "id": 2,
+    "freq_lower_hz": -779296.875,
+    "freq_upper_hz": -603515.625,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": null,
+    "bandwidth_99pct_hz": 175781.25,
+    "snr_db": -2.6862827006054064,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   },
+   {
+    "id": 3,
+    "freq_lower_hz": 2642578.125,
+    "freq_upper_hz": 2689453.125,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": null,
+    "bandwidth_99pct_hz": 46875.0,
+    "snr_db": -4.050972718570761,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   },
+   {
+    "id": 4,
+    "freq_lower_hz": 4587890.625,
+    "freq_upper_hz": 4658203.125,
+    "is_pulsed": true,
+    "bandwidth_3db_hz": 37547.3634836236,
+    "bandwidth_99pct_hz": 58593.75,
+    "snr_db": -4.427921643335273,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (pulsed bursts not validated)"
+   },
+   {
+    "id": 5,
+    "freq_lower_hz": -4130859.375,
+    "freq_upper_hz": -4060546.875,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": null,
+    "bandwidth_99pct_hz": 70312.5,
+    "snr_db": -4.617783654604912,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   },
+   {
+    "id": 6,
+    "freq_lower_hz": -3158203.125,
+    "freq_upper_hz": -3029296.875,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": 40178.600178506225,
+    "bandwidth_99pct_hz": 128906.25,
+    "snr_db": -4.2648106058982185,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   },
+   {
+    "id": 7,
+    "freq_lower_hz": -2115234.375,
+    "freq_upper_hz": -1892578.125,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": 203462.49363728683,
+    "bandwidth_99pct_hz": 222656.25,
+    "snr_db": -3.526064425052888,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   },
+   {
+    "id": 8,
+    "freq_lower_hz": 3650390.625,
+    "freq_upper_hz": 3708984.375,
+    "is_pulsed": true,
+    "bandwidth_3db_hz": 36014.29292641394,
+    "bandwidth_99pct_hz": 58593.75,
+    "snr_db": -3.534636391941221,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (pulsed bursts not validated)"
+   },
+   {
+    "id": 9,
+    "freq_lower_hz": -3052734.375,
+    "freq_upper_hz": -2619140.625,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": 37448.92064958578,
+    "bandwidth_99pct_hz": 433593.75,
+    "snr_db": -4.055773234109722,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   },
+   {
+    "id": 10,
+    "freq_lower_hz": -779296.875,
+    "freq_upper_hz": -615234.375,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": 80746.5197313705,
+    "bandwidth_99pct_hz": 164062.5,
+    "snr_db": -2.4991564740720387,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   },
+   {
+    "id": 11,
+    "freq_lower_hz": 3322265.625,
+    "freq_upper_hz": 3380859.375,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": 35624.66870366875,
+    "bandwidth_99pct_hz": 58593.75,
+    "snr_db": -2.3980107311038896,
+    "modulation_label": null,
+    "estimate_tier": "unknown_family",
+    "symbol_rate_hz": 24896.795828584247,
+    "verify_status": "unknown family (structure outside the library)"
+   },
+   {
+    "id": 12,
+    "freq_lower_hz": 4740234.375,
+    "freq_upper_hz": 4798828.125,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": 36859.2569110319,
+    "bandwidth_99pct_hz": 58593.75,
+    "snr_db": -5.278039639486705,
+    "modulation_label": "QPSK",
+    "estimate_tier": "labelled",
+    "symbol_rate_hz": 25017.135348553486,
+    "verify_status": "estimated (label margin passed)"
+   },
+   {
+    "id": 13,
+    "freq_lower_hz": -3873046.875,
+    "freq_upper_hz": -3837890.625,
+    "is_pulsed": false,
+    "bandwidth_3db_hz": null,
+    "bandwidth_99pct_hz": 35156.25,
+    "snr_db": -5.036806634465277,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (margins below thresholds)"
+   },
+   {
+    "id": 14,
+    "freq_lower_hz": -3134765.625,
+    "freq_upper_hz": -3017578.125,
+    "is_pulsed": true,
+    "bandwidth_3db_hz": 38081.12366614258,
+    "bandwidth_99pct_hz": 117187.5,
+    "snr_db": -5.104290308632342,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (pulsed bursts not validated)"
+   }
+  ]
+ },
+ {
+  "file": "AIS-Collection-Fort-Smallwood-Pt1-161M975CF-240K0FS-20260730",
+  "known": "AIS bursts, GMSK 9600 Bd (BT 0.4) at the capture centre",
+  "crashed": false,
+  "sanity_ok": true,
+  "note": "all checks passed",
+  "detections": [
+   {
+    "id": 0,
+    "freq_lower_hz": -97382.8125,
+    "freq_upper_hz": 109804.6875,
+    "is_pulsed": true,
+    "bandwidth_3db_hz": null,
+    "bandwidth_99pct_hz": null,
+    "snr_db": null,
+    "modulation_label": null,
+    "estimate_tier": "abstain",
+    "symbol_rate_hz": null,
+    "verify_status": "not reliably estimated (track exceeds the bounded re-analysis limit for large-capture blocks)"
+   }
+  ]
+ }
+]

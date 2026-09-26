@@ -1,6 +1,6 @@
 # Claims we can defend
 
-Every number below comes from `docs/readiness.json`, written by `python -m experiments.readiness.scoreboard`. Numbers after an `rj` marker are rewritten from that file by `--sync-docs`, and the docs criterion fails if any of them drifts. All of them are **synthetic, held-out test data**: none is a field-performance claim. Real recordings (G3) have not been processed yet.
+Every number below comes from `docs/readiness.json`, written by `python -m experiments.readiness.scoreboard`. Numbers after an `rj` marker are rewritten from that file by `--sync-docs`, and the docs criterion fails if any of them drifts. All of them are **synthetic, held-out test data**: none is a field-performance claim. Real recordings (G3) are summarised at the end; they are too few for statistics.
 
 **Conditions shared by every row**
 
@@ -47,6 +47,6 @@ Every number below comes from `docs/readiness.json`, written by `python -m exper
 
 - **Speed:** the verify estimator does not yet meet 0.5 s per candidate. The share of candidates within 0.5 s is <!--rj:stats.verify.G1.speed.within--> 100.0% on G1 and <!--rj:stats.verify.G2.speed.within--> 90.0% on G2.
 - **FM coverage on G1:** the FM-over-digital margin gate needed to stop 8-FSK/4-FSK being published as FM also withholds most G1 FM labels.
-- **Real recordings:** none processed yet (G3 empty).
+- **Real recordings (G3):** six public IQEngine SigMF files, with expectations written before running them (`experiments/readiness/real_manifest.json`; results in `artifacts/readiness/real_results.json`). None crashed; 4 of 6 passed their sanity checks. `bpsk_rect_20sps` was labelled BPSK at 50,000 Hz. `pulsed_ASK`, `iridium_cf32` and AIS were detected as bursts with no label published, so nothing wrong but no positive evidence either. **Failures:** `analog_FM_France`: the two adjacent FM stations were merged into one detection (the WP6 gap-power merge joins co-timed neighbours whose skirts fill the gap). `dect6`: its 4 M-sample track exceeds the large-capture 2 M-sample estimation bound, so no bandwidth was measured.
 - **Calibrated probabilities:** margins are nats, not probabilities. Detect's isotonic confidence was fit on one synthetic corpus and is labelled "uncalibrated across generators".
 - **The legacy estimator** (`estimator=legacy`): its fixture numbers (e.g. 30/30 symbol rates at ≥ 4.5 dB) hold only on the `synth_gen` fixtures (48 kHz, 96 samples/symbol, one filter). On G1 it publishes wrong labels on <!--rj:stats.shipped.G1.label.published_wrong--> 16.7% of captures.
