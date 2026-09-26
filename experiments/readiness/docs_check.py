@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ("README.md", "docs/PROJECT_STATUS.md", "docs/CLAIMS.md")
-MARKER = re.compile(r"<!--rj:([\w.\-]+)-->\s*([^\s|<]+)")
+MARKER = re.compile(r"<!--rj:([\w.\-]+)-->[ ]?([^\s|<]+)")
 
 # phrase (lower-case) -> file whose existence makes the phrase false
 CONTRADICTIONS = {
@@ -58,8 +58,8 @@ def check(readiness: dict, root: Path = ROOT):
             elif fmt(want) != shown:
                 problems.append(f"CLAIMS.md marker {path}: says {shown}, readiness.json has {fmt(want)}")
     status = root / "docs" / "PROJECT_STATUS.md"
-    bars = readiness.get("bars", "")
-    if not status.exists() or bars.strip() not in status.read_text():
+    embedded = _block(status.read_text()) if status.exists() else None
+    if embedded is None or _comparable(embedded) != _comparable(readiness.get("bars", "")):
         problems.append("docs/PROJECT_STATUS.md does not embed the current readiness bars")
     for rel in DOCS:
         p = root / rel
@@ -74,3 +74,32 @@ def check(readiness: dict, root: Path = ROOT):
             if any(c in line for c in CONDITIONAL) and not any(w in line.lower() for w in CONDITION_WORDS):
                 problems.append(f"{rel}: unconditional claim: {line.strip()[:90]}")
     return not problems, problems
+
+
+START, END = "<!-- readiness:start -->", "<!-- readiness:end -->"
+
+
+def _block(text):
+    if START not in text or END not in text:
+        return None
+    return text[text.index(START) + len(START):text.index(END)].strip()
+
+
+def _comparable(bars):
+    """Bars without the Docs and Overall lines: the docs criterion itself changes those."""
+    return [ln for ln in bars.strip().splitlines() if not ln.startswith(("Docs", "Overall"))]
+
+
+def sync(readiness: dict, root: Path = ROOT):
+    """Rewrite the bars block in PROJECT_STATUS and every rj-marked number in CLAIMS from readiness.json."""
+    status = root / "docs" / "PROJECT_STATUS.md"
+    if status.exists() and START in status.read_text():
+        text = status.read_text()
+        head, tail = text[:text.index(START) + len(START)], text[text.index(END):]
+        status.write_text(f"{head}\n{readiness['bars'].strip()}\n{tail}")
+    claims = root / "docs" / "CLAIMS.md"
+    if claims.exists():
+        def repl(m):
+            want = lookup(readiness, m.group(1))
+            return m.group(0) if want is None else f"<!--rj:{m.group(1)}--> {fmt(want)}"
+        claims.write_text(MARKER.sub(repl, claims.read_text()))

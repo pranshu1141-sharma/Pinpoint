@@ -2,6 +2,26 @@
 
 This is the requirement-by-requirement ledger for the original SIH26147 Phase 1 prompt, audited against the current repository. “Complete” means complete for the stated Phase 1 requirement, not production readiness or field validation.
 
+## Measured readiness
+
+Generated from `docs/readiness.json` by `python -m experiments.readiness.scoreboard --sync-docs` (never edited by hand). A bar is the fraction of that phase's fixed pass/fail criteria that pass; G1 = spike corpus (test seed 7), G2 = widened shipped fixture family, G3 = real recordings. Criteria, thresholds and per-generator numbers: [READINESS.md](READINESS.md); judge-facing numbers with their conditions: [CLAIMS.md](CLAIMS.md).
+
+<!-- readiness:start -->
+```
+Detect                  ██████░░░░  67%  (2/3 criteria)  [G1 ✗ G2 ✗ G3 –]
+Parameters              ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
+Modulation label        ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
+Symbol rate             ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
+Confidence/abstention   ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
+Speed                   ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✗ G2 ✗ G3 –]
+Real data (G3)          ░░░░░░░░░░   0%  (0/1 criteria)  [G1 – G2 – G3 –]
+Automation              ░░░░░░░░░░   0%  (0/1 criteria)  [G1 – G2 – G3 ✗]
+Docs                    ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
+--------------------
+Overall                 ███████░░░  76%  (13/17 criteria)
+```
+<!-- readiness:end -->
+
 ## Executive status
 
 | Scope | Status | Evidence and qualification |
@@ -9,7 +29,7 @@ This is the requirement-by-requirement ledger for the original SIH26147 Phase 1 
 | Hard constraints | Complete | Real API data, qualified stage claims, explicit ambiguous-input handling, Tier 2 roadmap placeholders. |
 | Tier 0 backend | Complete | All six required capabilities are implemented and tested. |
 | Tier 1 backend | Partial | Confidence/review and a second, independent statistical non-Gaussianity evidence channel are built; coarse-to-fine scanning is not built. |
-| Downstream IQ analysis | Integrated; DSP validated on synthetic fixtures for BPSK/QPSK/8PSK/ASK/FSK, best-effort for QAM | Estimate, coarse envelope family, carrier refinement, fine classification (bpsk/qpsk/8psk via phase-cluster concentration, ask/fsk via discrete-level clustering, qam as an order-unresolved flag), and gated symbol-rate estimation (bpsk/qpsk/8psk/ask) run in synchronous uploads, demos, and the async large-capture path (per-track bounded re-read), JSON export and dashboard detail. Fine labels publish 5/5 seeds at 20/10 dB for bpsk/qpsk/8psk/ask/fsk; symbol rate is estimated 30/30 within 5% of truth when SNR ≥4.5 dB and a confirmed bpsk/qpsk/8psk/ask label; FSK and QAM symbol rate stay explicitly null. A large-capture track longer than 2,000,000 samples gets explicit unresolved fields rather than partial results. |
+| Downstream IQ analysis | Integrated; label and symbol rate from the verify estimator (default), validated on synthetic generators G1/G2 only | Parameters (centre frequency, −3 dB/99% bandwidth, SNR) plus modulation label and symbol rate from the propose → verify estimator, gated by margins fit on a cross-generator calibration split, in synchronous uploads, demos, the async large-capture path, JSON export and dashboard detail. Measured numbers and their conditions are in [CLAIMS.md](CLAIMS.md); the legacy fixture-validated heuristics remain under `estimator=legacy`. A large-capture track longer than 2,000,000 samples gets explicit unresolved fields rather than partial results. |
 | Tier 2 | Correctly excluded | All six prohibited features remain nonfunctional roadmap items. |
 | Synthetic data | Complete | BPSK, QPSK, FM at four SNRs, pulses, noise, mixed demo, separate truth files. |
 | FastAPI layer | Complete | All three required endpoints exist; supporting job, audio, export, demo, envelope, and health endpoints were added. |
@@ -71,7 +91,7 @@ Tier 2 remains excluded. Later stages now have the following independently quali
 | Real-time streaming detection | Intentionally out of scope |
 | Estimate stage | Complete for the tested IQ contract and synchronous API/detail integration: center, both bandwidth definitions and full-band SNR; explicit unknown states. Synthetic center/SNR acceptance passes 12/12. No theoretical fixture half-power bandwidth is supplied by the generator. Async integration is not built. |
 | Modulation classification | Complete for coarse family plus fine bpsk/qpsk/8psk/ask/fsk, best-effort for qam — coarse family correct on all nine >=0 dB continuous fixtures. Refinement validated separately with mean absolute error 0.0627 Hz (down from 0.4041 Hz after matching periodogram resolution to segment length). Fine phase-cluster rule passes 5/5 seeds at each of 20/10 dB for bpsk/qpsk/8psk; envelope/frequency-cluster rules pass 5/5 at 20/10 dB for ask/fsk; qam publishes only a low-confidence, order-unresolved flag. Pulsed candidates are explicitly excluded from all of these. No calibrated probability for any label. |
-| Symbol rate | Implemented and gated — estimated only with a confirmed bpsk/qpsk/8psk/ask fine label and measured SNR ≥4.5 dB; validated 30/30 within 5% of the generator's 500 Hz truth across bpsk/qpsk × {20,10,5} dB × five seeds (8PSK/ASK measured <0.05% error at 20/10 dB, same nonlinearity). FSK is excluded (~99% measured error — its information is carried in frequency, not amplitude/phase transitions); QAM is excluded (no confirmed order, no symbol-timing recovery). Explicit null with reason below the gate or for excluded labels; accuracy below 4.5 dB SNR is unverified. |
+| Symbol rate | Implemented and gated — estimated only with a confirmed bpsk/qpsk/8psk/ask fine label and measured SNR ≥4.5 dB; legacy estimator: validated 30/30 on the synth_gen fixtures (48 kHz, 96 samples/symbol, one filter) within 5% of the generator's 500 Hz truth across bpsk/qpsk × {20,10,5} dB × five seeds (8PSK/ASK measured <0.05% error at 20/10 dB, same nonlinearity). FSK is excluded (~99% measured error — its information is carried in frequency, not amplitude/phase transitions); QAM is excluded (no confirmed order, no symbol-timing recovery). Explicit null with reason below the gate or for excluded labels; accuracy below 4.5 dB SNR is unverified. |
 | Estimate v5 propose→verify (MDL) | **Experimental: methodology under test.** Separate from the Estimate/Classify/Symbol-rate rows above, which are unchanged. `backend/experimental/estimate_spike/` rebuilds each segment under competing hypotheses (NRZ/RRC PSK-QAM, 2-FSK, AM/FM, null) and uses score margins as confidence. Every PSK and FSK finalist is needle-refined; the FSK needle is a joint rate × timing search. Seed 4, 500 synthetic captures, held-out test half: 8/277 confidently wrong; FSK symbol rate right 95% at 9–14 dB (prototype 80%); 327 ms mean per 4,096 samples. It is not imported by Detect, the pipeline or the API. Synthetic AWGN only. See [Estimate spike](ESTIMATE_SPIKE.md) and [its results](estimate_spike_results.md). |
 | FM/AM/PSK demodulation | Planned, not built |
 | Decoded audio/data output | Planned, not built |
@@ -126,7 +146,7 @@ Supporting endpoints provide job polling, health, demos, audio clips, pulse enve
 - Downstream verification after the refinement-resolution and symbol-rate fixes: all 133 backend tests pass, including the previously-strict-expected-failure QPSK fine-classification majority checks, which now pass rather than being retained as documented failures. See [downstream methods and measurements](ESTIMATE_CLASSIFY.md) and [reproducible measured JSON](estimate-classify-validation.json).
 - All 12 BPSK/QPSK/FM continuous fixtures were re-run after the approved centroid and band-isolation changes: worst center error 0.2375% against the unchanged 2% target; worst SNR error 0.084 dB against the 3 dB target. Coarse family correct for all nine fixtures at >=0 dB. Bandwidth helper tested against analytical Gaussian half-power width; the generator's nominal detection bands are not theoretical half-power truth.
 - The separate Mth-power/log-parabolic path was re-tested after the centroid change and again after matching its periodogram resolution to segment length: ten 150 kHz-offset BPSK fixtures at 10 dB, seeds 47–56, 1 MHz sample rate. Mean absolute error 5.6533 Hz for the direct centroid (unchanged), 0.4041 Hz for the raised-tone peak under the old fixed 1,024-point Welch average, and 0.0627 Hz after the resolution fix.
-- Fine phase-cluster rule (circular spread <0.8 rad): BPSK and QPSK both now pass 5/5 at 20 dB and 5/5 at 10 dB (20/20 trials), where QPSK previously passed only 2/5 — the residual-frequency accumulation that caused the QPSK failures was the refinement resolution mismatch above. Published `fine_modulation_label`/`fine_modulation_confidence` are non-null whenever the rule is met; pulsed candidates are explicitly excluded. Symbol rate is implemented and gated to a confirmed PSK label plus ≥4.5 dB SNR: validated 30/30 within 5% of truth across bpsk/qpsk × {20,10,5} dB × five seeds, with explicit null-and-reason behavior tested at 20/10/5/0/-5 dB.
+- Legacy estimator, on the synth_gen fixtures only — fine phase-cluster rule (circular spread <0.8 rad): BPSK and QPSK both now pass 5/5 at 20 dB and 5/5 at 10 dB (20/20 trials), where QPSK previously passed only 2/5 — the residual-frequency accumulation that caused the QPSK failures was the refinement resolution mismatch above. Published `fine_modulation_label`/`fine_modulation_confidence` are non-null whenever the rule is met; pulsed candidates are explicitly excluded. Symbol rate is implemented and gated to a confirmed PSK label plus ≥4.5 dB SNR: validated 30/30 within 5% of truth across bpsk/qpsk × {20,10,5} dB × five seeds, with explicit null-and-reason behavior tested at 20/10/5/0/-5 dB.
 - Fresh documentation-audit verification on 2026-09-10: 42 backend tests passed in 26.90 seconds; the only output was two upstream Starlette/AnyIO deprecation warnings.
 - Fresh frontend verification on 2026-09-10: TypeScript and the Vite production build completed successfully; Vite reported a non-failing JavaScript chunk-size advisory for the 905.77 kB main bundle.
 - Fresh synthetic validation on 2026-09-10: the report regenerated successfully with continuous-fixture recall 12/12.

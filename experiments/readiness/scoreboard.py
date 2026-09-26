@@ -269,6 +269,8 @@ def main(argv=None):
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--g1-n", type=int, default=config.G1_TEST_N)
     ap.add_argument("--out", type=Path, default=ROOT / "docs")
+    ap.add_argument("--sync-docs", action="store_true",
+                    help="rewrite the bars in PROJECT_STATUS and the rj-marked numbers in CLAIMS first")
     args = ap.parse_args(argv)
     CACHE.mkdir(parents=True, exist_ok=True)
     rows_by = {}
@@ -293,6 +295,9 @@ def main(argv=None):
     # docs are checked against the readiness numbers computed in this run
     draft = dict(meta=meta, product=product, phases=[dict(name=n, criteria=c) for n, c in phases], stats=stats)
     draft["bars"] = bars_block(render(phases, candidate, stats, product, meta))
+    if args.sync_docs:
+        from . import docs_check
+        docs_check.sync(draft)
     extra["docs"] = docs_criterion(draft)
     phases, candidate, stats = evaluate(rows_by, product, extra)
     md = render(phases, candidate, stats, product, meta)
@@ -301,6 +306,9 @@ def main(argv=None):
                candidate={s: [dict(name=n, passed=sum(c["passed"] for c in cr), total=len(cr), criteria=cr)
                               for n, cr in ph] for s, ph in candidate.items()},
                stats=stats)
+    if args.sync_docs:   # the final bars (the Docs/Overall lines are not compared, so X1 is unchanged)
+        from . import docs_check
+        docs_check.sync(out)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "READINESS.md").write_text(md)
     (args.out / "readiness.json").write_text(json.dumps(out, indent=1, default=float) + "\n")

@@ -125,7 +125,8 @@ def test_docs_check_flags_missing_claims_stale_markers_and_contradictions(tmp_pa
     ok, problems = docs_check.check(readiness, tmp_path)
     assert not ok and "docs/CLAIMS.md is missing" in problems
     (tmp_path / "docs/CLAIMS.md").write_text("wrong rate <!--rj:stats.shipped.G1.label.published_wrong--> 10.0%\n")
-    (tmp_path / "docs/PROJECT_STATUS.md").write_text("status\n```\nDetect ███\n```\n")
+    (tmp_path / "docs/PROJECT_STATUS.md").write_text(
+        "status\n<!-- readiness:start -->\n```\nDetect ███\n```\n<!-- readiness:end -->\n")
     (tmp_path / "README.md").write_text("PinPoint does not classify modulation.\nvalidated 30/30 within 5%\n")
     ok, problems = docs_check.check(readiness, tmp_path)
     assert any("says 10.0%, readiness.json has 25.0%" in p for p in problems)
@@ -158,3 +159,20 @@ def test_library_after_wp3_and_held_out_block():
     assert cap.truth["label"] == "QAM8" and cap.truth["out_of_library"] and cap.truth["rate"] == 2000
     cap = generators.g2_capture("fsk8", 20, 0, 24, held[1]["seed"])
     assert cap.truth["label"] == "FSK8" and not cap.truth["linear"]
+
+
+def test_docs_sync_rewrites_bars_and_claim_values_and_check_ignores_the_docs_line(tmp_path):
+    from experiments.readiness import docs_check
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/PROJECT_STATUS.md").write_text(
+        "intro\n<!-- readiness:start -->\nold\n<!-- readiness:end -->\nrest\n")
+    (tmp_path / "docs/CLAIMS.md").write_text("wrong <!--rj:stats.verify.G1.label.published_wrong--> 9.9% (G1)\n")
+    bars = "```\nDetect ██\nDocs ░░\n--\nOverall ██\n```"
+    readiness = {"bars": bars, "stats": {"verify": {"G1": {"label": {"published_wrong": 0.0033}}}}}
+    docs_check.sync(readiness, tmp_path)
+    status = (tmp_path / "docs/PROJECT_STATUS.md").read_text()
+    assert bars in status and "old" not in status and status.endswith("rest\n")
+    assert "--> 0.3% (G1)" in (tmp_path / "docs/CLAIMS.md").read_text()
+    # the Docs and Overall lines may differ (the docs criterion itself changes them)
+    readiness["bars"] = "```\nDetect ██\nDocs ██\n--\nOverall ███\n```"
+    assert docs_check.check(readiness, tmp_path) == (True, [])

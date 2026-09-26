@@ -1,6 +1,8 @@
 # Estimate spike: propose → verify (MDL)
 
-> **Status: experimental, methodology under test.** This is **not** the shipped Estimate stage. The shipped stage, [Estimate and Classify](ESTIMATE_CLASSIFY.md), is unchanged and is still what the API and dashboard use. Nothing in `backend/pipeline` or `backend/api` imports this code, and a test enforces that. All evidence is **synthetic AWGN only**. Full numbers: [Estimate spike results](estimate_spike_results.md).
+> **Status update (readiness work):** the estimator is now wired into the product as the default modulation-label/symbol-rate path through `backend/pipeline/verify_estimator.py` (candidate window, decimation, cross-generator-calibrated margins), with added experts (least-squares pulse, 8PSK, unipolar 2-ASK, 4-FSK, an 8-tone probe) and fixes described in the branch history. The results below are the original spike evaluation; current measured numbers are in [READINESS.md](READINESS.md) and [CLAIMS.md](CLAIMS.md).
+
+> **Original status (superseded):** this document describes the spike as first evaluated, when it was experimental and not imported by the product. All evidence here is synthetic AWGN only; full original numbers: [Estimate spike results](estimate_spike_results.md).
 
 ## At a glance
 
