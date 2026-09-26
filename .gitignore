@@ -28,3 +28,4 @@ experiments/reference_spike/rows*.json
 artifacts/readiness/rows_*.json
 artifacts/readiness/calibration_rows.json
 artifacts/readiness/speed_*.json
+artifacts/readiness/real/
