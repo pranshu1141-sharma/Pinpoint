@@ -2,6 +2,17 @@
 
 This document records what the current project can support, what remains incomplete, and the order in which later work should be approached. It prevents planned capabilities from being mistaken for shipped behavior.
 
+## Measured open issues (readiness scoreboard)
+
+These are the criteria that still fail, or known weaknesses, from `docs/READINESS.md` and the G3 run. Each has a fixed pass/fail threshold (`experiments/readiness/config.py`).
+
+1. **Speed on the widened fixture family (G2).** 90% of candidates finish in ≤ 0.5 s (target 95%), p95 ≈ 0.54 s; the spike corpus (G1) passes (100%). 4-FSK, 8-FSK and FM candidates are the slow ones: 4-tone timing searches, and the 8-tone probe that runs when FM leads. A worker process for the FSK side would parallelise it, but spawning processes from library code breaks callers without a `__main__` guard, so the FSK side runs on a thread instead.
+2. **Unknown-family abstention (C2) on G2's held-out 8-FSK and rectangular 8-QAM: 13.5% wrong labels (target ≤ 10%).** It was 7.3% with an 8,192-sample window and passed; the 4,096-sample window chosen for speed leaves fewer symbols of evidence. On calibration-only unknown families (6-FSK, 16-PSK) about half get a wrong label (mostly 16-PSK published as 8PSK) at every window setting tried.
+3. **FM coverage on G1:** the FM-over-digital margin gate, needed to stop 4-FSK/8-FSK being published as FM, withholds most G1 FM labels (10/39 published; 15 before WP3).
+4. **Adjacent co-timed signals can merge (Detect, WP6).** The gap-power merge joins fragments of one signal, but on the real `analog_FM_France` recording it also joined two adjacent FM stations. A synthetic two-station fixture should drive a refinement: require the gap to be no deep valley relative to both bands.
+5. **Large-capture tracks longer than 2,000,000 samples** keep unresolved downstream fields (real `dect6`: no bandwidth or label).
+6. **Evidence is synthetic.** G1/G2 are synthetic AWGN generators; G3 has six public recordings, too few for statistics.
+
 ## Implemented Phase 1 capability
 
 The application currently provides:

@@ -1,6 +1,6 @@
 {
  "meta": {
-  "commit": "3524716",
+  "commit": "5afebd9",
   "date": "2026-09-26",
   "thresholds": {
    "min_snr_db": 5.0,
