@@ -23,6 +23,7 @@ class SpikeConfig:
     fsk_scales: tuple[int, ...] = (2, 4, 8, 16)
     peaks_per_scale: int = 3
     finalists: int = 3
+    subharmonics: tuple[int, ...] = (2, 3)           # also try top finalist / m
     dedupe_tol: float = 0.02
     refine_dedupe_tol: float = 0.01
     needle_offsets: tuple[float, ...] = (-0.006, -0.003, 0.0, 0.003, 0.006)
@@ -31,6 +32,11 @@ class SpikeConfig:
     rrc_alpha: float = 0.35
     rrc_span: int = 6
     rrc_phases: int = 8
+    lsp_span: int = 3                    # least-squares pulse support, +-symbols
+    lsp_grid: int = 16                   # pulse samples per symbol (coarser grids favour 2x rates)
+    lsp_rate_iters: int = 2              # decision-directed rate refinements
+    lsp_drift_chunks: int = 8
+    lsp_max_drift: float = 0.002         # larger clock errors are outside the linear regime
     fsk_search_block: int = 2
     fsk_score_block: int = 8
     fsk_quick_phases: int = 6

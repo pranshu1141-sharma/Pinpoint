@@ -205,3 +205,34 @@ def test_carrier_hint_is_used_as_the_coarse_estimate():
     x, _ = make_signal("bpsk", 15, duration=0.5, seed=3, frequency=15000)
     r = analyze_segment(np.asarray(x, complex), 48000, carrier_hint=14900.0)
     assert abs(r.carrier_hz - 15000) < 20
+
+
+# ---- WP2: smoothed pulses must not be reported at 2x / 3x the rate
+
+@pytest.mark.parametrize("kind,sps,carrier,seed", [
+    ("bpsk", 24, 0, 1), ("qpsk", 24, 3000, 2), ("bpsk", 48, 8000, 3), ("qpsk", 48, 0, 4),
+    ("qpsk", 96, 15000, 5), ("qam", 48, 3000, 6),
+])
+def test_firwin_smoothed_linear_modulation_reports_true_rate(kind, sps, carrier, seed):
+    from experiments.readiness.synth_wide import make_signal
+    x, _ = make_signal(kind, 20, carrier, sps, seed, 24000)
+    d = _decide(analyze_segment(np.asarray(x, complex), 48000))
+    truth = 48000 / sps
+    assert d.rate is not None and abs(d.rate - truth) / truth < 0.05, (d.expert, d.rate, truth)
+    assert d.label == {"bpsk": "BPSK", "qpsk": "QPSK", "qam": "QAM16"}[kind]
+
+
+@pytest.mark.parametrize("alpha", [0.2, 0.5, 1.0])
+def test_rrc_rolloffs_outside_the_old_library_report_true_rate(alpha):
+    from backend.experimental.estimate_spike.dsp import rrc_pulse
+    rng = np.random.default_rng(int(alpha * 10))
+    sps, n, rate = 10.0, 8192, 1e5
+    sy = rng.choice([-1.0, 1.0], n // 10 + 40) + 1j * rng.choice([-1.0, 1.0], n // 10 + 40)
+    tt = np.arange(n) / sps
+    k0 = np.floor(tt).astype(int)
+    s = sum(sy[k0 + d + 10] * rrc_pulse(tt - (k0 + d), alpha) for d in range(-8, 9))
+    s = s / np.sqrt(np.mean(np.abs(s) ** 2)) * np.exp(2j * np.pi * 0.03 * np.arange(n))
+    x = s + (rng.standard_normal(n) + 1j * rng.standard_normal(n)) * np.sqrt(0.01 / 2)
+    d = _decide(analyze_segment(x, 1e6))
+    assert d.rate is not None and abs(d.rate - rate) / rate < 0.05, (d.expert, d.rate)
+    assert d.label == "QPSK"

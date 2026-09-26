@@ -44,13 +44,19 @@ def rank_psk(xc: np.ndarray, fs: float, props: list[float], cfg: SpikeConfig) ->
 
 
 def needle_refine(xc: np.ndarray, fs: float, finalists: list[float], band, cfg: SpikeConfig) -> list[float]:
-    """The rate fit is needle-sharp: nudge every finalist by fractions of a percent."""
+    """The rate fit is needle-sharp: nudge every finalist by fractions of a percent.
+
+    Then add 1/2 and 1/3 of the top finalist: the flat-pulse quick score ranks
+    harmonics of smoothed pulses above the true rate, so the experts must see it.
+    """
     offsets = np.array(cfg.needle_offsets)
     refined = []
     for r0 in finalists:
         rr = r0 * (1 + offsets)
         qq = [nrz_quick_score(xc, fs, v, cfg) for v in rr]
         refined.append(float(rr[int(np.argmin(qq))]))
+    if refined:
+        refined += [refined[0] / m for m in cfg.subharmonics]
     return dedupe(refined, band, cfg.refine_dedupe_tol)
 
 

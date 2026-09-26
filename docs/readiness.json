@@ -1,6 +1,6 @@
 {
  "meta": {
-  "commit": "2e8497a",
+  "commit": "08f9fab",
   "date": "2026-09-26",
   "thresholds": {
    "min_snr_db": 5.0,
@@ -394,12 +394,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.03333333333333333,
-        "passed": false,
+        "value": 0.02666666666666667,
+        "passed": true,
         "n": 300
        },
        "G2": {
-        "value": 0.14957264957264957,
+        "value": 0.16452991452991453,
         "passed": false,
         "n": 936
        }
@@ -411,12 +411,12 @@
       "passed": true,
       "gens": {
        "G1": {
-        "value": 0.8857142857142857,
+        "value": 0.9,
         "passed": true,
         "n": 70
        },
        "G2": {
-        "value": 0.9027777777777778,
+        "value": 0.8935185185185185,
         "passed": true,
         "n": 432
        }
@@ -426,13 +426,13 @@
    },
    {
     "name": "Symbol rate",
-    "passed": 0,
+    "passed": 1,
     "total": 2,
     "criteria": [
      {
       "id": "R1",
       "desc": "published-wrong rates <= 3% of captures",
-      "passed": false,
+      "passed": true,
       "gens": {
        "G1": {
         "value": 0.006666666666666667,
@@ -440,8 +440,8 @@
         "n": 300
        },
        "G2": {
-        "value": 0.16773504273504272,
-        "passed": false,
+        "value": 0.010683760683760684,
+        "passed": true,
         "n": 936
        }
       }
@@ -452,12 +452,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.6144578313253012,
+        "value": 0.6024096385542169,
         "passed": true,
         "n": 83
        },
        "G2": {
-        "value": 0.06712962962962964,
+        "value": 0.19907407407407407,
         "passed": false,
         "n": 864
        }
@@ -493,12 +493,12 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.22580645161290322,
+        "value": 0.25806451612903225,
         "passed": false,
         "n": 31
        },
        "G2": {
-        "value": 0.2951388888888889,
+        "value": 0.3854166666666667,
         "passed": false,
         "n": 288
        }
@@ -534,7 +534,7 @@
       "passed": false,
       "gens": {
        "G1": {
-        "value": 0.2833333333333333,
+        "value": 0.03333333333333333,
         "passed": false,
         "n": 300
        },
@@ -650,61 +650,61 @@
    "G1": {
     "label": {
      "n": 300,
-     "published_wrong": 0.03333333333333333,
+     "published_wrong": 0.02666666666666667,
      "n_in_library": 70,
-     "published_correct_in_library": 0.8857142857142857,
-     "published": 0.3466666666666667
+     "published_correct_in_library": 0.9,
+     "published": 0.3333333333333333
     },
     "rate": {
      "n": 300,
      "published_wrong": 0.006666666666666667,
      "n_digital": 83,
-     "published_correct_digital": 0.6144578313253012,
+     "published_correct_digital": 0.6024096385542169,
      "harmonic_errors": 0.024096385542168676
     },
     "confidence": {
      "n_noise": 44,
      "noise_labelled": 0.0,
      "n_ool": 31,
-     "ool_wrong": 0.22580645161290322,
+     "ool_wrong": 0.25806451612903225,
      "calibration_claims": 0
     },
     "speed": {
      "n": 300,
-     "within": 0.2833333333333333,
-     "p50_s": 0.5197974999973667,
-     "p95_s": 0.6243976931051293,
-     "max_s": 0.7169077919970732
+     "within": 0.03333333333333333,
+     "p50_s": 0.7143548960011685,
+     "p95_s": 0.826408391345467,
+     "max_s": 0.8973421249975218
     }
    },
    "G2": {
     "label": {
      "n": 936,
-     "published_wrong": 0.14957264957264957,
+     "published_wrong": 0.16452991452991453,
      "n_in_library": 432,
-     "published_correct_in_library": 0.9027777777777778,
-     "published": 0.5918803418803419
+     "published_correct_in_library": 0.8935185185185185,
+     "published": 0.6025641025641025
     },
     "rate": {
      "n": 936,
-     "published_wrong": 0.16773504273504272,
+     "published_wrong": 0.010683760683760684,
      "n_digital": 864,
-     "published_correct_digital": 0.06712962962962964,
-     "harmonic_errors": 0.17592592592592593
+     "published_correct_digital": 0.19907407407407407,
+     "harmonic_errors": 0.005787037037037037
     },
     "confidence": {
      "n_noise": 36,
      "noise_labelled": 0.0,
      "n_ool": 288,
-     "ool_wrong": 0.2951388888888889,
+     "ool_wrong": 0.3854166666666667,
      "calibration_claims": 0
     },
     "speed": {
      "n": 936,
      "within": 0.0,
-     "p50_s": 2.545339812495513,
-     "p95_s": 2.7930150312495243,
-     "max_s": 3.1863462920009624
+     "p50_s": 3.886408250000386,
+     "p95_s": 4.486894333509554,
+     "max_s": 5.596153790989774
     }
    }
   }

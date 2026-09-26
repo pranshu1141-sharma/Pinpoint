@@ -9,8 +9,8 @@ import numpy as np
 
 FAMILY = {"BPSK": "PSK", "QPSK": "PSK", "QAM16": "QAM16", "FSK2": "FSK",
           "AM": "AM", "FM": "FM", "none": "none"}
-DIGITAL_EXPERTS = ("nrz", "rrc", "fsk")
-ALL_EXPERTS = ("nrz", "rrc", "fsk", "analog")
+DIGITAL_EXPERTS = ("nrz", "rrc", "lsp", "fsk")
+ALL_EXPERTS = ("nrz", "rrc", "lsp", "fsk", "analog")
 
 
 @dataclass(frozen=True)

@@ -8,7 +8,7 @@ from .config import DEFAULT, SpikeConfig
 from .dsp import carrier_estimate, derotate, noise_variance, rate_band
 from .expert_analog import AnalogExpert, null_hypothesis
 from .expert_fsk import FskExpert
-from .experts_psk import NrzPskExpert, RrcPskExpert
+from .experts_psk import LsPulsePskExpert, NrzPskExpert, RrcPskExpert
 from .features import router_features
 from .hypothesis import ALL_EXPERTS, Hypothesis
 from .proposals import (fsk_needle_refine, fsk_proposals, needle_refine, psk_proposals, rank_fsk,
@@ -84,7 +84,7 @@ def analyze_segment(x: np.ndarray, fs: float, cfg: SpikeConfig = DEFAULT,
     ffin = [r for r, _ in fsk_targets]
 
     hyps: list[Hypothesis] = []
-    for name, expert in (("nrz", NrzPskExpert(cfg)), ("rrc", RrcPskExpert(cfg))):
+    for name, expert in (("nrz", NrzPskExpert(cfg)), ("rrc", RrcPskExpert(cfg)), ("lsp", LsPulsePskExpert(cfg))):
         if name in experts:
             fits = timed(name, lambda: [expert.fit(x, xc, fs, r) for r in pfin])
             hyps += [h for h in fits if h is not None]

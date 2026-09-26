@@ -105,3 +105,128 @@ class RrcPskExpert:
         if best[1] is None:
             return None
         return Hypothesis(self.name, LABEL[best[1]], float(rate), best[0], best[2])
+
+
+def _block_means(xc: np.ndarray, sps: float, tau: float):
+    """Per-symbol means of flat blocks at timing tau: (symbol coordinate u, k, msk, means)."""
+    u = np.arange(len(xc)) / sps + tau
+    k = np.floor(u).astype(int)
+    k0 = k.min()
+    k -= k0
+    msk = (k > 0) & (k < k.max())
+    cnt = np.maximum(np.bincount(k), 1).astype(float)
+    m = (np.bincount(k, xc.real) + 1j * np.bincount(k, xc.imag)) / cnt
+    return u - k0, k, msk, m
+
+
+def _pulse_taps(u: np.ndarray, n_sym: int, span: int, grid: int) -> tuple:
+    """Sparse structure of the pulse model x[n] ~= sum_j a[sym[n,j]] * w[n,j] * p[col[n,j]]:
+    a real pulse p sampled every 1/grid symbol on [-span, span] (symbol k centred at
+    k + 0.5), linearly interpolated. Returns (sym, col, w), each (N, 2*(2*span+2))."""
+    m_par = 2 * span * grid + 1
+    kb = np.floor(u).astype(int)
+    syms, cols, ws = [], [], []
+    for d in range(-span - 1, span + 1):
+        k = kb + d
+        g = (u - (k + 0.5) + span) * grid
+        j0 = np.floor(g).astype(int)
+        fr = g - j0
+        for j, w in ((j0, 1 - fr), (j0 + 1, fr)):
+            ok = (k >= 0) & (k < n_sym) & (j >= 0) & (j < m_par)
+            syms.append(np.where(ok, k, 0))
+            cols.append(np.where(ok, j, 0))
+            ws.append(np.where(ok, w, 0.0))
+    return np.stack(syms, 1), np.stack(cols, 1), np.stack(ws, 1)
+
+
+def _pulse_lstsq(y: np.ndarray, a: np.ndarray, taps: tuple, m_par: int) -> tuple:
+    """Least-squares real pulse via sparse normal equations; returns (pulse, rebuild)."""
+    sym, col, w = taps
+    v = a[sym] * w                                         # (N, P) complex coefficients
+    P = col.shape[1]
+    ii = (col[:, :, None] * m_par + col[:, None, :]).ravel()
+    gram = np.real(np.conj(v)[:, :, None] * v[:, None, :]).ravel()
+    G = np.bincount(ii, gram, m_par * m_par).reshape(m_par, m_par)
+    rhs = np.bincount(col.ravel(), np.real(np.conj(v) * y[:, None]).ravel(), m_par)
+    G[np.diag_indices(m_par)] += 1e-9 * (np.trace(G) / m_par + TINY)
+    p = np.linalg.solve(G, rhs)
+    return p, np.sum(v * p[col], axis=1)
+
+
+class LsPulsePskExpert:
+    """Generic smooth pulse: decide symbols from flat blocks, then solve a real pulse
+    over +-lsp_span symbols by least squares and rebuild. Charged 0.5 ln N per pulse
+    sample in the MDL cost. Covers filtered NRZ, RC/RRC of any roll-off, Gaussian.
+
+    Without it, smoothed-NRZ captures are fitted better by RRC at 2x or 3x the rate.
+    """
+    name = "lsp"
+
+    def __init__(self, cfg: SpikeConfig):
+        self.cfg = cfg
+
+    def _fit(self, xc: np.ndarray, fs: float, rate: float, orders) -> tuple:
+        """(score, order, residual, rebuild, inner slice) at `rate`, best of `orders`."""
+        cfg = self.cfg
+        sps = fs / rate
+        span, grid = cfg.lsp_span, cfg.lsp_grid
+        edge = int(np.ceil((span + 1) * sps))
+        if len(xc) - 2 * edge < 256:
+            return (np.inf, None, np.nan, None, None)
+        tau, _ = fine_search(lambda t: _nrz_at(xc, sps, t, cfg.alphabets, cfg.snap_block),
+                             transition_timing(xc, rate, fs), sps)
+        u, k, _, m = _block_means(xc, sps, tau)
+        inner = slice(edge, len(xc) - edge)
+        n_eff = inner.stop - inner.start
+        n_sym = int(np.ptp(k[inner])) + 1
+        m_par = 2 * span * grid + 1
+        y = xc[inner]
+        taps = _pulse_taps(u[inner], len(m), span, grid)
+        best = (np.inf, None, np.nan, None, inner)
+        for order in orders:
+            _, rec = _pulse_lstsq(y, snap_to_alphabet(m, order, cfg.snap_block), taps, m_par)
+            res = np.mean(np.abs(y - rec) ** 2) + TINY
+            cost = n_sym * np.log(order) + np.ceil(n_sym / cfg.snap_block) * np.log(n_eff) \
+                + 0.5 * m_par * np.log(n_eff)
+            score = np.log(res) + cost / n_eff
+            if score < best[0]:
+                best = (float(score), order, float(res), rec, inner)
+        return best
+
+    def fit(self, x: np.ndarray, xc: np.ndarray, fs: float, rate: float) -> Optional[Hypothesis]:
+        """Fit at `rate` (all alphabets), then refine the rate decision-directed and
+        refit with the chosen alphabet (a 1e-4 rate nudge does not change it).
+
+        Spectral-line rate estimates leave ~1e-4 relative error; over hundreds of
+        symbols that misaligns the edges enough, at high SNR, for a 2x-rate model
+        to win. Local timing shifts s_j of the rebuild in chunks (x ~ y + s_j y')
+        grow linearly, s_j = eps * n_j, when the true rate is rate * (1 + eps).
+        """
+        cfg = self.cfg
+        best = self._fit(xc, fs, rate, cfg.alphabets)
+        if best[1] is None:
+            return None
+        for _ in range(cfg.lsp_rate_iters):
+            eps = _drift(xc[best[4]], best[3], cfg.lsp_drift_chunks)
+            if eps is None or abs(eps) > cfg.lsp_max_drift:
+                break
+            trial = self._fit(xc, fs, rate * (1 + eps), (best[1],))
+            if not trial[0] < best[0]:
+                break
+            rate, best = rate * (1 + eps), trial
+        return Hypothesis(self.name, LABEL[best[1]], float(rate), best[0], best[2])
+
+
+def _drift(y: np.ndarray, rec: np.ndarray, chunks: int) -> Optional[float]:
+    """Relative clock error eps from chunk-wise timing shifts of a rebuild `rec` against `y`."""
+    d = np.gradient(rec)
+    edges = np.linspace(0, len(y), chunks + 1).astype(int)
+    shifts, weights, centres = [], [], []
+    for a, b in zip(edges[:-1], edges[1:]):
+        e = np.sum(np.abs(d[a:b]) ** 2)
+        if e <= 0:
+            return None
+        shifts.append(np.real(np.sum((y[a:b] - rec[a:b]) * np.conj(d[a:b]))) / e)
+        weights.append(np.sqrt(e))
+        centres.append((a + b) / 2)
+    return float(np.polyfit(centres, shifts, 1, w=weights)[0])
