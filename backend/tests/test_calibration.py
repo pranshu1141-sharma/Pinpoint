@@ -114,7 +114,9 @@ def test_shipped_calibrator_generalizes_to_a_fresh_held_out_corpus(score_name, m
     check the *shipped* calibrator file still meets a documented ECE bound.
     Protects against silent drift if detect.py's heuristics change later
     without rerunning calibrate.py."""
-    fresh = build_corpus(seed_offset=500, seeds_per_combo=2)
+    # 6 seeds per combination (was 2): at ~200 candidates the ECE estimate swung by more than the
+    # bound itself (0.066 at 2 seeds vs 0.024 at 6 seeds and 0.012 on an independent 6-seed set)
+    fresh = build_corpus(seed_offset=500, seeds_per_combo=6)
     scores = np.array([r[score_name] for r in fresh])
     labels = np.array([r["label"] for r in fresh])
     calibrated = np.array([calibrate_confidence(score_name, s)[0] for s in scores])

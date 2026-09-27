@@ -1,4 +1,4 @@
-"""Reproduce downstream measurements: python -m backend.tests.run_estimate_check.
+"""Reproduce the legacy estimator's downstream measurements: python -m backend.tests.run_estimate_check.
 
 Truth is used only here for scoring, never by the pipeline functions.
 """
@@ -19,7 +19,7 @@ def main():
     for kind in ("bpsk", "qpsk", "fm"):
         for snr in (20, 10, 0, -5):
             c, d, truth = fixture(kind, snr)
-            out = analyze_candidate(c, d)
+            out = analyze_candidate(c, d, estimator="legacy")
             continuous.append({"kind": kind, "seed": 47, "truth_snr_db": snr,
                                "truth_frequency_hz": 8000,
                                "truth_symbol_rate_hz": truth["symbol_rate_hz"],
@@ -32,7 +32,7 @@ def main():
                             "wav_disambiguation": {"result": "declared_iq"}})
         ds = analyze_capture(c).response["detections"]
         d = next(d for d in ds if d["freq_lower_hz"] < 150000 < d["freq_upper_hz"])
-        out = analyze_candidate(c, d)
+        out = analyze_candidate(c, d, estimator="legacy")
         refinement.append({"seed": seed, "truth_frequency_hz": 150000,
                            "direct_error_hz": out["center_frequency_hz"]-150000,
                            "refined_error_hz": out["center_frequency_refined_hz"]-150000,
@@ -42,7 +42,7 @@ def main():
         for snr in (20, 10):
             for seed in range(47, 52):
                 c, d, _ = fixture(kind, snr, seed=seed)
-                out = analyze_candidate(c, d)
+                out = analyze_candidate(c, d, estimator="legacy")
                 spread = out["phase_cluster_spread_rad"]
                 # Counterfactual diagnostic isolates frequency drift's effect.
                 # The true frequency is NEVER provided to analyze_candidate.
@@ -60,7 +60,7 @@ def main():
     for kind in ("bpsk", "qpsk"):
         for snr in (20, 10, 5, 0, -5):
             c, d, truth = fixture(kind, snr)
-            out = analyze_candidate(c, d)
+            out = analyze_candidate(c, d, estimator="legacy")
             symbol_rate.append({"kind": kind, "truth_snr_db": snr,
                                 "measured_snr_db": out["snr_db"],
                                 "truth_symbol_rate_hz": truth["symbol_rate_hz"],

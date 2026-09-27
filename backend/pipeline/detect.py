@@ -18,7 +18,7 @@ _DOCS_DIR = Path(__file__).resolve().parents[2] / "docs"
 # VALIDATION.md's Phase 3 report). Both calibrators are fit on a synthetic
 # corpus only -- no real-file calibration exists yet, so this is a
 # synthetic-validated correction, not a claim about real captures.
-CALIBRATION_ECE = {"confidence": 0.0066, "confidence_evidence_based": 0.0999}
+CALIBRATION_ECE = {"confidence": 0.007, "confidence_evidence_based": 0.114}
 
 
 @lru_cache(maxsize=None)
@@ -38,8 +38,10 @@ def calibrate_confidence(score_name, raw_value):
         return None, "uncalibrated (no fitted calibrator file present)"
     value = float(calibrator.predict(np.array([raw_value]))[0])
     ece = CALIBRATION_ECE.get(score_name)
-    return value, f"isotonic-calibrated on synthetic corpus (held-out ECE={ece:.4f})" if ece is not None \
-        else "isotonic-calibrated on synthetic corpus"
+    # An isotonic fit on one synthetic generator is not calibration across generators or on
+    # real captures, so it is never presented as a calibrated probability.
+    note = "uncalibrated across generators (isotonic fit on one synthetic corpus"
+    return value, f"{note}, held-out ECE={ece:.4f} on that corpus)" if ece is not None else f"{note})"
 
 
 def db(value):
@@ -164,6 +166,102 @@ def adaptive_threshold_detect(power, noise_floor, margin_db=8, fixed_threshold_d
     return mask, smooth, threshold
 
 
+FRAGMENT_GAP_OF_WIDTH = 0.25     # merge co-timed neighbours separated by <= 1/4 of the wider band
+SIDELOBE_GAP_OF_WIDTH = 1.0      # ... or by <= the stronger band's width when the other is >= 6 dB weaker
+SIDELOBE_DB = 6.0
+CO_TIMED = 0.8                   # share of the shorter band's active frames shared with the other
+GAP_EXCESS_DB = 1.5              # ... or by a gap >= this above the LOCAL noise and
+VALLEY_DB = 10.0                 # ... no deeper than this below the weaker adjacent band
+
+
+def merge_fragments(bands, mask, smooth, power=None):
+    """Join frequency bands that are fragments of one signal; yield (fa, fb, occupied rows).
+
+    Spectral nulls split one signal into a main lobe and sidelobes (sinc/filtered
+    pulses), and at low SNR a noisy PSD splits a wide lobe into pieces; the WP0
+    scoreboard saw 36% of single-signal captures come back as 2-8 detections.
+    Neighbours must be co-timed (>= CO_TIMED of the shorter band's active frames).
+    Every rule compares the two ADJACENT component bands (never an accumulated merge,
+    which chained one signal into the next through its sidelobe):
+      * the gap is <= FRAGMENT_GAP_OF_WIDTH of the wider component, or
+      * the gap is <= the stronger component's width, the other is >= SIDELOBE_DB
+        weaker, and that weak band is not equally attributable to a stronger band on
+        its other side, or
+      * the gap's time-averaged power is >= GAP_EXCESS_DB above the local noise (the
+        median of non-band bins one to three pair-widths away, so neither a receiver
+        stopband elsewhere nor an undetected part of the same lobe counts) and no deeper than VALLEY_DB below the weaker component: sparse
+        fragments of one weak lobe have signal between them; separate signals leave a
+        noise valley.
+    Evidence is later computed over the occupied rows only, not the bridged gap.
+    """
+    frames_power = None if power is None else power
+    band_rows = np.zeros(mask.shape[0], bool)
+    for fa, fb in bands:
+        band_rows[fa:fb] = True
+    comps = []
+    for fa, fb in bands:
+        on = np.any(mask[fa:fb], axis=0)
+        peak = float(db(np.max(smooth[fa:fb][:, on]))) if on.any() else -np.inf
+        comps.append(dict(fa=fa, fb=fb, on=on, peak=peak))
+    items = [dict(comps=[c], rows=list(range(c["fa"], c["fb"])), on=c["on"]) for c in comps]
+
+    def mean_power(fa, fb, frames):
+        return float(frames_power[fa:fb][:, frames].mean())
+
+    def other_side(i, weak_is_left):
+        """The component on the far side of the weak one (or None)."""
+        if weak_is_left:
+            cs = items[i]["comps"]
+            return cs[-2] if len(cs) > 1 else (items[i - 1]["comps"][-1] if i > 0 else None)
+        cs = items[i + 1]["comps"]
+        return cs[1] if len(cs) > 1 else (items[i + 2]["comps"][0] if i + 2 < len(items) else None)
+
+    def joinable(i):
+        a, b = items[i], items[i + 1]
+        ca, cb = a["comps"][-1], b["comps"][0]
+        shorter = min(ca["on"].sum(), cb["on"].sum())
+        if shorter == 0 or (ca["on"] & cb["on"]).sum() < CO_TIMED * shorter:
+            return False
+        gap = cb["fa"] - ca["fb"]
+        wa, wb = ca["fb"] - ca["fa"], cb["fb"] - cb["fa"]
+        if gap <= FRAGMENT_GAP_OF_WIDTH * max(wa, wb):
+            return True
+        strong, weak = (ca, cb) if ca["peak"] >= cb["peak"] else (cb, ca)
+        if strong["peak"] - weak["peak"] >= SIDELOBE_DB and gap <= SIDELOBE_GAP_OF_WIDTH * (strong["fb"] - strong["fa"]):
+            o = other_side(i, weak is ca)
+            owned_elsewhere = o is not None and o["peak"] - weak["peak"] >= SIDELOBE_DB and \
+                min(abs(o["fa"] - weak["fb"]), abs(weak["fa"] - o["fb"])) <= o["fb"] - o["fa"]
+            if not owned_elsewhere:
+                return True
+        if frames_power is not None and gap > 0:
+            frames = ca["on"] | cb["on"]
+            span = cb["fb"] - ca["fa"]
+            # noise from non-band bins one to three pair-widths away: beside the pair, an
+            # undetected part of the same weak lobe would be taken for noise
+            near = [*range(max(0, ca["fa"] - 3 * span), max(0, ca["fa"] - span)),
+                    *range(min(mask.shape[0], cb["fb"] + span), min(mask.shape[0], cb["fb"] + 3 * span))]
+            local = [k for k in near if not band_rows[k]]
+            if len(local) >= 4:
+                noise = float(np.median(frames_power[local][:, frames].mean(axis=1)))
+                g = mean_power(ca["fb"], cb["fa"], frames)
+                weaker = min(mean_power(ca["fa"], ca["fb"], frames), mean_power(cb["fa"], cb["fb"], frames))
+                if db(g) - db(noise) >= GAP_EXCESS_DB and db(weaker) - db(g) <= VALLEY_DB:
+                    return True
+        return False
+
+    changed = True
+    while changed and len(items) > 1:
+        changed = False
+        for i in range(len(items) - 1):
+            if joinable(i):
+                a, b = items[i], items[i + 1]
+                items[i] = dict(comps=a["comps"] + b["comps"], rows=a["rows"] + b["rows"], on=a["on"] | b["on"])
+                del items[i + 1]
+                changed = True
+                break
+    return [(it["comps"][0]["fa"], it["comps"][-1]["fb"], it["rows"]) for it in items]
+
+
 @dataclass
 class DetectionResult:
     response: dict
@@ -199,22 +297,25 @@ def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_thresh
             active[a:b] = True
     detections, envelopes = [], {}
     df = fs/nfft
+    bands = []
     for fa, fb in runs(active):
         if fb-fa < 2:
             continue
-        time_on = np.any(mask[fa:fb], axis=0)
-        ti = np.flatnonzero(time_on)
-        if ti.size < 3 or np.count_nonzero(mask[fa:fb]) < 12:
+        if np.count_nonzero(np.any(mask[fa:fb], axis=0)) < 3 or np.count_nonzero(mask[fa:fb]) < 12:
             continue
+        bands.append((fa, fb))
+    for fa, fb, rows in merge_fragments(bands, mask, smooth, power):
+        time_on = np.any(mask[rows], axis=0)
+        ti = np.flatnonzero(time_on)
         lower = max(0 if real else -fs/2, float(f[fa]-df/2))
         upper = min(fs/2, float(f[fb-1]+df/2))
         start = max(0, int(round(t[ti[0]]*fs-nfft/2)))
         end = min(len(x), int(round(t[ti[-1]]*fs+nfft/2)))
         isolated = isolate_band(x, fs, lower, upper, real)
         pulse = envelope_detect(isolated, fs, floor*(upper-lower))
-        evidence = smooth[fa:fb][:, ti]
+        evidence = smooth[rows][:, ti]
         excess = float(db(np.percentile(evidence, 90))-threshold)
-        occupancy = float(np.mean(mask[fa:fb][:, ti]))
+        occupancy = float(np.mean(mask[rows][:, ti]))
         # This is an explainable evidence score, NOT a calibrated probability or
         # a modulation classifier. Borderline energy gets an explicit review flag.
         confidence = float(np.clip(.48 + .38*(1-np.exp(-max(0, excess)/10)) + .12*occupancy, 0, .99))
@@ -222,7 +323,7 @@ def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_thresh
         # statistic on raw (unsmoothed) power, not an amplitude threshold.
         # Deliberately NOT collapsed into `confidence` above -- no calibration
         # dataset exists to justify combining the two into one number.
-        deviation = power_cv_deviation(power[fa:fb][:, ti])
+        deviation = power_cv_deviation(power[rows][:, ti])
         confidence_evidence_based = float(np.clip(.48+.5*(1-np.exp(-deviation/.2)), 0, .99))
         idx = len(detections)
         if pulse["is_pulsed"]:

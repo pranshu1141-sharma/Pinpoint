@@ -22,11 +22,13 @@ from .calibration_corpus import build_corpus
 
 DOCS_DIR = Path(__file__).resolve().parents[2] / "docs"
 SCORES = ("confidence", "confidence_evidence_based")
+CALIBRATION_SEEDS_PER_COMBO = 8
 
 
 def run(train_seed_offset=0, test_seed_offset=100):
-    train = build_corpus(seed_offset=train_seed_offset)
-    test = build_corpus(seed_offset=test_seed_offset)
+    # 8 seeds per combination: 3 left the isotonic fit too noisy to generalise (fresh-corpus ECE)
+    train = build_corpus(seed_offset=train_seed_offset, seeds_per_combo=CALIBRATION_SEEDS_PER_COMBO)
+    test = build_corpus(seed_offset=test_seed_offset, seeds_per_combo=CALIBRATION_SEEDS_PER_COMBO)
     report = {"corpus": {"train_n": len(train), "test_n": len(test),
                          "train_positive_rate": float(np.mean([r["label"] for r in train])),
                          "test_positive_rate": float(np.mean([r["label"] for r in test])),

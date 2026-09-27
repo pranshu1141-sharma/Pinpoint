@@ -1,0 +1,20 @@
+{
+  "_about": "G3 real recordings (WP7). Written BEFORE running the pipeline on them: what is known about each file (from its SigMF description, annotations and the public standard), and the sanity check it must pass. Files are the public IQEngine GNU Radio SigMF repo (iqengine.org/api/datasources/local/local/<name>); large files were truncated to their first 16,000,000 bytes (stored under artifacts/readiness/real/, not in git). Frequencies in the checks are baseband offsets from the capture centre.",
+  "common_checks": ["no crash", "every published label is in allowed_labels", "every published rate for an allowed label is within 5% of expected_rate_hz"],
+  "recordings": [
+    {"file": "bpsk_rect_20sps", "source": "IQEngine (Marc Lichtman): 'BPSK using 20 samples per symbol and light noise', 1 MS/s", "known": "one BPSK signal, rectangular pulses, 50 kBd",
+     "allowed_labels": ["BPSK"], "expected_rate_hz": 50000, "min_detections": 1},
+    {"file": "analog_FM_France", "source": "IQEngine (J.-M. Friedt, CC BY-SA): 'two adjacent analog wideband FM stations including stereo and RDS', 1.92 MS/s at 96.9 MHz", "known": "two broadcast WFM stations (~150-200 kHz occupied each)",
+     "allowed_labels": ["FM"], "min_detections": 2, "min_wide_detections": {"count": 2, "bandwidth_99pct_hz": 100000}},
+    {"file": "pulsed_ASK", "source": "IQEngine (bigal): 'Short pulses of ASK', 2.4 MS/s at 160.787 MHz", "known": "short on/off-keyed bursts",
+     "allowed_labels": ["ASK2"], "min_detections": 1, "require_pulsed": true},
+    {"file": "dect6", "source": "IQEngine (J. Gilbert, CC BY-SA): DECT6 with FP and PP, 4 MS/s at 1921.55 MHz; annotations mark DECT bursts 1920.8-1922.3 MHz", "known": "DECT TDMA bursts, GFSK 1.152 Mb/s, 1.728 MHz channel (annotated band -750..+750 kHz)",
+     "allowed_labels": ["FSK2"], "expected_rate_hz": 1152000, "min_detections": 1,
+     "overlap_band_hz": [-750000, 750000], "bandwidth_99pct_range_hz": [500000, 2500000]},
+    {"file": "iridium_cf32", "source": "IQEngine (CC0): 'Recording of Iridium Downlink', 12 MS/s at 1621.5 MHz", "known": "Iridium downlink bursts: DE-QPSK at 25 ksym/s on 41.67 kHz channels",
+     "allowed_labels": ["QPSK"], "expected_rate_hz": 25000, "min_detections": 1},
+    {"file": "AIS-Collection-Fort-Smallwood-Pt1-161M975CF-240K0FS-20260730", "source": "IQEngine (G. Schafer, CC BY 4.0): shipborne AIS near Annapolis, 240 kS/s centred on AIS channel A (161.975 MHz)", "known": "AIS bursts, GMSK 9600 Bd (BT 0.4) at the capture centre",
+     "allowed_labels": ["FSK2"], "expected_rate_hz": 9600, "min_detections": 1,
+     "overlap_band_hz": [-15000, 15000], "require_pulsed": true}
+  ]
+}

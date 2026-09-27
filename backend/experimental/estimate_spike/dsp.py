@@ -67,8 +67,9 @@ def dedupe(rates, band: tuple[float, float], tol: float) -> list[float]:
     return out
 
 
-def mth_power_carrier(x: np.ndarray, fs: float, nfft: int, power: int = 4) -> float:
-    """Coarse carrier offset from the M-th power line (Hann, zero-padded, parabolic)."""
+def mth_power_line(x: np.ndarray, fs: float, nfft: int, power: int = 4) -> tuple[float, float]:
+    """(carrier offset, line prominence) from the M-th power line (Hann, zero-padded,
+    parabolic). Prominence = peak / median magnitude of the M-th power spectrum."""
     y = x ** power
     nf = fft_size(len(y), nfft)
     mag = np.abs(np.fft.fft(y * np.hanning(len(y)), nf))
@@ -79,7 +80,42 @@ def mth_power_carrier(x: np.ndarray, fs: float, nfft: int, power: int = 4) -> fl
     f = (k + d) * fs / nf
     if f > fs / 2:
         f -= fs
-    return f / power
+    return f / power, float(mag[k] / (np.median(mag) + TINY))
+
+
+def mth_power_carrier(x: np.ndarray, fs: float, nfft: int, power: int = 4) -> float:
+    """Carrier offset from the M-th power line; aliases once |offset| > fs/(2M)."""
+    return mth_power_line(x, fs, nfft, power)[0]
+
+
+def occupied_centroid(x: np.ndarray, fs: float) -> float:
+    """Coarse carrier: power centroid of the PSD bins more than 3 dB above the noise floor.
+
+    Floor = 20th percentile of the two-sided Welch PSD (robust when the signal
+    occupies most of the band). Used when no Detect band is available.
+    """
+    f, psd = welch(x, fs=fs, nperseg=min(1024, len(x)), return_onesided=False)
+    floor = np.percentile(psd, 20)
+    excess = np.where(psd > 2 * floor, psd - floor, 0.0)
+    if not np.any(excess > 0):
+        return 0.0
+    return float(np.sum(f * excess) / np.sum(excess))
+
+
+def carrier_estimate(x: np.ndarray, fs: float, nfft: int, powers=(4, 8),
+                     coarse: float | None = None) -> float:
+    """Carrier = coarse (Detect band centre, else occupied centroid) + M-th power fine residual.
+
+    The M-th power line alone aliases once |carrier| > fs/(2M); after derotating by
+    the coarse value the residual is small, and the fine search is restricted to
+    |residual| < fs/(2M), where the M-th power line cannot alias. Several M are
+    tried (8PSK has no 4th-power line) and the most prominent line wins.
+    """
+    powers = (powers,) if isinstance(powers, int) else tuple(powers)
+    c = occupied_centroid(x, fs) if coarse is None else float(coarse)
+    xd = derotate(x, c, fs)
+    fine = max((mth_power_line(xd, fs, nfft, m) for m in powers), key=lambda fp: fp[1])[0]
+    return c + fine
 
 
 def derotate(x: np.ndarray, f: float, fs: float) -> np.ndarray:

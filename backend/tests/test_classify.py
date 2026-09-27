@@ -137,7 +137,7 @@ def test_ask_qam_fsk_majority_acceptance(kind, label, snr):
     rows = []
     for seed in range(47, 52):
         c, d, _ = fixture(kind, snr, seed=seed)
-        out = classify.analyze_candidate(c, d)
+        out = classify.analyze_candidate(c, d, estimator="legacy")
         rows.append((seed, out["fine_modulation_label"], out.get("envelope_level_count"),
                      out.get("frequency_level_count")))
         matches += out["fine_modulation_label"] == label
@@ -151,7 +151,7 @@ def test_ask_qam_fsk_never_false_fire_on_psk_or_fm(kind, snr):
     2-cluster fit (see FSK_SEPARATION_THRESHOLD's docstring); PSK's constant
     envelope must never trip the varying-envelope ASK/QAM path."""
     c, d, _ = fixture(kind, snr)
-    out = classify.analyze_candidate(c, d)
+    out = classify.analyze_candidate(c, d, estimator="legacy")
     assert out["fine_modulation_label"] not in ("ask", "qam", "fsk")
 
 
@@ -162,7 +162,7 @@ def test_ask_qam_never_false_fire_below_validated_snr():
     noise alone, so classify_fine_ask must decline rather than guess."""
     for seed in range(47, 52):
         c, d, _ = fixture("bpsk", -5, seed=seed)
-        out = classify.analyze_candidate(c, d)
+        out = classify.analyze_candidate(c, d, estimator="legacy")
         assert out["fine_modulation_label"] not in ("ask", "qam")
 
 
@@ -172,7 +172,7 @@ def test_end_to_end_never_leaks_stale_input_values(kind, snr):
     c, d, truth = fixture(kind, snr)
     # Previously supplied values must not leak through the enriched copy.
     d.update(fine_modulation_label="guessed", symbol_rate_hz=12345)
-    out = classify.analyze_candidate(c, d)
+    out = classify.analyze_candidate(c, d, estimator="legacy")
     assert out["fine_modulation_label"] != "guessed"
     assert out["symbol_rate_hz"] != 12345
     assert d["fine_modulation_label"] == "guessed"
@@ -200,7 +200,7 @@ def test_symbol_rate_majority_acceptance(kind, snr):
     rows = []
     for seed in range(47, 52):
         c, d, truth = fixture(kind, snr, seed=seed)
-        out = classify.analyze_candidate(c, d)
+        out = classify.analyze_candidate(c, d, estimator="legacy")
         rows.append((seed, out["symbol_rate_hz"]))
         matches += (out["symbol_rate_hz"] is not None
                     and out["symbol_rate_hz"] == pytest.approx(truth["symbol_rate_hz"], rel=.05))
@@ -216,7 +216,7 @@ def test_ask_symbol_rate_majority_acceptance(snr):
     rows = []
     for seed in range(47, 52):
         c, d, truth = fixture("ask", snr, seed=seed)
-        out = classify.analyze_candidate(c, d)
+        out = classify.analyze_candidate(c, d, estimator="legacy")
         rows.append((seed, out["symbol_rate_hz"]))
         matches += (out["symbol_rate_hz"] is not None
                     and out["symbol_rate_hz"] == pytest.approx(truth["symbol_rate_hz"], rel=.05))
@@ -231,7 +231,7 @@ def test_fsk_qam_symbol_rate_stays_unresolved(kind, snr):
     QAM has no confirmed order and no symbol-timing recovery in this project.
     Both are excluded from SYMBOL_RATE_LABELS rather than published wrong."""
     c, d, _ = fixture(kind, snr)
-    out = classify.analyze_candidate(c, d)
+    out = classify.analyze_candidate(c, d, estimator="legacy")
     assert out["symbol_rate_hz"] is None
 
 
@@ -239,7 +239,7 @@ def test_fsk_qam_symbol_rate_stays_unresolved(kind, snr):
 @pytest.mark.parametrize("snr", [0, -5])
 def test_symbol_rate_below_validated_range_is_explicit_unknown(kind, snr):
     c, d, _ = fixture(kind, snr)
-    out = classify.analyze_candidate(c, d)
+    out = classify.analyze_candidate(c, d, estimator="legacy")
     assert out["symbol_rate_hz"] is None
     assert "not reliably estimated" in out["symbol_rate_status"]
 
@@ -249,7 +249,7 @@ def test_pulsed_candidate_never_gets_a_fine_label_or_symbol_rate():
     fine classification/symbol rate are validated on continuous signals only."""
     c, d, _ = fixture("pulsed", 10)
     e = classify.refine_frequency(c, classify.classify_coarse(c, estimate_candidate(c, d)))
-    out = classify.analyze_candidate(c, d)
+    out = classify.analyze_candidate(c, d, estimator="legacy")
     assert e["modulation_family"] == "constant-envelope"
     assert out["fine_modulation_label"] is None
     assert out["symbol_rate_hz"] is None
@@ -259,11 +259,11 @@ def test_pulsed_candidate_never_gets_a_fine_label_or_symbol_rate():
 def test_end_to_end_audio_and_short_samples_are_unknown():
     c, d, _ = fixture("bpsk", 10)
     c.metadata["source_kind"] = "audio"
-    out = classify.analyze_candidate(c, d)
+    out = classify.analyze_candidate(c, d, estimator="legacy")
     assert out["modulation_family"] is None
     assert out["center_frequency_refined_hz"] is None
     c.metadata["source_kind"] = "iq"
     d["end_sample"] = d["start_sample"]+1024
-    out = classify.analyze_candidate(c, d)
+    out = classify.analyze_candidate(c, d, estimator="legacy")
     assert out["modulation_family"] is None
     assert out["center_frequency_refined_hz"] is None

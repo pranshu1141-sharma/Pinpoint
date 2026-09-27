@@ -19,7 +19,7 @@ from backend.pipeline.sigmf_io import export_metadata
 from backend.pipeline.large_capture import (open_disk_capture, analyze_disk_capture, build_disk_layers,
                                             DiskSamples, AnalysisCancelled)
 
-app = FastAPI(title="SIH26147 · Detect", version="1.0.0", description="Offline detection with synchronous IQ estimates and coarse classification; no decoding.")
+app = FastAPI(title="SIH26147 · Detect", version="1.0.0", description="Offline detection; per-candidate parameter estimates; modulation label and symbol rate from the verify (MDL) estimator by default, legacy heuristics with estimator=legacy.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
                    allow_methods=["GET", "POST"], allow_headers=["*"])
 DATA = Path(__file__).resolve().parents[1] / "data"
@@ -67,7 +67,7 @@ def get_job(job_id):
 
 
 def run_analysis(filename, data, sample_rate=None, datatype=None, metadata=None, wav_mode="auto",
-                 margin_db=8, mode="adaptive", fixed_threshold_db=None):
+                 margin_db=8, mode="adaptive", fixed_threshold_db=None, estimator="verify"):
     if not COMPUTE.acquire(blocking=False):
         raise HTTPException(429, "Another analysis is running. Try again when it finishes.")
     try:
@@ -79,8 +79,9 @@ def run_analysis(filename, data, sample_rate=None, datatype=None, metadata=None,
         # Large disk-backed uploads take a separate enrichment path (see
         # large_capture.enrich_track): each finished track gets its own
         # bounded direct re-read instead of reusing this whole-capture flow.
-        r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor)
+        r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor, estimator=estimator)
                                     for d in r.response["detections"]]
+        r.response["estimator"] = estimator
         # The existing log still describes Detect. The API timer includes all
         # downstream processing so the dashboard reports its actual cost.
         r.response["elapsed_ms"] = (monotonic()-started)*1000
@@ -117,7 +118,8 @@ async def bounded_read(file, limit):
 async def analyze(file: UploadFile = File(...), metadata: UploadFile | None = File(None),
                   sample_rate: float | None = Form(None), datatype: str | None = Form(None),
                   wav_mode: str = Form("auto"), margin_db: float = Form(8),
-                  mode: str = Form("adaptive"), fixed_threshold_db: float | None = Form(None)):
+                  mode: str = Form("adaptive"), fixed_threshold_db: float | None = Form(None),
+                  estimator: str = Form("verify", pattern="^(verify|legacy)$")):
     meta = await bounded_read(metadata, 1024*1024) if metadata else None
     if file.size is not None and file.size > MAX_BYTES:
         raise HTTPException(413, "Maximum capture size is 2 GiB (2,147,483,648 bytes).")
@@ -135,7 +137,7 @@ async def analyze(file: UploadFile = File(...), metadata: UploadFile | None = Fi
         if size <= LARGE_FILE_BYTES:
             data = await run_in_threadpool(path.read_bytes)
             return await run_in_threadpool(run_analysis, file.filename or "capture", data, sample_rate,
-                                          datatype, meta, wav_mode, margin_db, mode, fixed_threshold_db)
+                                          datatype, meta, wav_mode, margin_db, mode, fixed_threshold_db, estimator)
         if not COMPUTE.acquire(blocking=False):
             raise HTTPException(429, "Another analysis is running. Try again when it finishes.")
         job_id = uuid4().hex
@@ -147,7 +149,7 @@ async def analyze(file: UploadFile = File(...), metadata: UploadFile | None = Fi
                             "cancel_event":cancel_event}
         try:
             EXECUTOR.submit(process_large_job, job_id, path, file.filename or "capture", sample_rate,
-                            datatype, meta, wav_mode, margin_db, mode, fixed_threshold_db, cancel_event)
+                            datatype, meta, wav_mode, margin_db, mode, fixed_threshold_db, cancel_event, estimator)
         except Exception:
             COMPUTE.release()
             with LOCK:
@@ -162,7 +164,7 @@ async def analyze(file: UploadFile = File(...), metadata: UploadFile | None = Fi
 
 
 def process_large_job(job_id, path, filename, sample_rate, datatype, meta, wav_mode, margin_db, mode,
-                      fixed_threshold_db, cancel_event):
+                      fixed_threshold_db, cancel_event, estimator="verify"):
     def progress(done, total, message):
         with LOCK:
             JOBS[job_id].update(status="processing", processed_samples=done, total_samples=total,
@@ -171,8 +173,8 @@ def process_large_job(job_id, path, filename, sample_rate, datatype, meta, wav_m
         capture = open_disk_capture(path, filename, sample_rate, datatype, meta, wav_mode)
         progress(0, len(capture.iq), "Metadata validated. Scanning the complete capture in overlapping blocks.")
         result = analyze_disk_capture(capture, margin_db, mode, fixed_threshold_db, progress,
-                                      cancel_check=cancel_event.is_set)
-        result.response.update(job_id=job_id, expires_in_seconds=TTL_SECONDS)
+                                      cancel_check=cancel_event.is_set, estimator=estimator)
+        result.response.update(job_id=job_id, expires_in_seconds=TTL_SECONDS, estimator=estimator)
         with LOCK:
             JOBS[job_id].update(status="complete", capture=capture, result=result, created=monotonic(), progress=1,
                                 message="Complete capture analyzed.")
@@ -235,7 +237,7 @@ def cancel_job(job_id: str):
 
 @app.post("/api/jobs/{job_id}/rerun")
 def rerun(job_id: str, margin_db: float = Query(8, ge=3, le=30), mode: str = Query("adaptive"),
-          fixed_threshold_db: float | None = Query(None)):
+          fixed_threshold_db: float | None = Query(None), estimator: str = Query("verify", pattern="^(verify|legacy)$")):
     """Re-run detection against the already-loaded capture with a new CFAR
     margin, without re-uploading or re-validating the file."""
     job = get_job(job_id)
@@ -250,11 +252,12 @@ def rerun(job_id: str, margin_db: float = Query(8, ge=3, le=30), mode: str = Que
             # second pass here would apply analyze_candidate's whole-capture
             # assumptions directly to the disk-backed reader with each
             # track's global sample bounds, which it does not support.
-            r = analyze_disk_capture(c, margin_db, mode, fixed_threshold_db)
+            r = analyze_disk_capture(c, margin_db, mode, fixed_threshold_db, estimator=estimator)
         else:
             r = analyze_capture(c, margin_db, mode, fixed_threshold_db)
-            r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor)
+            r.response["detections"] = [analyze_candidate(c, d, noise_floor=r.noise_floor, estimator=estimator)
                                         for d in r.response["detections"]]
+        r.response["estimator"] = estimator
         r.response["elapsed_ms"] = (monotonic()-started)*1000
         r.response["job_id"] = job_id
         r.response["expires_in_seconds"] = TTL_SECONDS
@@ -270,16 +273,18 @@ def rerun(job_id: str, margin_db: float = Query(8, ge=3, le=30), mode: str = Que
 
 
 @app.post("/api/demo")
-def demo(kind: str = Query("iq", pattern="^(iq|audio)$"), margin_db: float = Query(8, ge=3, le=30)):
+def demo(kind: str = Query("iq", pattern="^(iq|audio)$"), margin_db: float = Query(8, ge=3, le=30),
+         estimator: str = Query("verify", pattern="^(verify|legacy)$")):
     if kind == "audio":
         path = DEMO/"audio_demo.wav"
         if not path.exists():
             raise HTTPException(503, "Bundled demo file is missing. Run the synthetic generator.")
-        return run_analysis(path.name, path.read_bytes(), margin_db=margin_db)
+        return run_analysis(path.name, path.read_bytes(), margin_db=margin_db, estimator=estimator)
     path = DEMO/"demo.sigmf-data"
     if not path.exists():
         raise HTTPException(503, "Bundled demo file is missing. Run the synthetic generator.")
-    return run_analysis(path.name, path.read_bytes(), metadata=(DEMO/"demo.sigmf-meta").read_bytes(), margin_db=margin_db)
+    return run_analysis(path.name, path.read_bytes(), metadata=(DEMO/"demo.sigmf-meta").read_bytes(), margin_db=margin_db,
+                        estimator=estimator)
 
 
 @app.get("/api/demo/files/{filename}")

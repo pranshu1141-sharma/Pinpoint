@@ -9,7 +9,7 @@ import numpy as np
 
 from .config import SpikeConfig
 from .dsp import dedupe, line_peaks, moving_average
-from .experts_psk import nrz_quick_score
+from .experts_psk import flat_score, nrz_quick_score
 from .expert_fsk import FskExpert, fsk_quick_score
 
 
@@ -44,20 +44,26 @@ def rank_psk(xc: np.ndarray, fs: float, props: list[float], cfg: SpikeConfig) ->
 
 
 def needle_refine(xc: np.ndarray, fs: float, finalists: list[float], band, cfg: SpikeConfig) -> list[float]:
-    """The rate fit is needle-sharp: nudge every finalist by fractions of a percent."""
+    """The rate fit is needle-sharp: nudge every finalist by fractions of a percent.
+
+    Then add 1/2 and 1/3 of the top finalist: the flat-pulse quick score ranks
+    harmonics of smoothed pulses above the true rate, so the experts must see it.
+    """
     offsets = np.array(cfg.needle_offsets)
     refined = []
     for r0 in finalists:
         rr = r0 * (1 + offsets)
-        qq = [nrz_quick_score(xc, fs, v, cfg) for v in rr]
+        qq = [flat_score(xc, fs, v) for v in rr]      # alphabet-free: QPSK snapping misjudges ASK/QAM
         refined.append(float(rr[int(np.argmin(qq))]))
+    if refined:
+        refined += [refined[0] / m for m in cfg.subharmonics]
     return dedupe(refined, band, cfg.refine_dedupe_tol)
 
 
 def rank_fsk(x: np.ndarray, fs: float, props: list[float], cfg: SpikeConfig) -> list[float]:
     """Keep the finalists whose per-symbol frequencies split most cleanly into two clusters."""
     q = [fsk_quick_score(x, fs, r, cfg) for r in props]
-    return [props[i] for i in np.argsort(q)[::-1][:cfg.finalists]]
+    return [props[i] for i in np.argsort(q)[::-1][:cfg.fsk_finalists]]
 
 
 def fsk_needle_refine(x: np.ndarray, fs: float, finalists: list[float], band,
