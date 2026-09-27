@@ -1,7 +1,7 @@
 {
  "meta": {
-  "commit": "c43ffb1",
-  "date": "2026-09-26",
+  "commit": "2eb056e",
+  "date": "2026-09-27",
   "thresholds": {
    "min_snr_db": 5.0,
    "detect_recall_min": 0.95,
@@ -333,7 +333,7 @@
      "passed": false,
      "gens": {
       "G3": {
-       "value": "4/6 sane",
+       "value": "5/6 sane",
        "passed": false,
        "n": 6
       }
@@ -348,8 +348,8 @@
       {
        "file": "analog_FM_France",
        "crashed": false,
-       "sanity_ok": false,
-       "note": "1 detections < 2; 1 detections with 99% bandwidth >= 100000 Hz < 2"
+       "sanity_ok": true,
+       "note": "all checks passed"
       },
       {
        "file": "pulsed_ASK",
@@ -409,7 +409,7 @@
      "passed": false,
      "gens": {
       "G3": {
-       "value": 20,
+       "value": 21,
        "passed": false,
        "n": null
       }
@@ -433,6 +433,7 @@
       "CLAIMS.md marker stats.verify.G1.confidence.fm_labelled: says 17.9%, readiness.json has 23.1%",
       "CLAIMS.md marker stats.verify.G2.confidence.fm_labelled: says 100.0%, readiness.json has 94.4%",
       "CLAIMS.md marker stats.shipped.G1.label.published_wrong: says 16.3%, readiness.json has 13.3%",
+      "LIMITATIONS_AND_ROADMAP.md marker stats.verify.G2.speed.within: says 88.8%, readiness.json has 89.2%",
       "LIMITATIONS_AND_ROADMAP.md marker stats.verify.G1.confidence.fm_labelled: says 17.9%, readiness.json has 23.1%",
       "docs/PROJECT_STATUS.md does not embed the current readiness bars"
      ]
