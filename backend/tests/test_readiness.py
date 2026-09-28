@@ -241,3 +241,19 @@ def test_fm_label_share_is_reported():
     from experiments.readiness import metrics
     rows = [_row("FM", "FM"), _row("FM", None), _row("FM", "BPSK"), _row("BPSK", "BPSK", 1e3)]
     assert metrics.confidence_stats(rows)["fm_labelled"] == pytest.approx(1 / 3)
+
+
+def test_g5_split_is_frozen_and_by_protocol():
+    """WP2: the G5 calibration/test split may not change, and no protocol is on both sides."""
+    import json
+    from pathlib import Path
+    from experiments.readiness import g5_build
+    m = json.loads((Path(config.__file__).with_name(config.G5_MANIFEST)).read_text())
+    rec = m["recordings"]
+    assert g5_build.split_digest(rec) == m["split_sha256"] == config.G5_SPLIT_SHA256
+    sides = {}
+    for e in rec:
+        sides.setdefault(e["protocol"], set()).add(e["split"])
+        assert e["allowed_labels"] == ([e["truth"]["label"]] if e["truth"]["label"] else [])
+    assert all(len(s) == 1 for s in sides.values())
+    assert sides["ais"] == {"test"}

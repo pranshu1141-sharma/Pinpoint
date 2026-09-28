@@ -56,3 +56,4 @@ G1_TEST_N = 300
 # WP2 generators: G4 impaired synthetic (generators.g4_specs; calibration seeds from G4_CALIBRATION_SEED_BASE),
 # G5 real benchmark (g5_manifest.json, split frozen by protocol before anything was run on it).
 G5_MANIFEST = "g5_manifest.json"
+G5_SPLIT_SHA256 = "d38bc7b66fa74b22fadef60705ff3240fc326257b1578ba50cdd9a9717284663"   # frozen 2026-09-28, before any pipeline run on G5
