@@ -25,6 +25,11 @@ def test_thresholds_are_frozen_constants():
     assert th.ool_wrong_max == 0.10 and th.speed_s == 0.5 and th.min_snr_db == 5.0
     with pytest.raises(Exception):
         th.speed_s = 1.0
+    # WP2 criteria (registered before first measured)
+    assert th.g4_label_wrong_max == 0.03 and th.g4_label_correct_min == 0.60
+    assert th.g4_ool_wrong_max == 0.10 and th.g4_rate_wrong_max == 0.03
+    assert th.real_correct_min == 0.50 and th.real_wrong_max == 0.05 and th.real_rate_wrong_max == 0.05
+    assert th.throughput_rtf_max == 1.0
 
 
 @pytest.mark.parametrize("pred,truth,ok", [
