@@ -146,7 +146,7 @@ def test_criterion_passes_only_when_every_applicable_generator_passes():
     from experiments.readiness.scoreboard import _crit, gen_marks
     c = _crit("L1", "x", {"G1": (0.01, True, 10), "G2": (0.2, False, 10), "G3": (None, None, 0)})
     assert not c["passed"]
-    assert gen_marks([c]) == {"G1": True, "G2": False, "G3": None}
+    assert gen_marks([c]) == {"G1": True, "G2": False, "G3": None, "G4": None, "G5": None}
     assert _crit("L1", "x", {"G1": (0.01, True, 10), "G3": (None, None, 0)})["passed"]
     assert not _crit("L1", "x", {"G3": (None, None, 0)})["passed"]
 

@@ -5,7 +5,21 @@ from sigmf import SigMFFile
 
 DTYPES = {"cf32_le": ("<f4", True), "cf32_be": (">f4", True),
           "ci16_le": ("<i2", True), "ci16_be": (">i2", True),
-          "rf32_le": ("<f4", False), "ri16_le": ("<i2", False)}
+          "rf32_le": ("<f4", False), "ri16_le": ("<i2", False),
+          # 8-bit IQ as written by RTL-SDR tools (rtl_sdr, rtl_433 *.cu8) and HackRF (*.cs8)
+          "cu8": ("u1", True), "ci8": ("i1", True)}
+
+
+def normalize(values, dtype):
+    """Integer ADC codes to full-scale floats (float input unchanged): signed /2^(bits-1);
+    unsigned 8-bit is offset binary centred on 127.5, as RTL-SDR writes it."""
+    dtype = np.dtype(dtype)
+    if dtype.kind == "i":
+        return values / float(2 ** (8 * dtype.itemsize - 1))
+    if dtype.kind == "u":
+        half = (2 ** (8 * dtype.itemsize) - 1) / 2
+        return (values - half) / half
+    return values
 
 
 def decode_samples(data, datatype):
@@ -15,11 +29,9 @@ def decode_samples(data, datatype):
     stride = np.dtype(dtype).itemsize * (2 if complex_data else 1)
     if len(data) % stride:
         raise ValueError("Data contains an incomplete sample; check the selected datatype.")
-    x = np.frombuffer(data, dtype=dtype).astype(np.float32)
     # Integer full scale is normalized explicitly; no physical power calibration
     # can be inferred from ADC codes, so outputs are never labeled dBm.
-    if "i2" in dtype:
-        x /= 32768.0
+    x = normalize(np.frombuffer(data, dtype=dtype).astype(np.float32), dtype).astype(np.float32)
     if complex_data:
         x = x[::2] + 1j * x[1::2]
     return x.astype(np.complex64), "iq" if complex_data else "audio"

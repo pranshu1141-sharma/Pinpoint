@@ -8,17 +8,20 @@ Generated from `docs/readiness.json` by `python -m experiments.readiness.scorebo
 
 <!-- readiness:start -->
 ```
-Detect                  ██████░░░░  67%  (2/3 criteria)  [G1 ✗ G2 ✓ G3 –]
-Parameters              ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 –]
-Modulation label        ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
-Symbol rate             ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
-Confidence/abstention   ██████░░░░  67%  (2/3 criteria)  [G1 ✓ G2 ✗ G3 –]
-Speed                   ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✓ G2 ✗ G3 –]
-Real data (G3)          ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
-Automation              ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
-Docs                    ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
+Detect                    ██████░░░░  67%  (2/3 criteria)  [G1 ✗ G2 ✓ G3 – G4 – G5 –]
+Parameters                ██████████  100%  (3/3 criteria)  [G1 ✓ G2 ✓ G3 – G4 – G5 –]
+Modulation label          ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 – G4 – G5 –]
+Symbol rate               ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 – G4 – G5 –]
+Confidence/abstention     ██████░░░░  67%  (2/3 criteria)  [G1 ✓ G2 ✗ G3 – G4 – G5 –]
+Speed                     ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✓ G2 ✗ G3 – G4 – G5 –]
+Impaired synthetic (G4)   ██░░░░░░░░  25%  (1/4 criteria)  [G1 – G2 – G3 – G4 ✗ G5 –]
+Real benchmark (G5)       ███░░░░░░░  33%  (1/3 criteria)  [G1 – G2 – G3 – G4 – G5 ✗]
+Throughput                ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 – G4 – G5 ✓]
+Real data (G3)            ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
+Automation                ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
+Docs                      ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
 --------------------
-Overall                 ████████░░  82%  (14/17 criteria)
+Overall                   ██████░░░░  68%  (17/25 criteria)
 ```
 <!-- readiness:end -->
 

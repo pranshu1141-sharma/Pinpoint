@@ -227,7 +227,7 @@ def criteria(blob=None):
         crit("RC3", f"wrong rate published on <= {TH.real_rate_wrong_max:.0%} of rate-scored G5 test files",
              s["rate_wrong"], le(s["rate_wrong"], TH.real_rate_wrong_max), s["n_rate_scored"]),
         crit("T1", f"batch CLI time / recorded duration <= {TH.throughput_rtf_max:g} (G3 + G5 test folder)",
-             round(s["rtf"], 3), le(s["rtf"], TH.throughput_rtf_max), len(blob["files"])),
+             f"{s['rtf']:.3f}x", le(s["rtf"], TH.throughput_rtf_max), len(blob["files"])),
     ], s
 
 

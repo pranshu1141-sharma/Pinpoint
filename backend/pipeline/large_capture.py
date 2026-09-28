@@ -6,7 +6,7 @@ from time import perf_counter
 import numpy as np
 from scipy.io import wavfile
 from .ingest import Capture, load_capture
-from .sigmf_io import DTYPES
+from .sigmf_io import DTYPES, normalize
 from .detect import analyze_capture, estimate_noise_floor, DetectionResult, db
 from .classify import analyze_candidate
 from .layers import waveform, build_layers
@@ -64,9 +64,11 @@ class DiskSamples:
         if len(raw) != (stop-start)*self.dtype.itemsize*self.channels:
             raise ValueError("Capture ended unexpectedly during analysis.")
         values = np.frombuffer(raw, dtype=self.dtype).reshape(-1, self.channels).astype(np.float32)
-        if self.dtype.kind in "iu":
+        if self.wav and self.dtype.kind in "iu":
             info = np.iinfo(self.dtype)
             values = (values-(128 if self.dtype == np.uint8 else 0))/max(abs(info.min), info.max)
+        elif self.dtype.kind in "iu":      # raw IQ / SigMF: the same scaling as the in-memory loader
+            values = normalize(values, self.dtype).astype(np.float32)
         if self.source == "iq":
             x = values[:, 0]+1j*values[:, 1]
         else:

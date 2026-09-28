@@ -162,3 +162,61 @@ def g2_capture_id(kind, snr_db, carrier_hz, sps, seed, n=G2_N) -> str:
 def g2_captures():
     for s in g2_specs():
         yield g2_capture(**s)
+
+
+# ---------------------------------------------------------------- G4 (WP2): impaired, long captures
+
+from . import impaired
+
+G4_TEST_SEED_BASE = 400_000
+G4_CALIBRATION_SEED_BASE = 500_000        # disjoint from the test seeds; thresholds may only be fit on these
+G4_SEEDS_PER_CELL = 2
+G4_FM_PER_SNR = 8
+G4_NOISE = 16
+
+
+def g4_specs(seed_base: int = G4_TEST_SEED_BASE) -> list[dict]:
+    """Digital families (in-library and held-out) x samples/symbol x SNR x seeds, FM per SNR, noise."""
+    specs, s = [], seed_base
+    for kind in impaired.KINDS_DIGITAL + impaired.KINDS_HELD_OUT:
+        for sps in impaired.SPS:
+            for snr in impaired.SNRS:
+                for _ in range(G4_SEEDS_PER_CELL):
+                    specs.append(dict(kind=kind, sps=sps, snr_db=snr, seed=s))
+                    s += 1
+    for snr in impaired.SNRS:
+        for _ in range(G4_FM_PER_SNR):
+            specs.append(dict(kind="fm", sps=16, snr_db=snr, seed=s))
+            s += 1
+    for _ in range(G4_NOISE):
+        specs.append(dict(kind="noise", sps=16, snr_db=0, seed=s))
+        s += 1
+    return specs
+
+
+def g4_capture_id(kind, sps, snr_db, seed) -> str:
+    return f"G4-{kind}-{sps}-{snr_db}-{seed}"
+
+
+def _smoothed_nrz_bw3(sps: int, fs: float) -> float:
+    p = np.convolve(np.ones(sps), impaired.smoothing_taps(sps, fs))
+    nf = 1 << 18
+    spec = np.abs(np.fft.rfft(p, nf)) ** 2
+    return 2 * int(np.argmax(spec < spec[0] / 2)) * fs / nf
+
+
+def g4_capture(kind: str, sps: int, snr_db: float, seed: int) -> Capture:
+    x, clean, info = impaired.make_capture(kind, snr_db, sps, seed)
+    fs = impaired.FS
+    label = impaired.LABEL[kind]
+    if kind == "noise":
+        truth = _truth("noise", None, None, None, None, None, False)
+    else:
+        rate = fs / sps if kind not in ("fm",) else None
+        linear = kind in impaired.LINEAR
+        bw3 = None
+        if linear:
+            bw3 = rate if info["shaping"].startswith("rrc") else _smoothed_nrz_bw3(sps, fs)
+        truth = _truth(label, float(snr_db), rate, info["fc"], bw3, info["width"], linear)
+    truth["impairments"] = {k: v for k, v in info.items() if k not in ("kind", "fc", "width")}
+    return Capture("G4", g4_capture_id(kind, sps, snr_db, seed), x, fs, clean, truth)
