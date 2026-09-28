@@ -225,21 +225,21 @@
   "file": "dect6",
   "known": "DECT TDMA bursts, GFSK 1.152 Mb/s, 1.728 MHz channel (annotated band -750..+750 kHz)",
   "crashed": false,
-  "sanity_ok": false,
-  "note": "no detection with 99% bandwidth in [500000, 2500000] Hz",
+  "sanity_ok": true,
+  "note": "all checks passed",
   "detections": [
    {
     "id": 0,
     "freq_lower_hz": -1283203.125,
     "freq_upper_hz": 1255859.375,
     "is_pulsed": false,
-    "bandwidth_3db_hz": null,
-    "bandwidth_99pct_hz": null,
-    "snr_db": null,
+    "bandwidth_3db_hz": 168060.78073429473,
+    "bandwidth_99pct_hz": 1306640.625,
+    "snr_db": 17.0757659381115,
     "modulation_label": null,
     "estimate_tier": "abstain",
     "symbol_rate_hz": null,
-    "verify_status": "not reliably estimated (track exceeds the bounded re-analysis limit for large-capture blocks)"
+    "verify_status": "not reliably estimated (a label on 0 of 8 sampled spans, fewer than half)"
    }
   ]
  },
@@ -498,13 +498,13 @@
     "freq_lower_hz": -97382.8125,
     "freq_upper_hz": 89648.4375,
     "is_pulsed": true,
-    "bandwidth_3db_hz": null,
-    "bandwidth_99pct_hz": null,
-    "snr_db": null,
+    "bandwidth_3db_hz": 3911.609793225076,
+    "bandwidth_99pct_hz": 9843.75,
+    "snr_db": 67.67450337784223,
     "modulation_label": null,
     "estimate_tier": "abstain",
     "symbol_rate_hz": null,
-    "verify_status": "not reliably estimated (track exceeds the bounded re-analysis limit for large-capture blocks)"
+    "verify_status": "not reliably estimated (a label on 0 of 8 sampled spans, fewer than half)"
    },
    {
     "id": 1,

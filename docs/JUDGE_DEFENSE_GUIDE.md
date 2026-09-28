@@ -4,7 +4,7 @@ This guide gives concise, technically accurate answers for a demonstration or re
 
 ## Thirty-second project explanation
 
-SIH26147 Detect is an offline RF/audio capture triage system. It validates the recording format, estimates a noise floor, scans time and frequency for energy above that floor, groups evidence into candidate regions, measures pulse timing, and exposes every major intermediate representation for operator review. It accepts captures up to 2 GiB with bounded-memory block processing. It does not claim modulation classification or decoded content in Phase 1.
+SIH26147 Detect is an offline RF/audio capture triage system. It validates the recording format, estimates a noise floor, scans time and frequency for energy above that floor, groups evidence into candidate regions, measures pulse timing, and exposes every major intermediate representation for operator review. It accepts captures up to 2 GiB with bounded-memory block processing. For each IQ candidate it measures centre frequency, bandwidth and SNR, and names the modulation and symbol rate only when a model-comparison margin proves them; otherwise it abstains and flags the candidate for review. It does not decode content.
 
 ## What to demonstrate
 
@@ -34,6 +34,10 @@ No. They are dB relative to one sample-unit squared per hertz. The capture does 
 ### Are candidate frequencies absolute RF frequencies?
 
 They are baseband offsets. If SigMF supplies a center frequency, the app retains it separately. An operator can derive an RF estimate from acquisition context, but the detector does not silently change the coordinate system.
+
+### Does it identify modulation?
+
+Yes, when it can prove it, and it says so when it cannot. The verify estimator rebuilds the candidate under competing hypotheses (BPSK, QPSK, 8PSK, 16-QAM, 2-ASK, 2-FSK, 4-FSK, AM, FM, noise) and publishes a label and symbol rate only when the winner's margin over every rival, in nats, passes a threshold fit on calibration data that never overlaps the test data. Otherwise the output is *unknown family* (structure outside the library) or *not reliably estimated*. The measured rates of correct and wrong labels, on synthetic generators and real recordings, are in [CLAIMS.md](CLAIMS.md) with their conditions; quote those, not a general accuracy. Margins are not probabilities.
 
 ### Does the system decode audio from IQ?
 
@@ -81,7 +85,7 @@ The analysis completes successfully with an empty list. It means no region passe
 
 ### What prevents false precision?
 
-The UI displays baseband units, review flags, the exact detector method, threshold/noise summaries, measured resolution, and explicit limitations. It avoids dBm, probability, classification, and decoded-content claims without the required evidence.
+The UI displays baseband units, review flags, the exact detector method, threshold/noise summaries, measured resolution, and explicit limitations. It avoids dBm, probability and decoded-content claims, and publishes a modulation label only beside a passing margin.
 
 ## Evidence files to keep ready
 
@@ -96,7 +100,8 @@ The UI displays baseband units, review flags, the exact detector method, thresho
 
 ## Claims to avoid
 
-- “It identifies BPSK/QPSK/FM.” The detector sees energy; fixture names belong to ground truth.
+- “It always identifies the modulation.” It publishes a label only when the margin passes, and abstains on many real candidates; quote the measured coverage in [CLAIMS.md](CLAIMS.md).
+- “Its label accuracy is X%” without conditions. Every number holds only for the generator or recordings it was measured on.
 - “Confidence is 90% probability.” The score is not calibrated.
 - “The power is dBm.” It is uncalibrated sample-unit PSD.
 - “It decodes IQ to sound.” It does not demodulate.

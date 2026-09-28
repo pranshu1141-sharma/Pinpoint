@@ -1,7 +1,7 @@
 {
  "meta": {
-  "commit": "2eb056e",
-  "date": "2026-09-27",
+  "commit": "da84d09",
+  "date": "2026-09-28",
   "thresholds": {
    "min_snr_db": 5.0,
    "detect_recall_min": 0.95,
@@ -40,7 +40,7 @@
   ]
  },
  "product": "verify",
- "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2713 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nModulation label        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSymbol rate             \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nSpeed                   \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nReal data (G3)          \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2717]\nAutomation              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nDocs                    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\n--------------------\nOverall                 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591  76%  (13/17 criteria)\n```",
+ "bars": "```\nDetect                  \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2713 G3 \u2013]\nParameters              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nModulation label        \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nSymbol rate             \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013]\nConfidence/abstention   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nSpeed                   \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013]\nReal data (G3)          \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nAutomation              \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\nDocs                    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713]\n--------------------\nOverall                 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591  82%  (14/17 criteria)\n```",
  "phases": [
   {
    "name": "Detect",
@@ -314,7 +314,7 @@
        "n": 63
       },
       "G2": {
-       "value": 0.8875502008032129,
+       "value": 0.9036144578313253,
        "passed": false,
        "n": 249
       }
@@ -324,17 +324,17 @@
   },
   {
    "name": "Real data (G3)",
-   "passed": 0,
+   "passed": 1,
    "total": 1,
    "criteria": [
     {
      "id": "RD1",
      "desc": ">= 5 public recordings end to end, no crash, sanity check on each",
-     "passed": false,
+     "passed": true,
      "gens": {
       "G3": {
-       "value": "5/6 sane",
-       "passed": false,
+       "value": "6/6 sane",
+       "passed": true,
        "n": 6
       }
      },
@@ -360,8 +360,8 @@
       {
        "file": "dect6",
        "crashed": false,
-       "sanity_ok": false,
-       "note": "no detection with 99% bandwidth in [500000, 2500000] Hz"
+       "sanity_ok": true,
+       "note": "all checks passed"
       },
       {
        "file": "iridium_cf32",
@@ -616,9 +616,9 @@
     "speed": {
      "n": 254,
      "within": 1.0,
-     "p50_s": 0.006124770501628518,
-     "p95_s": 0.012472035201790277,
-     "max_s": 0.016359125002054498
+     "p50_s": 0.00566404199344106,
+     "p95_s": 0.011423443867533932,
+     "max_s": 0.015682792000006884
     },
     "detect": {
      "n_strong": 125,
@@ -665,9 +665,9 @@
     "speed": {
      "n": 996,
      "within": 1.0,
-     "p50_s": 0.029300208007043693,
-     "p95_s": 0.0425241872544575,
-     "max_s": 0.05331899999873713
+     "p50_s": 0.027084874993306585,
+     "p95_s": 0.039424405731551815,
+     "max_s": 0.05471879200194962
     },
     "detect": {
      "n_strong": 996,
@@ -716,9 +716,9 @@
     "speed": {
      "n": 63,
      "within": 1.0,
-     "p50_s": 0.30986737499188166,
-     "p95_s": 0.4644662542006699,
-     "max_s": 0.47644054199918173,
+     "p50_s": 0.3054711669974495,
+     "p95_s": 0.4561004631017567,
+     "max_s": 0.4709731670154724,
      "measured": "sequential, every 4th capture"
     },
     "detect": {
@@ -765,10 +765,10 @@
     },
     "speed": {
      "n": 249,
-     "within": 0.8875502008032129,
-     "p50_s": 0.3502380839927355,
-     "p95_s": 0.5386108252045233,
-     "max_s": 0.6176558330043918,
+     "within": 0.9036144578313253,
+     "p50_s": 0.3456878339929972,
+     "p95_s": 0.5313160499965306,
+     "max_s": 0.6067781659949105,
      "measured": "sequential, every 4th capture"
     },
     "detect": {

@@ -208,6 +208,30 @@ def test_docs_check_flags_stale_status_prose_and_a_wrong_window_cap(tmp_path):
     assert any("8,192" in p and "4,096" in p for p in problems)
 
 
+def test_docs_check_covers_the_docs_index_and_judge_guide(tmp_path):
+    """X1 (WP1): docs/README.md and JUDGE_DEFENSE_GUIDE.md may not deny that the product names
+    modulation, and no checked doc may say long tracks stay null once sampled spans exist."""
+    from experiments.readiness import docs_check
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "backend/pipeline").mkdir(parents=True)
+    (tmp_path / "backend/pipeline/verify_estimator.py").write_text("")
+    (tmp_path / "backend/pipeline/large_capture.py").write_text("")
+    (tmp_path / "docs/CLAIMS.md").write_text("x\n")
+    (tmp_path / "docs/PROJECT_STATUS.md").write_text("<!-- readiness:start -->\n```\n```\n<!-- readiness:end -->\n")
+    (tmp_path / "docs/README.md").write_text("Non-purpose: this version does not identify modulation.\n")
+    (tmp_path / "docs/JUDGE_DEFENSE_GUIDE.md").write_text(
+        "## Claims to avoid\n- \u201cIt identifies BPSK/QPSK/FM.\u201d\n")
+    (tmp_path / "docs/LIMITATIONS_AND_ROADMAP.md").write_text("Long tracks keep unresolved downstream fields.\n")
+    ok, problems = docs_check.check({"bars": "```\n```"}, tmp_path)
+    assert any("docs/README.md" in p and "does not identify modulation" in p for p in problems)
+    assert any("JUDGE_DEFENSE_GUIDE" in p and "it identifies bpsk/qpsk/fm" in p for p in problems)
+    # the long-track phrase is only false once sampled spans exist in the code
+    assert not any("unresolved downstream" in p for p in problems)
+    (tmp_path / "backend/pipeline/large_capture.py").write_text("def sampled_spans(track, budget):\n")
+    ok, problems = docs_check.check({"bars": "```\n```"}, tmp_path)
+    assert any("LIMITATIONS" in p and "keep unresolved downstream fields" in p for p in problems)
+
+
 def test_fm_label_share_is_reported():
     from experiments.readiness import metrics
     rows = [_row("FM", "FM"), _row("FM", None), _row("FM", "BPSK"), _row("BPSK", "BPSK", 1e3)]

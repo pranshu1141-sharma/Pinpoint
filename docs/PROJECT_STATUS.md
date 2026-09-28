@@ -14,11 +14,11 @@ Modulation label        ██████████  100%  (2/2 criteria)  [G
 Symbol rate             ██████████  100%  (2/2 criteria)  [G1 ✓ G2 ✓ G3 –]
 Confidence/abstention   ██████░░░░  67%  (2/3 criteria)  [G1 ✓ G2 ✗ G3 –]
 Speed                   ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✓ G2 ✗ G3 –]
-Real data (G3)          ░░░░░░░░░░   0%  (0/1 criteria)  [G1 – G2 – G3 ✗]
+Real data (G3)          ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 Automation              ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 Docs                    ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓]
 --------------------
-Overall                 ███████░░░  76%  (13/17 criteria)
+Overall                 ████████░░  82%  (14/17 criteria)
 ```
 <!-- readiness:end -->
 
@@ -29,7 +29,7 @@ Overall                 ███████░░░  76%  (13/17 criteria)
 | Hard constraints | Complete | Real API data, qualified stage claims, explicit ambiguous-input handling, Tier 2 roadmap placeholders. |
 | Tier 0 backend | Complete | All six required capabilities are implemented and tested. |
 | Tier 1 backend | Partial | Confidence/review and a second, independent statistical non-Gaussianity evidence channel are built; coarse-to-fine scanning is not built. |
-| Downstream IQ analysis | Integrated; label and symbol rate from the verify estimator (default), validated on synthetic generators G1/G2 only | Parameters (centre frequency, −3 dB/99% bandwidth, SNR) plus modulation label and symbol rate from the propose → verify estimator, gated by margins fit on a cross-generator calibration split, in synchronous uploads, demos, the async large-capture path, JSON export and dashboard detail. Measured numbers and their conditions are in [CLAIMS.md](CLAIMS.md); the legacy fixture-validated heuristics remain under `estimator=legacy`. A large-capture track longer than 2,000,000 samples gets explicit unresolved fields rather than partial results. |
+| Downstream IQ analysis | Integrated; label and symbol rate from the verify estimator (default), validated on synthetic generators G1/G2 only | Parameters (centre frequency, −3 dB/99% bandwidth, SNR) plus modulation label and symbol rate from the propose → verify estimator, gated by margins fit on a cross-generator calibration split, in synchronous uploads, demos, the async large-capture path, JSON export and dashboard detail. Measured numbers and their conditions are in [CLAIMS.md](CLAIMS.md); the legacy fixture-validated heuristics remain under `estimator=legacy`. A large-capture track longer than 2,000,000 samples is estimated from 8 deterministic sampled spans, listed in `analysis_spans`. |
 | Tier 2 | Correctly excluded | All six prohibited features remain nonfunctional roadmap items. |
 | Synthetic data | Complete | BPSK, QPSK, FM at four SNRs, pulses, noise, mixed demo, separate truth files. |
 | FastAPI layer | Complete | All three required endpoints exist; supporting job, audio, export, demo, envelope, and health endpoints were added. |

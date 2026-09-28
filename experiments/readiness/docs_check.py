@@ -4,17 +4,21 @@ Rules:
   1. docs/CLAIMS.md exists, and every `<!--rj:dotted.path-->` marker in it is followed by
      the value found at that path in readiness.json (formatted by `fmt`).
   2. docs/PROJECT_STATUS.md embeds the current bars block verbatim.
-  3. README.md, PROJECT_STATUS.md and CLAIMS.md contain none of the contradiction phrases
-     below while the contradicting code exists, and no unconditional fixture claims.
+  3. The DOCS files (README.md, docs/README.md, PROJECT_STATUS.md, CLAIMS.md, LIMITATIONS_AND_ROADMAP.md,
+     JUDGE_DEFENSE_GUIDE.md) contain none of the contradiction phrases below while the contradicting
+     code exists, and no unconditional fixture claims.
 """
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DOCS = ("README.md", "docs/PROJECT_STATUS.md", "docs/CLAIMS.md", "docs/LIMITATIONS_AND_ROADMAP.md")
+DOCS = ("README.md", "docs/README.md", "docs/PROJECT_STATUS.md", "docs/CLAIMS.md", "docs/LIMITATIONS_AND_ROADMAP.md",
+        "docs/JUDGE_DEFENSE_GUIDE.md")
 MARKER = re.compile(r"<!--rj:([\w.\-]+)-->[ ]?([^\s|<]+)")
 
-# phrase (lower-case) -> file whose existence makes the phrase false
+# phrase (lower-case) -> code whose existence makes the phrase false: a file, or "file::text" when the
+# phrase is only false once that text appears in the file
+_SAMPLED = "backend/pipeline/large_capture.py::def sampled_spans"
 CONTRADICTIONS = {
     "does not classify modulation": "backend/pipeline/classify.py",
     "no demodulation or decoding exists": "backend/pipeline/decode.py",
@@ -23,7 +27,22 @@ CONTRADICTIONS = {
     "methodology under test": "backend/pipeline/verify_estimator.py",
     "is under test in `backend/experimental": "backend/pipeline/verify_estimator.py",
     "is not imported by detect": "backend/pipeline/verify_estimator.py",
+    # the product names modulation (verify estimator): a doc may not deny it, or list it as a claim to avoid
+    "does not identify modulation": "backend/pipeline/verify_estimator.py",
+    "does not claim modulation classification": "backend/pipeline/verify_estimator.py",
+    "it identifies bpsk/qpsk/fm": "backend/pipeline/verify_estimator.py",
+    "not wired into the product": "backend/pipeline/verify_estimator.py",
+    # long large-capture tracks are estimated from sampled spans (WP1), not left null
+    "explicitly null with an unresolved status": _SAMPLED,
+    "keep unresolved downstream fields": _SAMPLED,
+    "explicit unresolved fields rather than partial results": _SAMPLED,
 }
+
+
+def _exists(root, code):
+    path, _, text = code.partition("::")
+    p = root / path
+    return p.exists() and (not text or text in p.read_text())
 MARKED = ("docs/CLAIMS.md", "docs/LIMITATIONS_AND_ROADMAP.md")   # files whose rj markers are synced
 WINDOW_CLAIM = re.compile(r"caps the window at ([\d,]+) samples")
 # claims that must carry their fixture conditions on the same line
@@ -83,7 +102,7 @@ def check(readiness: dict, root: Path = ROOT):
         text = p.read_text()
         low = text.lower()
         for phrase, code in CONTRADICTIONS.items():
-            if phrase in low and (root / code).exists():
+            if phrase in low and _exists(root, code):
                 problems.append(f"{rel}: says '{phrase}' but {code} exists")
         cap = _max_samples(root)
         for claimed in WINDOW_CLAIM.findall(text):
