@@ -4,17 +4,22 @@ An offline RF capture detector and dashboard for the Smart India Hackathon NTRO 
 
 ## Screenshots
 
-The dashboard runs the bundled IQ capture through the real Detect pipeline and exposes the resulting candidates, waterfall, PSD, confidence and signal breakdown in one workspace.
+The dashboard runs the bundled IQ capture through the real Detect pipeline and keeps the complete investigation workflow in one offline workspace.
 
 <p align="center">
-  <img src="docs/screenshots/pinpoint-detection-waterfall.png" alt="PinPoint Detect output showing three candidate signal regions across time and frequency" width="100%">
+  <img src="docs/screenshots/pinpoint-welcome-dashboard.png" alt="PinPoint dashboard welcome screen with IQ and audio demo actions" width="100%">
 </p>
-<p align="center"><em>Measured Detect output from the bundled demo capture: three candidate signal regions with pulse windows.</em></p>
+<p align="center"><em>Capture intake: open IQ, WAV or SigMF data, or launch a bundled demo.</em></p>
 
 <p align="center">
-  <img src="docs/screenshots/pulse-detection-mark.png" alt="PinPoint pulse detection marker" width="260">
+  <img src="docs/screenshots/pinpoint-analysis-dashboard.png" alt="PinPoint dashboard showing PSD, waterfall, detections and signal breakdown" width="100%">
 </p>
-<p align="center"><em>Pulse timing is surfaced as a first-class analysis result for pulsed candidates.</em></p>
+<p align="center"><em>Detect workspace: PSD, adaptive threshold, waterfall, candidate list, confidence and signal breakdown.</em></p>
+
+<p align="center">
+  <img src="docs/screenshots/pinpoint-settings-dashboard.png" alt="PinPoint dashboard detector settings above an analyzed capture" width="100%">
+</p>
+<p align="center"><em>Detector controls: tune adaptive margin and switch between adaptive and fixed-debug analysis.</em></p>
 
 ## Modulation label and symbol rate (verify estimator, default)
 
