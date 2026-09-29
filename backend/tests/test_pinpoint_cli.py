@@ -95,3 +95,29 @@ def test_jobs_4_json_output_matches_jobs_1(inputs):
     lines1 = sorted(r1.stdout.splitlines())
     lines4 = sorted(r4.stdout.splitlines())
     assert lines1 == lines4
+
+
+def test_summary_prints_needs_review_first_and_totals(inputs, tmp_path):
+    out = tmp_path / "out"
+    assert _run_new("analyze", inputs, "--out", out).returncode == 0
+    r = _run_new("summary", out)
+    assert r.returncode == 0, r.stderr
+    lines = [l for l in r.stdout.splitlines() if l.strip()]
+    header_idx = next(i for i, l in enumerate(lines) if l.startswith("needs_review"))
+    body = lines[header_idx + 2:]                 # skip header + separator row
+    true_seen_false = False
+    for line in body:
+        if not line.startswith("true") and not line.startswith("false"):
+            break                                  # totals line
+        if line.startswith("false"):
+            true_seen_false = True
+        elif true_seen_false:
+            pytest.fail(f"a 'true' row appeared after a 'false' row: {line}")
+    totals = lines[-1]
+    assert totals.startswith("files=") and "detections=" in totals and "labelled=" in totals
+    assert "abstained=" in totals and "errors=" in totals
+
+
+def test_summary_missing_out_dir_is_a_usage_error(tmp_path):
+    r = _run_new("summary", tmp_path / "does-not-exist")
+    assert r.returncode == 1

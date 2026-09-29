@@ -47,6 +47,27 @@ def _write_outputs(name, blob, out_dir):
     (out_dir / f"{stem}.sigmf-meta").write_text(json.dumps(sigmf, indent=1, sort_keys=True) + "\n")
 
 
+def cmd_summary(args):
+    csv_path = args.out_dir / "summary.csv"
+    if not csv_path.exists():
+        print(f"{csv_path} does not exist", file=sys.stderr)
+        return 1
+    rows = list(csv.DictReader(csv_path.open()))
+    rows.sort(key=lambda r: (r["needs_review"] != "true", r["file"], r["detection_id"]))
+    cols = ["needs_review", "file", "detection_id", "label", "tier", "snr_db", "status", "error"]
+    widths = {c: max([len(c)] + [len(r[c]) for r in rows]) for c in cols}
+    print("  ".join(c.ljust(widths[c]) for c in cols))
+    print("  ".join("-" * widths[c] for c in cols))
+    for r in rows:
+        print("  ".join(r[c].ljust(widths[c]) for c in cols))
+    files = {r["file"] for r in rows}
+    labelled = sum(1 for r in rows if r["label"])
+    errors = sum(1 for r in rows if r["error"])
+    abstained = sum(1 for r in rows if not r["label"] and not r["error"])
+    print(f"files={len(files)} detections={len(rows)} labelled={labelled} abstained={abstained} errors={errors}")
+    return 0
+
+
 def cmd_analyze(args):
     try:
         inputs = find_inputs(args.target)
@@ -104,12 +125,16 @@ def build_parser():
     an.add_argument("--jobs", type=int, default=1)
     _add_shared_analyze_args(an)
     an.set_defaults(func=cmd_analyze)
+
+    su = sub.add_parser("summary", help="print a terminal table from an --out folder's summary.csv")
+    su.add_argument("out_dir", type=Path)
+    su.set_defaults(func=cmd_summary)
     return ap
 
 
 def run(argv=None):
     args = build_parser().parse_args(argv)
-    if args.jobs < 1:
+    if hasattr(args, 'jobs') and args.jobs < 1:
         print("--jobs must be >= 1", file=sys.stderr)
         return 1
     return args.func(args)
