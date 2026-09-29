@@ -405,3 +405,16 @@ def test_ablation_summary_reports_how_often_detect_bounds_are_too_wide():
             row(10e3, [[0.0, 4e3]])]             # 0.4x: too narrow
     s = ablation.summarize(rows)
     assert s["too_wide"] == pytest.approx(1 / 4) and s["too_narrow"] == pytest.approx(1 / 4)
+
+
+def test_ablation_summary_separates_bad_bounds_from_bad_estimates():
+    from experiments.readiness import ablation
+
+    def row(width, label):
+        return dict(truth=dict(label="QPSK", in_library=True, band=[0.0, 10e3]),
+                    out=dict(label=label, tier="labelled" if label else "abstain"),
+                    detect=dict(hit=True, n_overlap=1, bands=[[0.0, width]]))
+    rows = [row(11e3, "QPSK"), row(11e3, None), row(12e3, None), row(40e3, "QPSK")]   # 3 good bounds (1 correct), 1 too wide
+    s = ablation.summarize(rows)
+    assert s["correct_given_ok_bounds"] == pytest.approx(1 / 3) and s["ok_bounds"] == pytest.approx(3 / 4)
+    assert ablation.compact(rows[0]) == dict(truth="QPSK", label="QPSK", tier="labelled", width_ratio=1.1, n_overlap=1)
