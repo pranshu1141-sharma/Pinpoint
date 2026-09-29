@@ -6,7 +6,7 @@ from time import perf_counter
 import numpy as np
 from scipy.io import wavfile
 from .ingest import Capture, load_capture
-from .sigmf_io import DTYPES
+from .sigmf_io import DTYPES, normalize
 from .detect import analyze_capture, estimate_noise_floor, DetectionResult, db
 from .classify import analyze_candidate
 from .layers import waveform, build_layers
@@ -64,9 +64,11 @@ class DiskSamples:
         if len(raw) != (stop-start)*self.dtype.itemsize*self.channels:
             raise ValueError("Capture ended unexpectedly during analysis.")
         values = np.frombuffer(raw, dtype=self.dtype).reshape(-1, self.channels).astype(np.float32)
-        if self.dtype.kind in "iu":
+        if self.wav and self.dtype.kind in "iu":
             info = np.iinfo(self.dtype)
             values = (values-(128 if self.dtype == np.uint8 else 0))/max(abs(info.min), info.max)
+        elif self.dtype.kind in "iu":      # raw IQ / SigMF: the same scaling as the in-memory loader
+            values = normalize(values, self.dtype).astype(np.float32)
         if self.source == "iq":
             x = values[:, 0]+1j*values[:, 1]
         else:
@@ -114,13 +116,6 @@ def open_disk_capture(path, filename, sample_rate=None, datatype=None, metadata=
     return c
 
 
-# A track longer than max_read_samples(capture.sample_rate) has no way to
-# become one contiguous in-memory buffer through a single bounded re-read, so
-# downstream enrichment is skipped for it rather than attempted on a
-# partial/reassembled buffer. enrich_track (below) calls max_read_samples()
-# itself with the capture's own sample rate, so this can never silently drift
-# from DiskSamples' read limit.
-
 # Every field estimate_candidate/classify_* ever add, so a track that skips
 # enrichment still has the exact same key set as one that didn't -- API
 # consumers never have to branch on whether a field is merely absent.
@@ -144,6 +139,117 @@ _NULL_DOWNSTREAM_FIELDS = {
     "verify_segment": None, "verify_elapsed_ms": None, "verify_thresholds": None,
     "verify_model_snr_db": None, "snr_method": None, "verify_carrier_hz": None,
 }
+_FAILED_STATUS = "not reliably estimated (the bounded re-read could not be analysed)"
+
+
+def _null_fields(status):
+    """The null downstream record with every status field set to `status`."""
+    return {k: (status if k.endswith("_status") else v) for k, v in _NULL_DOWNSTREAM_FIELDS.items()}
+
+
+# A track longer than one bounded re-read (max_read_samples(capture.sample_rate),
+# the same limit DiskSamples enforces) cannot become one contiguous in-memory
+# buffer. It is estimated from SAMPLED_SPANS deterministic spans across it, each
+# max_read_samples/SAMPLED_SPANS long, so the total read stays within one bounded
+# read's memory budget: one span per selected pulse window for a pulsed track,
+# evenly spaced otherwise. Each span is genuine contiguous IQ analysed on its own;
+# nothing is concatenated. Parameters are the median over spans; a label is
+# published only when at least half the spans publish it and no span publishes a
+# different one. `analysis_spans` records every span used.
+SAMPLED_SPANS = 8
+# Numeric parameters combined across spans (median of the spans that measured them).
+_MEDIAN_FIELDS = ("center_frequency_hz", "bandwidth_3db_hz", "bandwidth_99pct_hz", "snr_db")
+
+
+def sampled_spans(track, budget, count=SAMPLED_SPANS):
+    """Deterministic [start, end) spans (global samples) inside a track longer than `budget`.
+
+    Pulsed tracks: `count` pulse windows picked evenly by index, one span starting at each
+    (so the burst is inside it). Continuous tracks: `count` spans evenly spaced from the
+    track's start to its end. Every span is budget // count samples long."""
+    start, end = track["start_sample"], track["end_sample"]
+    length = min(end-start, budget//count)
+    windows = track.get("pulse_windows") or []
+    if track.get("is_pulsed") and windows:
+        picks = sorted({round(i*(len(windows)-1)/max(count-1, 1)) for i in range(count)})
+        anchors = [min(max(start, windows[i]["start_sample"]), end-length) for i in picks]
+    else:
+        anchors = [start+round(i*(end-start-length)/max(count-1, 1)) for i in range(count)]
+    return [(a, a+length) for a in sorted(set(anchors))]
+
+
+def _enrich_span(capture, track, a, b, estimator):
+    """Downstream fields for the re-read samples [a, b) of `track` (raises ValueError when
+    the span cannot be analysed)."""
+    local_iq = capture.iq[a:b]
+    local_capture = Capture(local_iq, capture.sample_rate, capture.metadata)
+    span = b-a
+    whole = (a, b) == (track["start_sample"], track["end_sample"])
+    # Clamped at both ends of both fields, not just the expected side: current
+    # merge logic never produces a window straddling a track's own bounds, but
+    # if that ever changed, an unclamped window could translate to start>=end
+    # here, and occupied_windows' bounds check would then reject the *whole*
+    # track's enrichment over one bad window rather than just that window.
+    # A sampled span drops the pulse windows that fall outside it.
+    windows = [{"start_sample": max(0, min(span, w["start_sample"]-a)),
+                "end_sample": max(0, min(span, w["end_sample"]-a))} for w in track["pulse_windows"]]
+    if not whole:
+        windows = [w for w in windows if w["end_sample"] > w["start_sample"]]
+        if track.get("is_pulsed") and not windows:
+            raise ValueError("no pulse window inside the sampled span")
+    local_track = {**track, "start_sample": 0, "end_sample": span, "pulse_windows": windows}
+    _, _, floor = estimate_noise_floor(local_iq, capture.sample_rate)
+    enriched = analyze_candidate(local_capture, local_track, noise_floor=floor, estimator=estimator)
+    # Only genuinely new (downstream) fields are merged back; track's own
+    # Detect-stage fields (global sample coordinates, confidence, etc.) must
+    # survive untouched, not the local re-read's 0-based translated copies.
+    new_fields = {k: v for k, v in enriched.items() if k not in track}
+    # If a future Estimate/Classify field ever reused a Detect-stage key name,
+    # the filter above would silently drop it instead of merging it in -- this
+    # would fail loudly here (in tests) rather than silently losing a field.
+    assert new_fields.keys() == _NULL_DOWNSTREAM_FIELDS.keys(), (
+        f"analyze_candidate's field set changed: {new_fields.keys() ^ _NULL_DOWNSTREAM_FIELDS.keys()}")
+    return new_fields
+
+
+def _combine_spans(results):
+    """One downstream record from per-span results [(start, end, fields or None)], or None.
+
+    Parameters: median over the spans that measured them. Label: published only when at
+    least half of all spans publish it and no span publishes a different label; the rate is
+    then the median of the agreeing spans' rates, if every one of them published a rate
+    within 5% of that median. Every other field comes from one representative span (the
+    agreeing span nearest the middle, else the analysed span nearest the middle), so each
+    is a genuine single-span value."""
+    done = [f for _, _, f in results if f is not None]
+    if not done:
+        return None
+    labels = [f["modulation_label"] for f in done if f["modulation_label"] is not None]
+    agreed = labels[0] if labels and len(set(labels)) == 1 and 2*len(labels) >= len(results) else None
+    mid = (len(done)-1)/2
+    order = sorted(range(len(done)), key=lambda i: (abs(i-mid), i))
+    rep = next(i for i in order if agreed is None or done[i]["modulation_label"] == agreed)
+    out = dict(done[rep])
+    for key in _MEDIAN_FIELDS:
+        vals = [f[key] for f in done if f.get(key) is not None]
+        out[key] = float(np.median(vals)) if vals else None
+    if agreed is None:
+        why = (f"sampled spans disagree: {', '.join(sorted(set(labels)))}" if len(set(labels)) > 1 else
+               f"a label on {len(labels)} of {len(results)} sampled spans, fewer than half")
+        status = f"not reliably estimated ({why})"
+        out.update(modulation_label=None, symbol_rate_hz=None, estimate_tier="abstain", label_needs_review=True,
+                   verify_family=None, verify_status=status, symbol_rate_status=status, verify_carrier_hz=None,
+                   verify_model_snr_db=None)
+        if out.get("refinement_status", "").startswith("refined (verify"):
+            out.update(center_frequency_refined_hz=None,
+                       refinement_status="not refined (verify: no label agreed across sampled spans)")
+    else:
+        rates = [f["symbol_rate_hz"] for f in done if f["modulation_label"] == agreed]
+        rate = float(np.median(rates)) if all(r is not None for r in rates) else None
+        if rate is not None and any(abs(r-rate) > 0.05*rate for r in rates):
+            rate = None
+        out["symbol_rate_hz"] = rate
+    return out
 
 
 def enrich_track(capture, track, estimator="verify"):
@@ -156,38 +262,41 @@ def enrich_track(capture, track, estimator="verify"):
     bounded slice -- the underlying file is genuinely contiguous, so this is
     real phase-continuous IQ, not a reconstruction. The existing, unmodified
     analyze_candidate then runs on it exactly as the synchronous upload path
-    already does. Tracks longer than DiskSamples' own bounded-read limit are
-    an explicit unresolved status, never a partial or reassembled result.
+    already does. A track longer than DiskSamples' own bounded-read limit is
+    estimated from sampled spans (see SAMPLED_SPANS above), never from a
+    reassembled buffer. `analysis_spans` lists the samples each result used.
     """
     span = track["end_sample"]-track["start_sample"]
-    if not (1 <= span <= max_read_samples(capture.sample_rate)):
-        return {**track, **_NULL_DOWNSTREAM_FIELDS}
-    local_iq = capture.iq[track["start_sample"]:track["end_sample"]]
-    local_capture = Capture(local_iq, capture.sample_rate, capture.metadata)
-    # Clamped at both ends of both fields, not just the expected side: current
-    # merge logic never produces a window straddling a track's own bounds, but
-    # if that ever changed, an unclamped window could translate to start>=end
-    # here, and occupied_windows' bounds check would then reject the *whole*
-    # track's enrichment over one bad window rather than just that window.
-    local_track = {**track, "start_sample": 0, "end_sample": span,
-                   "pulse_windows": [{"start_sample": max(0, min(span, w["start_sample"]-track["start_sample"])),
-                                      "end_sample": max(0, min(span, w["end_sample"]-track["start_sample"]))}
-                                     for w in track["pulse_windows"]]}
-    try:
-        _, _, floor = estimate_noise_floor(local_iq, capture.sample_rate)
-        enriched = analyze_candidate(local_capture, local_track, noise_floor=floor, estimator=estimator)
-    except ValueError:
-        return {**track, **_NULL_DOWNSTREAM_FIELDS}
-    # Only genuinely new (downstream) fields are merged back; track's own
-    # Detect-stage fields (global sample coordinates, confidence, etc.) must
-    # survive untouched, not the local re-read's 0-based translated copies.
-    new_fields = {k: v for k, v in enriched.items() if k not in track}
-    # If a future Estimate/Classify field ever reused a Detect-stage key name,
-    # the filter above would silently drop it instead of merging it in -- this
-    # would fail loudly here (in tests) rather than silently losing a field.
-    assert new_fields.keys() == _NULL_DOWNSTREAM_FIELDS.keys(), (
-        f"analyze_candidate's field set changed: {new_fields.keys() ^ _NULL_DOWNSTREAM_FIELDS.keys()}")
-    return {**track, **new_fields}
+    budget = max_read_samples(capture.sample_rate)
+    if span < 1 or track["end_sample"] > len(capture.iq):     # never read past the file's own length
+        return {**track, **_null_fields(_FAILED_STATUS), "analysis_spans": [], "analysis_span_method": None}
+    if span <= budget:
+        try:
+            new_fields = _enrich_span(capture, track, track["start_sample"], track["end_sample"], estimator)
+        except ValueError:
+            return {**track, **_null_fields(_FAILED_STATUS), "analysis_spans": [], "analysis_span_method": None}
+        spans = [{"start_sample": track["start_sample"], "end_sample": track["end_sample"],
+                  "modulation_label": new_fields["modulation_label"], "estimate_tier": new_fields["estimate_tier"],
+                  "symbol_rate_hz": new_fields["symbol_rate_hz"]}]
+        return {**track, **new_fields, "analysis_spans": spans,
+                "analysis_span_method": "whole track (one bounded re-read)"}
+    results = []
+    for a, b in sampled_spans(track, budget):
+        try:
+            results.append((a, b, _enrich_span(capture, track, a, b, estimator)))
+        except ValueError:
+            results.append((a, b, None))
+    spans = [{"start_sample": a, "end_sample": b,
+              "modulation_label": None if f is None else f["modulation_label"],
+              "estimate_tier": None if f is None else f["estimate_tier"],
+              "symbol_rate_hz": None if f is None else f["symbol_rate_hz"]} for a, b, f in results]
+    kind = "one per selected pulse window" if track.get("is_pulsed") and track.get("pulse_windows") else "evenly spaced"
+    method = (f"sampled: {len(results)} spans of {results[0][1]-results[0][0]:,} samples ({kind}); "
+              f"the {span:,}-sample track exceeds the {budget:,}-sample bounded re-read")
+    combined = _combine_spans(results)
+    if combined is None:
+        return {**track, **_NULL_DOWNSTREAM_FIELDS, "analysis_spans": spans, "analysis_span_method": method}
+    return {**track, **combined, "analysis_spans": spans, "analysis_span_method": method}
 
 
 class AnalysisCancelled(Exception):

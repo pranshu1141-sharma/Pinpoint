@@ -29,3 +29,6 @@ artifacts/readiness/rows_*.json
 artifacts/readiness/calibration_rows.json
 artifacts/readiness/speed_*.json
 artifacts/readiness/real/
+artifacts/readiness/g5/
+artifacts/readiness/batch_folder/
+artifacts/readiness/batch_out/

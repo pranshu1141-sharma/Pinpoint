@@ -1,7 +1,8 @@
 """Offline batch analysis: python -m backend.cli analyze <file-or-folder> --out <dir>.
 
-For every capture (a .sigmf-data with its .sigmf-meta, a .wav, or a raw .iq with
---sample-rate and --datatype) it writes <stem>.json (detections with parameters,
+For every capture (a .sigmf-data with its .sigmf-meta, a .wav, a raw .iq with
+--sample-rate and --datatype, or a raw .cu8/.cs8/.cs16, whose datatype is its suffix and whose
+rate and centre come from an rtl_433-style name such as g001_433.92M_250k.cu8) it writes <stem>.json (detections with parameters,
 label, rate, tier and review flags) and <stem>.sigmf-meta (annotations), plus one
 summary.csv for the batch, with rows needing review first. It uses the same
 pipeline as the API (captures above 1 MiB take the disk-backed large-capture
@@ -24,7 +25,7 @@ from backend.pipeline.large_capture import analyze_disk_capture, open_disk_captu
 from backend.pipeline.sigmf_io import export_metadata
 
 LARGE_FILE_BYTES = 1024 * 1024
-SUFFIXES = (".sigmf-data", ".wav", ".iq")
+SUFFIXES = (".sigmf-data", ".wav", ".iq", ".cu8", ".cs8", ".cs16")
 TIMING_KEYS = ("elapsed_ms", "verify_elapsed_ms")
 SUMMARY_FIELDS = ("needs_review", "file", "detection_id", "label", "tier", "symbol_rate_hz",
                   "center_frequency_hz", "bandwidth_3db_hz", "snr_db", "freq_lower_hz", "freq_upper_hz",

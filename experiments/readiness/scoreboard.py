@@ -20,7 +20,7 @@ from .render import render_bar
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "artifacts" / "readiness"
-GENS = ("G1", "G2", "G3")
+GENS = ("G1", "G2", "G3", "G4", "G5")
 
 
 # ------------------------------------------------------------------ running
@@ -30,7 +30,7 @@ def _g1_job(args):
     return systems.run(system, cap)
 
 
-SEEDS = {"g1": config.G1_TEST_SEED, "g2": generators.G2_TEST_SEED_BASE}
+SEEDS = {"g1": config.G1_TEST_SEED, "g2": generators.G2_TEST_SEED_BASE, "g4": generators.G4_TEST_SEED_BASE}
 
 
 def _g1_seed():
@@ -40,6 +40,11 @@ def _g1_seed():
 def _g2_job(args):
     system, spec = args
     return systems.run(system, generators.g2_capture(**spec))
+
+
+def _g4_job(args):
+    system, spec = args
+    return systems.run(system, generators.g4_capture(**spec))
 
 
 def compute_rows(system, gen, workers, g1_n, cached=()):
@@ -53,6 +58,10 @@ def compute_rows(system, gen, workers, g1_n, cached=()):
         specs = generators.g2_specs(SEEDS["g2"])
         ids = [generators.g2_capture_id(**s) for s in specs]
         jobs, fn = [(system, s) for s, i in zip(specs, ids) if i not in have], _g2_job
+    elif gen == "G4":
+        specs = generators.g4_specs(SEEDS["g4"])
+        ids = [generators.g4_capture_id(**s) for s in specs]
+        jobs, fn = [(system, s) for s, i in zip(specs, ids) if i not in have], _g4_job
     else:
         return []
     if jobs:
@@ -181,6 +190,18 @@ def evaluate(rows_by, product, extra, speed_by=None):
             _crit("P3", f"SNR error <= {TH.snr_err_db:g} dB at >= 5 dB (>= {pf:.0%} of captures)",
                   per(product, "params", "snr_ok", lambda v: _ge(v, pf)))]),
     ] + estimator_phases(product) + [
+        ("Impaired synthetic (G4)", [
+            _crit("W1", f"published-wrong labels <= {TH.g4_label_wrong_max:.0%} of G4 captures",
+                  per(product, "label", "published_wrong", lambda v: _le(v, TH.g4_label_wrong_max), gens=("G4",))),
+            _crit("W2", f"published-correct >= {TH.g4_label_correct_min:.0%} of G4 in-library digital at >= 5 dB",
+                  per(product, "label", "published_correct_in_library",
+                      lambda v: _ge(v, TH.g4_label_correct_min), gens=("G4",))),
+            _crit("W3", f"G4 out-of-library families -> <= {TH.g4_ool_wrong_max:.0%} wrong labels",
+                  per(product, "confidence", "ool_wrong", lambda v: _le(v, TH.g4_ool_wrong_max), gens=("G4",))),
+            _crit("W4", f"published-wrong rates <= {TH.g4_rate_wrong_max:.0%} of G4 captures",
+                  per(product, "rate", "published_wrong", lambda v: _le(v, TH.g4_rate_wrong_max), gens=("G4",)))]),
+        ("Real benchmark (G5)", [c for c in extra["g5"] if c["id"] != "T1"]),
+        ("Throughput", [c for c in extra["g5"] if c["id"] == "T1"]),
         ("Real data (G3)", [extra["real"]]),
         ("Automation", [extra["cli"]]),
         ("Docs", [extra["docs"]]),
@@ -239,7 +260,8 @@ def render(phases, candidate, stats, product, meta):
              f"({meta['date']}). Product estimator: **{product}**. "
              "A bar is the fraction of that phase's pass/fail criteria that pass; thresholds are fixed in "
              "`experiments/readiness/config.py`. G1 = spike corpus (seed 7), G2 = widened shipped fixtures, "
-             "G3 = real recordings. ✓ all criteria pass on that generator, ✗ at least one fails, – no data.", "",
+             "G3 = real recordings, G4 = impaired synthetic (long captures, test seeds 400000+), G5 = real benchmark "
+             "(rtl_433_tests + IQEngine test files, frozen split). ✓ all criteria pass on that generator, ✗ at least one fails, – no data.", "",
              "```"]
     passed_all = total_all = 0
     for name, crits in phases:
@@ -253,7 +275,8 @@ def render(phases, candidate, stats, product, meta):
         for name, crits in ph:
             lines.append(render_bar(name, sum(c["passed"] for c in crits), len(crits), gen_marks(crits), width))
         lines += ["```", ""]
-    lines += ["## Criteria", "", "| Phase | ID | Criterion | G1 | G2 | G3 | Pass |", "|---|---|---|---|---|---|---|"]
+    lines += ["## Criteria", "", "| Phase | ID | Criterion | G1 | G2 | G3 | G4 | G5 | Pass |",
+              "|---|---|---|---|---|---|---|---|---|"]
 
     def cell(c, g):
         e = c["gens"].get(g)
@@ -264,12 +287,12 @@ def render(phases, candidate, stats, product, meta):
     for name, crits in phases:
         for c in crits:
             lines.append(f"| {name} | {c['id']} | {c['desc']} | {cell(c, 'G1')} | {cell(c, 'G2')} | {cell(c, 'G3')} "
-                         f"| {'✓' if c['passed'] else '✗'} |")
+                         f"| {cell(c, 'G4')} | {cell(c, 'G5')} | {'✓' if c['passed'] else '✗'} |")
     for sysname, ph in candidate.items():
         for name, crits in ph:
             for c in crits:
                 lines.append(f"| {name} ({sysname}) | {c['id']} | {c['desc']} | {cell(c, 'G1')} | {cell(c, 'G2')} "
-                             f"| {cell(c, 'G3')} | {'✓' if c['passed'] else '✗'} |")
+                             f"| {cell(c, 'G3')} | {cell(c, 'G4')} | {cell(c, 'G5')} | {'✓' if c['passed'] else '✗'} |")
     lines += ["", "## Diagnostics (not criteria)", "", "| System | Gen | Labels published | Harmonic rate errors | "
               "Median BW3 ratio | Median SNR error dB | Speed p50 / p95 s |", "|---|---|---|---|---|---|---|"]
     for sysname, by in stats.items():
@@ -305,18 +328,23 @@ def main(argv=None):
     ap.add_argument("--reuse", action="store_true", help="re-score cached rows")
     ap.add_argument("--fresh", default="", help="with --reuse: systems to recompute anyway (comma list)")
     ap.add_argument("--systems", default="shipped,verify")
-    ap.add_argument("--gens", default="G1,G2")
+    ap.add_argument("--gens", default="G1,G2,G4")
+    ap.add_argument("--skip-g5", action="store_true", help="reuse the last G5/throughput results instead of re-running")
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--g1-n", type=int, default=config.G1_TEST_N)
     ap.add_argument("--out", type=Path, default=ROOT / "docs")
     ap.add_argument("--g1-seed", type=int, default=config.G1_TEST_SEED)
     ap.add_argument("--g2-seed-base", type=int, default=generators.G2_TEST_SEED_BASE)
+    ap.add_argument("--g4-seed-base", type=int, default=generators.G4_TEST_SEED_BASE)
     ap.add_argument("--tag", default="", help="suffix for caches (use with fresh seeds and a separate --out)")
     ap.add_argument("--sync-docs", action="store_true",
                     help="rewrite the bars in PROJECT_STATUS and the rj-marked numbers in CLAIMS first")
     args = ap.parse_args(argv)
     CACHE.mkdir(parents=True, exist_ok=True)
-    SEEDS.update(g1=args.g1_seed, g2=args.g2_seed_base)
+    SEEDS.update(g1=args.g1_seed, g2=args.g2_seed_base, g4=args.g4_seed_base)
+    g4_cal = generators.G4_CALIBRATION_SEED_BASE
+    if g4_cal - len(generators.g4_specs()) < args.g4_seed_base < g4_cal + len(generators.g4_specs()):
+        raise SystemExit("refusing to score on G4 calibration seeds")
     if args.g2_seed_base in generators.G2_CALIBRATION_SEEDS or args.g1_seed == 4:
         raise SystemExit("refusing to score on calibration seeds")
     tag = f"_{args.tag}" if args.tag else ""
@@ -344,9 +372,14 @@ def main(argv=None):
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
                             text=True).stdout.strip()
     meta = dict(commit=commit, date=time.strftime("%Y-%m-%d"), thresholds=TH.__dict__,
-                seeds=dict(g1=args.g1_seed, g2_base=args.g2_seed_base),
+                seeds=dict(g1=args.g1_seed, g2_base=args.g2_seed_base, g4_base=args.g4_seed_base),
                 in_library=sorted(config.IN_LIBRARY), out_of_library=sorted(config.OUT_OF_LIBRARY))
-    extra = dict(real=real_criterion(), cli=cli_criterion(), docs=_crit("X1", "docs agree", {}))
+    from . import g5
+    # G5 + throughput: one timed batch-CLI run, after every worker pool above has finished
+    g5_blob = None if args.skip_g5 else g5.run()
+    g5_crits, g5_stats = g5.criteria(g5_blob)
+    meta["g5"] = g5_stats
+    extra = dict(real=real_criterion(), cli=cli_criterion(), docs=_crit("X1", "docs agree", {}), g5=g5_crits)
     phases, candidate, stats = evaluate(rows_by, product, extra, speed_by)
     # docs are checked against the readiness numbers computed in this run
     draft = dict(meta=meta, product=product, phases=[dict(name=n, criteria=c) for n, c in phases], stats=stats)

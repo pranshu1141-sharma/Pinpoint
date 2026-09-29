@@ -124,28 +124,62 @@ def test_disk_backed_track_gets_downstream_enrichment(tmp_path):
 
 
 def test_track_exceeding_bounded_reread_limit_is_explicit_unknown(tmp_path):
-    """A track longer than DiskSamples' own bounded-read limit must report an
-    explicit unresolved status on every downstream field, never a wrong or
-    partial number, and must never attempt to read past the file's own length."""
-    x, _ = make_signal("bpsk", 10, duration=14)
+    """A track longer than DiskSamples' own bounded-read limit is estimated from
+    sampled spans (WP1): deterministic, evenly spaced, each within the bounded
+    read, recorded in analysis_spans. It never reads past the file's own length:
+    a track claiming samples beyond the file stays an explicit unknown."""
+    from backend.pipeline.large_capture import SAMPLED_SPANS, sampled_spans
+    x, _ = make_signal("bpsk", 10, duration=44)
+    assert len(x) > max_read_samples(FS)
     path = tmp_path/"big.iq"
     x.astype("<c8").tofile(path)
     c = open_disk_capture(path, path.name, FS, "cf32_le")
-    track = {"id": 0, "start_sample": 0, "end_sample": max_read_samples(FS)+1,
-             "freq_lower_hz": -1000., "freq_upper_hz": 1000., "confidence": .9,
+    track = {"id": 0, "start_sample": 0, "end_sample": len(x),
+             "freq_lower_hz": 7000., "freq_upper_hz": 9000., "confidence": .9,
              "detection_method": "adaptive_threshold", "is_pulsed": False,
              "pulse_width_samples": None, "pri_samples": None, "pulse_windows": [],
              "needs_review": False, "threshold_excess_db": 10.}
     out = enrich_track(c, track)
     assert ESTIMATE_FIELDS <= out.keys()
-    assert out["center_frequency_hz"] is None
-    assert out["modulation_family"] is None
-    assert out["fine_modulation_label"] is None
-    assert out["symbol_rate_hz"] is None
-    assert "bounded re-analysis" in out["estimate_status"]
-    # Detect-stage fields must be preserved exactly, not overwritten with nulls.
-    assert out["start_sample"] == 0 and out["end_sample"] == max_read_samples(FS)+1
+    spans = out["analysis_spans"]
+    assert len(spans) == SAMPLED_SPANS and "sampled" in out["analysis_span_method"]
+    assert [(s["start_sample"], s["end_sample"]) for s in spans] == sampled_spans(track, max_read_samples(FS))
+    assert spans[0]["start_sample"] == 0 and spans[-1]["end_sample"] == len(x)
+    assert sum(s["end_sample"]-s["start_sample"] for s in spans) <= max_read_samples(FS)
+    assert out["center_frequency_hz"] == pytest.approx(8000, rel=.02)
+    assert out["modulation_label"] == "BPSK" and out["symbol_rate_hz"] == pytest.approx(500, rel=.05)
+    assert all(s["modulation_label"] in (None, "BPSK") for s in spans)
+    # deterministic: the same spans and the same answer again
+    again = enrich_track(c, track)
+    assert again["analysis_spans"] == spans and again["modulation_label"] == out["modulation_label"]
+    # Detect-stage fields must be preserved exactly, not overwritten.
+    assert out["start_sample"] == 0 and out["end_sample"] == len(x)
     assert out["confidence"] == .9
+    past = enrich_track(c, {**track, "end_sample": len(x)+1})
+    assert past["center_frequency_hz"] is None and past["modulation_label"] is None
+    assert past["analysis_spans"] == []
+
+
+def test_sampled_spans_follow_pulse_windows_and_disagreement_abstains():
+    from backend.pipeline.large_capture import _combine_spans, sampled_spans
+    track = {"start_sample": 0, "end_sample": 10_000_000, "is_pulsed": True,
+             "pulse_windows": [{"start_sample": s, "end_sample": s+5000} for s in range(0, 10_000_000, 100_000)]}
+    spans = sampled_spans(track, 2_000_000)
+    assert len(spans) == 8 and all(b-a == 250_000 for a, b in spans)
+    starts = {w["start_sample"] for w in track["pulse_windows"]}
+    assert all(a in starts for a, _ in spans[:-1])            # each span begins at a burst
+    base = {"modulation_label": "FSK2", "symbol_rate_hz": 9600., "estimate_tier": "labelled",
+            "center_frequency_hz": 0., "bandwidth_3db_hz": 1., "bandwidth_99pct_hz": 2., "snr_db": 10.,
+            "refinement_status": "not refined"}
+    agree = _combine_spans([(0, 1, base)]*6 + [(0, 1, {**base, "modulation_label": None})]*2)
+    assert agree["modulation_label"] == "FSK2" and agree["symbol_rate_hz"] == 9600.
+    split = _combine_spans([(0, 1, base)]*6 + [(0, 1, {**base, "modulation_label": "QPSK"})])
+    assert split["modulation_label"] is None and split["symbol_rate_hz"] is None
+    assert "disagree" in split["verify_status"]
+    few = _combine_spans([(0, 1, base)]*3 + [(0, 1, {**base, "modulation_label": None})]*5)
+    assert few["modulation_label"] is None and "fewer than half" in few["verify_status"]
+    rates = _combine_spans([(0, 1, base), (0, 1, {**base, "symbol_rate_hz": 12000.})])
+    assert rates["modulation_label"] == "FSK2" and rates["symbol_rate_hz"] is None
 
 
 def test_continuous_signal_straddling_block_boundary_merges_to_one_track(tmp_path):

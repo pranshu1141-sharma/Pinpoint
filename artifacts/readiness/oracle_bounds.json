@@ -1,0 +1,934 @@
+[
+ {
+  "file": "iqe_AIS_Collection_Fort_Smallwood_Pt1_162M025CF_240K0FS_20260730",
+  "truth": "FSK2",
+  "outcome": "skipped_too_long"
+ },
+ {
+  "file": "rtl433_6sc2_01_g001_315_1M_250k",
+  "truth": "ASK2",
+  "rate": 4000.0,
+  "packet_samples": 14123,
+  "band_khz": [
+   -90.27713658571125,
+   -74.27713658571125
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "unexplained",
+  "best": [
+   "lsp",
+   "QAM16",
+   8048.718112464067
+  ],
+  "m_fam": 0.18688946331400258,
+  "unexplained": 0.1265121481615015,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_DeltaDore_X3D_g004_868_95M_1000k",
+  "truth": "FSK2",
+  "rate": 40000.0,
+  "packet_samples": 8548,
+  "band_khz": [
+   -127.61330729166667,
+   121.61566080729168
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "unexplained",
+  "best": [
+   "fsk",
+   "FSK2",
+   39997.133147699096
+  ],
+  "m_fam": 0.1790782146209453,
+  "unexplained": 0.15148839249703752,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_EcoEye_01_g033_432_5M_250k",
+  "truth": "FSK2",
+  "rate": 5000.0,
+  "packet_samples": 4837,
+  "band_khz": [
+   -5.818050875854489,
+   124.85939557291667
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (margins below thresholds)",
+  "cause": "m_fam",
+  "best": [
+   "fsk",
+   "FSK4",
+   9578.675077301752
+  ],
+  "m_fam": 0.16047101869643132,
+  "unexplained": 0.3073675087994359,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_Elantra2012TPMS_g001_315M_250k",
+  "truth": "FSK2",
+  "rate": 20408.163265306124,
+  "packet_samples": 1982,
+  "band_khz": [
+   -45.88648142936862,
+   55.311120817389444
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (insufficient occupied samples (1982 < 2000))",
+  "cause": "short_segment",
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_IBIS_beacon_g001_433_92M_2560k",
+  "truth": "ASK2",
+  "rate": 33333.333333333336,
+  "packet_samples": 36934,
+  "band_khz": [
+   -53.77448060504324,
+   79.5588527282901
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "usage",
+  "best": [
+   "lsp",
+   "QAM16",
+   33229.269747560546
+  ],
+  "m_fam": 1.6362551303938866,
+  "unexplained": 0.014190248220812557,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_IKEA_Sparsnas_01_g001_867_95M_250k",
+  "truth": "FSK2",
+  "rate": 37037.03703703704,
+  "packet_samples": 1387,
+  "band_khz": [
+   -19.082299406828707,
+   95.83912037037037
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (insufficient occupied samples (1387 < 2000))",
+  "cause": "short_segment",
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_Jansite_TPMS_01_FL_08_22_433_92M_250k",
+  "truth": "FSK2",
+  "rate": 19230.76923076923,
+  "packet_samples": 64352,
+  "band_khz": [
+   -42.122386222956735,
+   31.62553039613381
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "unexplained",
+  "best": [
+   "fsk",
+   "FSK2",
+   19159.387049099954
+  ],
+  "m_fam": 0.4294389476003875,
+  "unexplained": 0.1889251096521124,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_Jeep_TPMS_g031_433_92M_250k",
+  "truth": "FSK2",
+  "rate": 19230.76923076923,
+  "packet_samples": 2652,
+  "band_khz": [
+   -62.957567147435896,
+   55.958593449519235
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (margins below thresholds)",
+  "cause": "fm_digital",
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.17096631275014373,
+  "unexplained": 0.23951578945270327,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_KIDDE_RF_SM_ACDC_g001_434_37M_250k",
+  "truth": "ASK2",
+  "outcome": "skipped_too_long"
+ },
+ {
+  "file": "rtl433_Nissan_TPMS_01_g001_315M_250k",
+  "truth": "FSK2",
+  "rate": 8333.333333333334,
+  "packet_samples": 3461,
+  "band_khz": [
+   -79.311166796875,
+   23.204246459960935
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "unexplained",
+  "best": [
+   "fsk",
+   "FSK4",
+   24588.265410921944
+  ],
+  "m_fam": 0.4961691777683923,
+  "unexplained": 0.2237885085266789,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_Oregon_WMR500_01_g028_868_2M_1000k",
+  "truth": "FSK2",
+  "rate": 38461.53846153846,
+  "packet_samples": 7632,
+  "band_khz": [
+   -59.891841781850964,
+   61.815397966746794
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (margins below thresholds)",
+  "cause": "fm_digital",
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.2217932340316786,
+  "unexplained": 0.053484457118387396,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_Schrader_TPMS_PA66GF35_01_g001_433_92M_1024k",
+  "truth": "ASK2",
+  "rate": 8130.081300813008,
+  "packet_samples": 29268,
+  "band_khz": [
+   -199.03233699003655,
+   -166.51201178678454
+  ],
+  "label": "ASK2",
+  "rate_out": 16712.02105582106,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "lsp",
+   "ASK2",
+   16712.02105582106
+  ],
+  "m_fam": 1.5897162393137987,
+  "unexplained": 0.052284393019913666,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_SmarTire_TPMS_01_g013_433_92M_250k",
+  "truth": "ASK2",
+  "rate": 5988.023952095808,
+  "packet_samples": 4693,
+  "band_khz": [
+   4.91080485523732,
+   28.862900663620554
+  ],
+  "label": "ASK2",
+  "rate_out": null,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "lsp",
+   "ASK2",
+   11865.079954975932
+  ],
+  "m_fam": 2.4703617704951903,
+  "unexplained": 0.0,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_TFA_Marbella_30_3238_06_g001_868M_1000k",
+  "truth": "FSK2",
+  "rate": 9523.809523809523,
+  "packet_samples": 17407,
+  "band_khz": [
+   -49.39466310453869,
+   50.189306268601186
+  ],
+  "label": "FSK2",
+  "rate_out": 9399.139347140861,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "fsk",
+   "FSK2",
+   9399.139347140861
+  ],
+  "m_fam": 0.22209247713229718,
+  "unexplained": 0.06409462622339744,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_Toyota_TPMS_03_others_g001_314_98M_250k",
+  "truth": "FSK2",
+  "rate": 10000.0,
+  "packet_samples": 3950,
+  "band_khz": [
+   -66.06786588541665,
+   38.26356002604166
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "unexplained",
+  "best": [
+   "fsk",
+   "FSK2",
+   9914.212703965079
+  ],
+  "m_fam": 0.20567490218706758,
+  "unexplained": 0.5245146847774487,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_arad_ms_meter_g001_916_2M_1024k",
+  "truth": "FSK2",
+  "rate": 119047.61904761904,
+  "packet_samples": 4182,
+  "band_khz": [
+   -111.04992227027529,
+   282.776191703869
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "unexplained",
+  "best": [
+   "fsk",
+   "FSK2",
+   281121.000732711
+  ],
+  "m_fam": 1.312759162529634,
+  "unexplained": 0.1336302480768361,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_cavius_g001_869_67M_250k",
+  "truth": "FSK2",
+  "rate": 4854.368932038835,
+  "packet_samples": 1415571,
+  "band_khz": [
+   -8.031937404328874,
+   20.451622838288838
+  ],
+  "label": "FSK2",
+  "rate_out": 4799.781180729483,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "fsk",
+   "FSK2",
+   4799.781180729483
+  ],
+  "m_fam": 0.9382553063279233,
+  "unexplained": 0.07603446314294478,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_chamberlain_cwpirc_01_g007_915M_1000k",
+  "truth": "FSK2",
+  "rate": 40000.0,
+  "packet_samples": 4536,
+  "band_khz": [
+   -345.9601354166666,
+   -220.3390229166667
+  ],
+  "label": "FM",
+  "rate_out": null,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.843484711266028,
+  "unexplained": 0.014525055461029411,
+  "correct": false,
+  "wrong": true
+ },
+ {
+  "file": "rtl433_elster_01_elster_t2_cleartext_nbrtable_len189_03_910M_2048k",
+  "truth": "FSK2",
+  "rate": 142857.14285714287,
+  "packet_samples": 71049,
+  "band_khz": [
+   -233.83418973214287,
+   221.65350744047618
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (margins below thresholds)",
+  "cause": "fm_digital",
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.37527371589365144,
+  "unexplained": 0.03642160046052108,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_fineoffset_ws90_01_g001_915M_1000k",
+  "truth": "FSK2",
+  "rate": 17241.379310344826,
+  "packet_samples": 34196,
+  "band_khz": [
+   -67.87626186242817,
+   46.116281523886485
+  ],
+  "label": "FSK4",
+  "rate_out": 17198.63407850259,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "fsk",
+   "FSK4",
+   17198.63407850259
+  ],
+  "m_fam": 0.8035807680499794,
+  "unexplained": 0.04299140962488931,
+  "correct": false,
+  "wrong": true
+ },
+ {
+  "file": "rtl433_gear_hive_tpms_01_g001_433_92M_250k",
+  "truth": "ASK2",
+  "rate": 8333.333333333334,
+  "packet_samples": 16159,
+  "band_khz": [
+   -11.5766239660045,
+   21.756709367328835
+  ],
+  "label": "ASK2",
+  "rate_out": 9634.489957292748,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "lsp",
+   "ASK2",
+   9634.489957292748
+  ],
+  "m_fam": 0.8003200059391093,
+  "unexplained": 0.04244836241294679,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_gm_tpms_pres_0_temp_27_id_2017968551_433_92M_250k",
+  "truth": "ASK2",
+  "rate": 8333.333333333334,
+  "packet_samples": 7669,
+  "band_khz": [
+   -26.902681792497937,
+   6.430651540835399
+  ],
+  "label": "ASK2",
+  "rate_out": 16948.613635137044,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "lsp",
+   "ASK2",
+   16948.613635137044
+  ],
+  "m_fam": 0.5893970977775147,
+  "unexplained": 0.028596628798352567,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_govee_h5112_g001_912_375M_250k",
+  "truth": "FSK2",
+  "rate": 10000.0,
+  "packet_samples": 14512,
+  "band_khz": [
+   -33.89549602864583,
+   27.675193359374994
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "usage",
+  "best": [
+   "lsp",
+   "8PSK",
+   67329.62088572218
+  ],
+  "m_fam": 0.20488751952239892,
+  "unexplained": 0.06556910488637953,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_honeywell_2Gig_DW10_g001_344_975M_250k",
+  "truth": "ASK2",
+  "rate": 7352.941176470588,
+  "packet_samples": 4175,
+  "band_khz": [
+   18.587530820711525,
+   47.999295526593876
+  ],
+  "label": "ASK2",
+  "rate_out": 7592.779282178462,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "lsp",
+   "ASK2",
+   7592.779282178462
+  ],
+  "m_fam": 1.8574401309437452,
+  "unexplained": 0.01332872557245376,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_inkbird_IBS_P01R_g001_433_92M_250k",
+  "truth": "FSK2",
+  "rate": 10000.0,
+  "packet_samples": 366232,
+  "band_khz": [
+   -34.12052493489583,
+   7.907137011718746
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (margins below thresholds)",
+  "cause": "fm_digital",
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.4300460519370932,
+  "unexplained": 0.06981030939092342,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_lacrosse_ltv_LTV_WR1_g165_915M_1000k",
+  "truth": "FSK2",
+  "rate": 9615.384615384615,
+  "packet_samples": 16368,
+  "band_khz": [
+   -59.86586801382211,
+   44.07777052033253
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (margins below thresholds)",
+  "cause": "fm_digital",
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.40051476641676964,
+  "unexplained": 0.04625598066335219,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_lacrosse_ws6868_01_g002_868_3M_1000k",
+  "truth": "FSK2",
+  "rate": 17241.379310344826,
+  "packet_samples": 57387,
+  "band_khz": [
+   -16.3723048494887,
+   81.86985131555316
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (margins below thresholds)",
+  "cause": "fm_digital",
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.25923543363416535,
+  "unexplained": 0.06685919305566299,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_olympia_9571_door_open_4ddf3b_868_4M_2048k",
+  "truth": "FSK2",
+  "rate": 2732.24043715847,
+  "packet_samples": 79925,
+  "band_khz": [
+   -47.206578978825135,
+   39.52457507257513
+  ],
+  "label": "FM",
+  "rate_out": null,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.7438421164957787,
+  "unexplained": 0.037413669402484986,
+  "correct": false,
+  "wrong": true
+ },
+ {
+  "file": "rtl433_oregon_scientific_WGR800X_01_WGR800X_g001_433_92M_250k",
+  "truth": "ASK2",
+  "rate": 2272.7272727272725,
+  "packet_samples": 82551,
+  "band_khz": [
+   73.96358834924087,
+   83.05449744014994
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "usage",
+  "best": [
+   "lsp",
+   "QAM16",
+   4095.9122752740645
+  ],
+  "m_fam": 1.353451542732003,
+  "unexplained": 0.08006818620748118,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_oria_wa150km_g037_433_92M_250k",
+  "truth": "ASK2",
+  "rate": 2040.8163265306123,
+  "packet_samples": 83573,
+  "band_khz": [
+   17.932055978434594,
+   26.09532128455704
+  ],
+  "label": "ASK2",
+  "rate_out": null,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "lsp",
+   "ASK2",
+   2047.8698434029711
+  ],
+  "m_fam": 1.5311499412994767,
+  "unexplained": 0.015190580801924848,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_radiohead_ask_03_g001_433_92M_250k",
+  "truth": "ASK2",
+  "rate": 1000.0,
+  "packet_samples": 37315,
+  "band_khz": [
+   3.956049845906472,
+   7.956049845906472
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "unexplained",
+  "best": [
+   "lsp",
+   "QAM16",
+   1984.1326436130996
+  ],
+  "m_fam": 1.1554311822990324,
+  "unexplained": 0.12394895900497283,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_scmplus_01_g002_912_6M_2359_3k",
+  "truth": "ASK2",
+  "rate": 33333.333333333336,
+  "packet_samples": 18991,
+  "band_khz": [
+   338.2071525108384,
+   471.54048584417177
+  ],
+  "label": "ASK2",
+  "rate_out": 32767.7453222666,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "lsp",
+   "ASK2",
+   32767.7453222666
+  ],
+  "m_fam": 1.2470485145534833,
+  "unexplained": 0.029899010508987963,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_secplus_v2_g002_310_01M_250k",
+  "truth": "ASK2",
+  "rate": 4000.0,
+  "packet_samples": 7754,
+  "band_khz": [
+   -8.354655661594016,
+   7.645344338405984
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "usage",
+  "best": [
+   "lsp",
+   "QAM16",
+   8022.108265876642
+  ],
+  "m_fam": 1.205129859707525,
+  "unexplained": 0.11765081567435065,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_siemens_5WY72XX_01_g001_315_1M_250k",
+  "truth": "ASK2",
+  "rate": 4545.454545454545,
+  "packet_samples": 11958,
+  "band_khz": [
+   -120.60621265337774,
+   -102.42439447155955
+  ],
+  "label": "ASK2",
+  "rate_out": 4716.8621679246335,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "lsp",
+   "ASK2",
+   4716.8621679246335
+  ],
+  "m_fam": 1.2129808592405578,
+  "unexplained": 0.03572626654538312,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_somfy_situo_5_rts_pure_ii_01_g006_433_414M_250k",
+  "truth": "ASK2",
+  "rate": 1655.6291390728477,
+  "packet_samples": 28210,
+  "band_khz": [
+   -11.818879688992913,
+   -5.1963631327015225
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "unknown family (structure outside the library)",
+  "cause": "unexplained",
+  "best": [
+   "lsp",
+   "QAM16",
+   1552.8157939750524
+  ],
+  "m_fam": 1.0732795481900286,
+  "unexplained": 0.13750684299269486,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_steelmate_TPMS_03_leak_433_92M_250k",
+  "truth": "FSK2",
+  "rate": 20000.0,
+  "packet_samples": 12247,
+  "band_khz": [
+   -50.99399863281249,
+   24.226626542154946
+  ],
+  "label": "FSK2",
+  "rate_out": 19119.184663120595,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "fsk",
+   "FSK2",
+   19119.184663120595
+  ],
+  "m_fam": 0.2635065661220075,
+  "unexplained": 0.05852333413123309,
+  "correct": true,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_tfa_14_1504_v2_194C_433_92M_250k",
+  "truth": "FSK2",
+  "rate": 2777.777777777778,
+  "packet_samples": 11525,
+  "band_khz": [
+   -33.247625661892364,
+   42.12227126736111
+  ],
+  "label": "FM",
+  "rate_out": null,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 3.016093942464436,
+  "unexplained": 0.010794961437093598,
+  "correct": false,
+  "wrong": true
+ },
+ {
+  "file": "rtl433_thermopro_211b_01_g002_915_1M_1000k",
+  "truth": "FSK2",
+  "rate": 9523.809523809523,
+  "packet_samples": 40711,
+  "band_khz": [
+   -144.8187035342262,
+   -49.318648191034214
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (margins below thresholds)",
+  "cause": "fm_digital",
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 0.6122750726529915,
+  "unexplained": 0.019047972366104546,
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_thermopro_tp86xb_01_g001_915M_1000k",
+  "truth": "FSK2",
+  "rate": 9615.384615384615,
+  "packet_samples": 18352,
+  "band_khz": [
+   -50.46956612580128,
+   32.31977445913462
+  ],
+  "label": "FM",
+  "rate_out": null,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 2.9109525221554198,
+  "unexplained": 0.0084533488925439,
+  "correct": false,
+  "wrong": true
+ },
+ {
+  "file": "rtl433_tpms_mercedes_benz_01_g030_433_92M_250k",
+  "truth": "FSK2",
+  "rate": 40000.0,
+  "packet_samples": 1272,
+  "band_khz": [
+   -66.99491002604168,
+   83.00845859374999
+  ],
+  "label": null,
+  "rate_out": null,
+  "status": "not reliably estimated (insufficient occupied samples (1272 < 2000))",
+  "cause": "short_segment",
+  "correct": false,
+  "wrong": false
+ },
+ {
+  "file": "rtl433_tpms_sefis_m3_01_g001_433_92M_1024k",
+  "truth": "FSK2",
+  "rate": 19230.76923076923,
+  "packet_samples": 22020,
+  "band_khz": [
+   -55.377359985977556,
+   37.72350731670673
+  ],
+  "label": "FSK4",
+  "rate_out": 58725.837540795714,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "fsk",
+   "FSK4",
+   58725.837540795714
+  ],
+  "m_fam": 2.144840844021823,
+  "unexplained": 0.009468975178968709,
+  "correct": false,
+  "wrong": true
+ },
+ {
+  "file": "rtl433_watts_vision_01_g001_868_25M_1000k",
+  "truth": "FSK2",
+  "rate": 38461.53846153846,
+  "packet_samples": 6590,
+  "band_khz": [
+   28.22558302283653,
+   141.80630330528845
+  ],
+  "label": "FM",
+  "rate_out": null,
+  "status": "estimated (label margin passed)",
+  "cause": null,
+  "best": [
+   "analog",
+   "FM",
+   null
+  ],
+  "m_fam": 2.554024523937515,
+  "unexplained": 0.022236054947981993,
+  "correct": false,
+  "wrong": true
+ }
+]

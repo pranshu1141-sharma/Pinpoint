@@ -25,6 +25,11 @@ def test_thresholds_are_frozen_constants():
     assert th.ool_wrong_max == 0.10 and th.speed_s == 0.5 and th.min_snr_db == 5.0
     with pytest.raises(Exception):
         th.speed_s = 1.0
+    # WP2 criteria (registered before first measured)
+    assert th.g4_label_wrong_max == 0.03 and th.g4_label_correct_min == 0.60
+    assert th.g4_ool_wrong_max == 0.10 and th.g4_rate_wrong_max == 0.03
+    assert th.real_correct_min == 0.50 and th.real_wrong_max == 0.05 and th.real_rate_wrong_max == 0.05
+    assert th.throughput_rtf_max == 1.0
 
 
 @pytest.mark.parametrize("pred,truth,ok", [
@@ -141,7 +146,7 @@ def test_criterion_passes_only_when_every_applicable_generator_passes():
     from experiments.readiness.scoreboard import _crit, gen_marks
     c = _crit("L1", "x", {"G1": (0.01, True, 10), "G2": (0.2, False, 10), "G3": (None, None, 0)})
     assert not c["passed"]
-    assert gen_marks([c]) == {"G1": True, "G2": False, "G3": None}
+    assert gen_marks([c]) == {"G1": True, "G2": False, "G3": None, "G4": None, "G5": None}
     assert _crit("L1", "x", {"G1": (0.01, True, 10), "G3": (None, None, 0)})["passed"]
     assert not _crit("L1", "x", {"G3": (None, None, 0)})["passed"]
 
@@ -208,7 +213,47 @@ def test_docs_check_flags_stale_status_prose_and_a_wrong_window_cap(tmp_path):
     assert any("8,192" in p and "4,096" in p for p in problems)
 
 
+def test_docs_check_covers_the_docs_index_and_judge_guide(tmp_path):
+    """X1 (WP1): docs/README.md and JUDGE_DEFENSE_GUIDE.md may not deny that the product names
+    modulation, and no checked doc may say long tracks stay null once sampled spans exist."""
+    from experiments.readiness import docs_check
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "backend/pipeline").mkdir(parents=True)
+    (tmp_path / "backend/pipeline/verify_estimator.py").write_text("")
+    (tmp_path / "backend/pipeline/large_capture.py").write_text("")
+    (tmp_path / "docs/CLAIMS.md").write_text("x\n")
+    (tmp_path / "docs/PROJECT_STATUS.md").write_text("<!-- readiness:start -->\n```\n```\n<!-- readiness:end -->\n")
+    (tmp_path / "docs/README.md").write_text("Non-purpose: this version does not identify modulation.\n")
+    (tmp_path / "docs/JUDGE_DEFENSE_GUIDE.md").write_text(
+        "## Claims to avoid\n- \u201cIt identifies BPSK/QPSK/FM.\u201d\n")
+    (tmp_path / "docs/LIMITATIONS_AND_ROADMAP.md").write_text("Long tracks keep unresolved downstream fields.\n")
+    ok, problems = docs_check.check({"bars": "```\n```"}, tmp_path)
+    assert any("docs/README.md" in p and "does not identify modulation" in p for p in problems)
+    assert any("JUDGE_DEFENSE_GUIDE" in p and "it identifies bpsk/qpsk/fm" in p for p in problems)
+    # the long-track phrase is only false once sampled spans exist in the code
+    assert not any("unresolved downstream" in p for p in problems)
+    (tmp_path / "backend/pipeline/large_capture.py").write_text("def sampled_spans(track, budget):\n")
+    ok, problems = docs_check.check({"bars": "```\n```"}, tmp_path)
+    assert any("LIMITATIONS" in p and "keep unresolved downstream fields" in p for p in problems)
+
+
 def test_fm_label_share_is_reported():
     from experiments.readiness import metrics
     rows = [_row("FM", "FM"), _row("FM", None), _row("FM", "BPSK"), _row("BPSK", "BPSK", 1e3)]
     assert metrics.confidence_stats(rows)["fm_labelled"] == pytest.approx(1 / 3)
+
+
+def test_g5_split_is_frozen_and_by_protocol():
+    """WP2: the G5 calibration/test split may not change, and no protocol is on both sides."""
+    import json
+    from pathlib import Path
+    from experiments.readiness import g5_build
+    m = json.loads((Path(config.__file__).with_name(config.G5_MANIFEST)).read_text())
+    rec = m["recordings"]
+    assert g5_build.split_digest(rec) == m["split_sha256"] == config.G5_SPLIT_SHA256
+    sides = {}
+    for e in rec:
+        sides.setdefault(e["protocol"], set()).add(e["split"])
+        assert e["allowed_labels"] == ([e["truth"]["label"]] if e["truth"]["label"] else [])
+    assert all(len(s) == 1 for s in sides.values())
+    assert sides["ais"] == {"test"}
