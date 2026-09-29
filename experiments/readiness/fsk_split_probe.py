@@ -1,4 +1,9 @@
-"""WP3 follow-up: does Detect's band cover an FSK2 signal's tones? (diagnostic only, never scored)
+"""Does Detect's band cover an FSK2 signal's tones? (diagnostic only, never scored)
+
+WP3 first version picked the highest-`snr_db` candidate as "the" candidate for the file. That selects weak narrow
+spectral lines (narrow bands read a high SNR), not the signal, and overstated the bounds problem. Corrected in WP3b: the
+candidate for a file is the one that overlaps the strongest burst in time and contains the burst's centre frequency,
+highest `threshold_excess_db` first; a file where none does counts as a miss.
 
     python -m experiments.readiness.fsk_split_probe   -> artifacts/readiness/fsk_split_probe.json
 
@@ -46,23 +51,28 @@ def run():
         while b < len(p) - 1 and p[b] > 0.25 * p[i]:
             b += 1
         seg = x[a:b]
-        dets = [d for d in blob["detections"] if d.get("snr_db") is not None]
+        dets = blob["detections"]
         if len(seg) < 50 or not dets:
             continue
         fi = np.angle(seg[1:] * np.conj(seg[:-1])) * fs / (2 * np.pi)
         fi = np.convolve(fi, np.ones(3) / 3, "same")[3:-3]
         lo, hi = np.percentile(fi, [15, 85])
-        top = max(dets, key=lambda d: d["snr_db"])
-        bw = top["freq_upper_hz"] - top["freq_lower_hz"]
-        near = [e for e in dets if abs(e["snr_db"] - top["snr_db"]) < 3]
-        out.append(dict(file=stem, split_khz=(hi - lo) / 1e3, bw_khz=bw / 1e3, ratio=bw / (hi - lo) if hi > lo else None,
-                        n_near=len(near), pulsed=top.get("is_pulsed"), label=top.get("modulation_label"),
+        centre = (lo + hi) / 2
+        hit = [d for d in dets if d["freq_lower_hz"] <= centre <= d["freq_upper_hz"]
+               and d["start_sample"] < b and d["end_sample"] > a]
+        top = max(hit, key=lambda d: d.get("threshold_excess_db", -99)) if hit else None
+        bw = top["freq_upper_hz"] - top["freq_lower_hz"] if top else None
+        out.append(dict(file=stem, split_khz=(hi - lo) / 1e3, bw_khz=bw / 1e3 if bw else None,
+                        ratio=bw / (hi - lo) if bw and hi > lo else None, found=top is not None,
+                        n_cands=len(dets), n_lines=sum(d["freq_upper_hz"] - d["freq_lower_hz"] < 3e3 for d in dets),
+                        pulsed=top.get("is_pulsed") if top else None, label=top.get("modulation_label") if top else None,
                         exp_rate=entry["expected_rate_hz"], fs=fs))
         print(stem, flush=True)
     OUT.write_text(json.dumps(out, indent=1, default=float) + "\n")
     r = [o for o in out if o["ratio"] is not None]
-    print(len(r), "files; candidate narrower than half the tone split:", sum(o["ratio"] < 0.5 for o in r),
-          "; more than twice the tone split:", sum(o["ratio"] > 2 for o in r))
+    print(len(out), "files; no candidate contains the burst centre:", sum(not o["found"] for o in out),
+          "; ratio < 0.5:", sum(o["ratio"] < 0.5 for o in r), "; 0.5-2:", sum(0.5 <= o["ratio"] <= 2 for o in r),
+          "; > 2:", sum(o["ratio"] > 2 for o in r), "; median candidates per file:", sorted(o["n_cands"] for o in out)[len(out) // 2])
 
 
 if __name__ == "__main__":

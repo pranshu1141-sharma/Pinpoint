@@ -76,7 +76,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
 
   const tierText: Record<string, string> = {
     labelled: 'Labelled (margin over every rival passed)',
-    unknown_family: 'Unknown family — structure outside the library; no label published',
+    unknown_family: 'Does not fit the clean models — impairment or an unknown family; no label published',
     abstain: 'Abstained — margins below thresholds; nothing published',
   };
   const nats = (v: number | null | undefined, th?: number) =>
@@ -84,7 +84,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
   const th = detection.verify_thresholds;
   const verifyRows: Row[] = [
     { key: 'Modulation', value: detection.modulation_label
-        ?? (detection.estimate_tier === 'unknown_family' ? (detection.verify_family ?? 'Unknown family') : 'Not reliably estimated'),
+        ?? (detection.estimate_tier === 'unknown_family' ? (detection.verify_family ?? 'Does not fit the clean models (impairment or unknown family)') : 'Not reliably estimated'),
       explain: 'Propose → verify: the segment is rebuilt under every hypothesis (PSK/QAM with several pulse models, 2/4-FSK, AM/FM, noise); the lowest description length wins. A label is published only when its margin over every rival family passes a threshold fit on a cross-generator calibration split.' },
     { key: 'Estimate tier', value: !detection.estimate_tier ? unavailable
         : detection.estimate_tier === 'abstain' && detection.verify_status ? `Abstained — ${detection.verify_status}; nothing published`

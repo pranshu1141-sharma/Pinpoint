@@ -68,6 +68,27 @@ def gate(d, usage: float, th: Thresholds, unit: str, n: int, fs: float, m_dig: f
     return dict(label=label, rate=rate, tier=tier, m_fam=m_fam, m_rate=m_rate)
 
 
+UNKNOWN_FAMILY_TEXT = "does not fit the clean models (impairment or unknown family)"
+TIER_STATUS = {"labelled": "estimated (label margin passed)",
+               "unknown_family": UNKNOWN_FAMILY_TEXT,
+               "abstain": "not reliably estimated (margins below thresholds)"}
+
+
+def tier_status(tier: str) -> str:
+    return TIER_STATUS[tier]
+
+
+def tier_family(tier: str, family: str):
+    """The family text shown beside a tier. `unknown_family` is the API tier name (a contract); it fires when the
+    family margin passes but unexplained power is high, which impaired in-library signals also cause (WP3 finding),
+    so only the discrete-IF probe winning is called an unknown family outright."""
+    if tier == "labelled":
+        return family
+    if tier == "unknown_family":
+        return "unknown constant-envelope family" if family == UNKNOWN_CE else UNKNOWN_FAMILY_TEXT
+    return None
+
+
 def candidate_segment(capture: Capture, candidate: dict):
     """(baseband segment, decimated rate) for the candidate, or (None, reason)."""
     fs = float(capture.sample_rate)
@@ -126,9 +147,7 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
              label_margin(r.hypotheses, best))
     out.update(
         modulation_label=d.label if g["label"] else None,
-        verify_family=(d.family if g["tier"] == "labelled" else
-                       ("unknown constant-envelope family" if d.family == UNKNOWN_CE else "unknown family")
-                       if g["tier"] == "unknown_family" else None),
+        verify_family=tier_family(g["tier"], d.family),
         symbol_rate_hz=float(d.rate) if g["rate"] else None,
         m_fam=_num(g["m_fam"]), m_rate=_num(g["m_rate"]), unexplained=_num(d.unexplained),
         estimate_tier=g["tier"], label_needs_review=not g["label"],
@@ -139,9 +158,7 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
         # the M-th power carrier (relative to the band centre the segment was mixed to) is only
         # meaningful for a published linear label
         verify_carrier_hz=float(centre + r.carrier_hz) if g["label"] and d.label in LINEAR_LABELS else None,
-        verify_status={"labelled": "estimated (label margin passed)",
-                       "unknown_family": "unknown family (structure outside the library)",
-                       "abstain": "not reliably estimated (margins below thresholds)"}[g["tier"]])
+        verify_status=tier_status(g["tier"]))
     if return_raw:
         out["_raw"] = (r, d)
     return out

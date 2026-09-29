@@ -94,12 +94,20 @@ def build():
     lb = [r["counterfactual"]["longest_burst_samples"] for r in cf]
     md.append(f"Longest burst: median {st.median(lb):.0f} samples, minimum {min(lb)}. Verify needs >= 2000 raw samples.\n")
 
-    probe = [p for p in load("fsk_split_probe.json") if p["ratio"] is not None]
-    md.append("## F. Detect bounds on FSK2 files: candidate bandwidth / tone split of the file's strongest burst\n")
-    md.append(table(["file", "tone split kHz", "top candidate bw kHz", "ratio", "candidates within 3 dB SNR"],
-                    [(p["file"][:44], f"{p['split_khz']:.1f}", f"{p['bw_khz']:.1f}", f"{p['ratio']:.2f}", p["n_near"]) for p in probe]) + "\n")
-    md.append(f"{len(probe)} files: candidate narrower than half the split on {sum(p['ratio'] < 0.5 for p in probe)}; "
-              f"between half and twice the split on {sum(0.5 <= p['ratio'] <= 2 for p in probe)}; wider than twice the split on {sum(p['ratio'] > 2 for p in probe)}.\n")
+    probe = [p for p in load("fsk_split_probe.json") if p.get("ratio") is not None and p.get("exp_rate")]
+    for p in probe:
+        p["carson_khz"] = p["split_khz"] + 2 * p["exp_rate"] / 1e3
+        p["carson_ratio"] = p["bw_khz"] / p["carson_khz"]
+    md.append("## F. Detect bounds on FSK2 files: signal candidate bandwidth vs occupied width (tone split + 2 x symbol rate)\n")
+    md.append("Signal candidate = the one overlapping the strongest burst in time and containing its centre frequency (corrected in WP3b; "
+              "the first WP3 version used the highest-`snr_db` candidate, which picks weak spectral lines).\n")
+    md.append(table(["file", "tone split kHz", "candidate bw kHz", "split + 2 rate kHz", "ratio", "candidates", "narrow lines"],
+                    [(p["file"][:44], f"{p['split_khz']:.1f}", f"{p['bw_khz']:.1f}", f"{p['carson_khz']:.1f}", f"{p['carson_ratio']:.2f}",
+                      p["n_cands"], p["n_lines"]) for p in sorted(probe, key=lambda p: p["carson_ratio"])]) + "\n")
+    md.append(f"{len(probe)} rated FSK2 files: narrower than half the occupied width on {sum(p['carson_ratio'] < 0.5 for p in probe)}; "
+              f"0.5-2x on {sum(0.5 <= p['carson_ratio'] <= 2 for p in probe)}; wider than 2x on {sum(p['carson_ratio'] > 2 for p in probe)} "
+              f"(wider than 4x on {sum(p['carson_ratio'] > 4 for p in probe)}). Median candidates per file "
+              f"{st.median(p['n_cands'] for p in probe):.0f}; median narrow (< 3 kHz) line candidates {st.median(p['n_lines'] for p in probe):.0f}.\n")
 
     orc = [o for o in load("oracle_bounds.json") if o.get("outcome") != "skipped_too_long"]
     md.append("## G. Oracle experiment: strongest packet, sane band, not refused (upper bound, not a product path)\n")

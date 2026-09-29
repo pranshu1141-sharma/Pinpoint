@@ -30,6 +30,9 @@ def test_thresholds_are_frozen_constants():
     assert th.g4_ool_wrong_max == 0.10 and th.g4_rate_wrong_max == 0.03
     assert th.real_correct_min == 0.50 and th.real_wrong_max == 0.05 and th.real_rate_wrong_max == 0.05
     assert th.throughput_rtf_max == 1.0
+    # WP4a bounds criteria (registered 2026-09-29, before first measured on test data)
+    assert th.bounds_ratio_lo == 0.5 and th.bounds_ratio_hi == 2.0
+    assert th.bounds_ok_min_g4 == 0.85 and th.g4_fragmentation_max == 0.05 and th.bounds_ok_min_g5 == 0.60
 
 
 @pytest.mark.parametrize("pred,truth,ok", [
@@ -257,3 +260,148 @@ def test_g5_split_is_frozen_and_by_protocol():
         assert e["allowed_labels"] == ([e["truth"]["label"]] if e["truth"]["label"] else [])
     assert all(len(s) == 1 for s in sides.values())
     assert sides["ais"] == {"test"}
+
+
+def _claims_dir(tmp_path, marker_line):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs/CLAIMS.md").write_text(marker_line + "\n")
+    (tmp_path / "docs/PROJECT_STATUS.md").write_text(
+        "status\n<!-- readiness:start -->\n```\nDetect ███\n```\n<!-- readiness:end -->\n")
+
+
+_TIMED = {"bars": "```\nDetect ███\n```", "stats": {"verify": {"G2": {"speed": {"within": 0.888},
+                                                                        "label": {"published_wrong": 0.005}}}}}
+
+
+def test_docs_check_gives_timing_markers_a_tolerance_but_not_accuracy_markers(tmp_path):
+    """X1 (WP3b): a wall-clock figure may drift by 5 points between runs; an accuracy figure must match exactly."""
+    from experiments.readiness import docs_check
+    _claims_dir(tmp_path, "speed <!--rj:stats.verify.G2.speed.within--> 90.4%")
+    assert docs_check.check(_TIMED, tmp_path) == (True, [])                       # 1.6 points off: noise
+    (tmp_path / "docs/CLAIMS.md").write_text("speed <!--rj:stats.verify.G2.speed.within--> 93.0%\n")
+    assert docs_check.check(_TIMED, tmp_path) == (True, [])                       # 4.2 points: inside the measured run-to-run spread
+    (tmp_path / "docs/CLAIMS.md").write_text("speed <!--rj:stats.verify.G2.speed.within--> 80.0%\n")
+    ok, problems = docs_check.check(_TIMED, tmp_path)
+    assert not ok and any("speed.within" in p for p in problems)                  # 8.8 points off: stale
+    (tmp_path / "docs/CLAIMS.md").write_text("wrong <!--rj:stats.verify.G2.label.published_wrong--> 0.6%\n")
+    ok, problems = docs_check.check(_TIMED, tmp_path)
+    assert not ok and any("published_wrong" in p for p in problems)               # 0.1 points off: still exact-match
+
+
+def test_unknown_family_text_names_impairment_not_a_new_family():
+    """WP3b: the tier fires on impaired in-library signals, so its text may not claim the structure is outside the library."""
+    from backend.pipeline import verify_estimator as ve
+    status = ve.tier_status("unknown_family")
+    family = ve.tier_family("unknown_family", "PSK")
+    for text in (status, family):
+        assert "impairment" in text and "outside the library" not in text
+    assert ve.tier_family("unknown_family", ve.UNKNOWN_CE) == "unknown constant-envelope family"
+    assert ve.tier_family("labelled", "PSK") == "PSK" and ve.tier_family("abstain", "PSK") is None
+    assert ve.tier_status("abstain").startswith("not reliably estimated")
+
+
+# --- G4 per-impairment ablation (WP3b): switches must not change any RNG draw --------------------------------------
+_G4_CASES = (("qpsk", 16, 10, 500001, "c3381df6dada04c5", "53448dab22efa58a"),
+             ("fsk2", 32, 5, 500002, "f8d114627fa92e29", "2644e4b7d205d18b"),
+             ("noise", 16, 0, 500003, "0de0468dd87f19eb", "2daeb1f36095b44b"))
+
+
+@pytest.mark.parametrize("kind,sps,snr,seed,y_hash,clean_hash", _G4_CASES)
+def test_g4_default_output_is_bit_identical_to_the_frozen_generator(kind, sps, snr, seed, y_hash, clean_hash):
+    import hashlib
+    from experiments.readiness import impaired
+    y, clean, _ = impaired.make_capture(kind, snr, sps, seed)
+    assert hashlib.sha256(y.tobytes()).hexdigest()[:16] == y_hash
+    assert hashlib.sha256(np.asarray(clean).tobytes()).hexdigest()[:16] == clean_hash
+
+
+def _g4(impairments, kind="qpsk", sps=16, snr=10, seed=500001):
+    from experiments.readiness import impaired
+    y, clean, info = impaired.make_capture(kind, snr, sps, seed, impairments=frozenset(impairments))
+    return y.astype(np.complex128), np.asarray(clean), info
+
+
+def test_g4_impairment_names_are_the_documented_eight():
+    from experiments.readiness import impaired
+    assert set(impaired.IMPAIRMENTS) == {"multipath", "drift", "phase_noise", "interferer", "colour", "iq", "dc", "clip"}
+
+
+def test_g4_dc_switch_adds_exactly_a_constant():
+    y0, _, _ = _g4(())
+    y1, _, info = _g4({"dc"})
+    d = y1 - y0
+    assert np.ptp(d.real) < 1e-4 and np.ptp(d.imag) < 1e-4 and abs(d.mean()) > 0
+
+
+def test_g4_iq_switch_applies_the_stated_imbalance_to_the_unimpaired_capture():
+    y0, _, _ = _g4(())
+    y1, _, info = _g4({"iq"})
+    g, phi = 10 ** (info["iq_gain_db"] / 20), np.deg2rad(info["iq_phase_deg"])
+    mu, nu = (1 + g * np.exp(-1j * phi)) / 2, (1 - g * np.exp(1j * phi)) / 2
+    assert np.allclose(y1, mu * y0 + nu * np.conj(y0), atol=1e-4)
+
+
+@pytest.mark.parametrize("only", ["multipath", "drift", "phase_noise"])
+def test_g4_emitter_impairments_change_the_signal_but_not_the_noise(only):
+    y0, c0, _ = _g4(())
+    y1, c1, _ = _g4({only})
+    assert not np.allclose(c0, c1)                                   # the emitter changed
+    assert np.allclose(y0 - c0, y1 - c1, atol=1e-4)                   # same noise draw, so runs are paired
+    assert np.mean(np.abs(c1) ** 2) == pytest.approx(np.mean(np.abs(c0) ** 2), rel=0.5)
+
+
+def test_g4_interferer_switch_adds_power_only_when_on_and_leaves_the_target_alone():
+    y0, c0, _ = _g4(())
+    y1, c1, info = _g4({"interferer"})
+    assert np.allclose(c0, c1)
+    assert info["interferer"] is not None and np.mean(np.abs(y1 - y0) ** 2) > 0
+
+
+def test_g4_clip_switch_clips_only_when_on():
+    _, _, i0 = _g4((), seed=500005)          # a seed where clipping actually occurs (about 0.03% of samples)
+    _, _, i1 = _g4({"clip"}, seed=500005)
+    assert i0["clipped_fraction"] == 0 and i1["clipped_fraction"] > 0
+
+
+def test_g4_colour_switch_adds_noise_correlation():
+    y0, c0, _ = _g4(())
+    y2, c2, _ = _g4({"colour"})
+    n0, n2 = y0 - c0, y2 - c2
+    assert abs(np.mean(n0[1:] * np.conj(n0[:-1]))) < abs(np.mean(n2[1:] * np.conj(n2[:-1])))
+
+
+def test_ablation_summary_counts_abstentions_wrong_labels_and_unknown_tier():
+    from experiments.readiness import ablation
+
+    def row(truth, label, tier, hit=True, n_overlap=1):
+        return dict(truth=dict(label=truth, in_library=True), out=dict(label=label, tier=tier),
+                    detect=dict(hit=hit, n_overlap=n_overlap))
+    rows = [row("QPSK", "QPSK", "labelled"), row("QPSK", "QAM16", "labelled"), row("BPSK", None, "unknown_family"),
+            row("BPSK", None, "abstain", n_overlap=3), row("8PSK", None, "abstain", hit=False)]
+    s = ablation.summarize(rows)
+    assert s["n"] == 5 and s["correct"] == pytest.approx(1 / 5) and s["wrong"] == pytest.approx(1 / 5)
+    assert s["abstain"] == pytest.approx(3 / 5) and s["unknown_tier"] == pytest.approx(1 / 5)
+    assert s["fragmented"] == pytest.approx(1 / 5) and s["detect_miss"] == pytest.approx(1 / 5)
+
+
+def test_ablation_refuses_test_seeds_and_names_every_condition_once():
+    from experiments.readiness import ablation, generators
+    with pytest.raises(SystemExit):
+        ablation.main(["--seed-base", str(generators.G4_TEST_SEED_BASE)])
+    names = [name for name, _ in ablation.conditions()]
+    assert len(names) == len(set(names)) and "none" in names and "all" in names
+    assert {"only:drift", "only:iq", "only:multipath", "without:iq"} <= set(names)
+
+
+def test_ablation_summary_reports_how_often_detect_bounds_are_too_wide():
+    from experiments.readiness import ablation
+
+    def row(width, bands):
+        return dict(truth=dict(label="QPSK", in_library=True, band=[0.0, width]),
+                    out=dict(label=None, tier="abstain"), detect=dict(hit=True, n_overlap=1, bands=bands))
+    rows = [row(10e3, [[0.0, 12e3]]),            # 1.2x: fine
+            row(10e3, [[0.0, 30e3]]),            # 3x: too wide
+            row(10e3, [[-5e3, 2e3], [1e3, 9e3]]),  # best overlap 8 kHz band: 0.8x
+            row(10e3, [[0.0, 4e3]])]             # 0.4x: too narrow
+    s = ablation.summarize(rows)
+    assert s["too_wide"] == pytest.approx(1 / 4) and s["too_narrow"] == pytest.approx(1 / 4)
