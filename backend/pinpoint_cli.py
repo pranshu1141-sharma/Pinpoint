@@ -68,6 +68,24 @@ def cmd_summary(args):
     return 0
 
 
+def cmd_validate(args):
+    from sigmf import SigMFFile
+    metas = sorted(args.out_dir.glob("*.sigmf-meta"))
+    if not metas:
+        print(f"no .sigmf-meta files found in {args.out_dir}", file=sys.stderr)
+        return 1
+    failed = 0
+    for path in metas:
+        metadata = json.loads(path.read_text())
+        try:
+            SigMFFile(metadata=metadata).validate()
+            print(f"{path.name}: OK")
+        except Exception as exc:
+            failed += 1
+            print(f"{path.name}: {exc}", file=sys.stderr)
+    return 2 if failed else 0
+
+
 def cmd_analyze(args):
     try:
         inputs = find_inputs(args.target)
@@ -129,6 +147,10 @@ def build_parser():
     su = sub.add_parser("summary", help="print a terminal table from an --out folder's summary.csv")
     su.add_argument("out_dir", type=Path)
     su.set_defaults(func=cmd_summary)
+
+    va = sub.add_parser("validate", help="validate every .sigmf-meta in an --out folder")
+    va.add_argument("out_dir", type=Path)
+    va.set_defaults(func=cmd_validate)
     return ap
 
 

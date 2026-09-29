@@ -121,3 +121,29 @@ def test_summary_prints_needs_review_first_and_totals(inputs, tmp_path):
 def test_summary_missing_out_dir_is_a_usage_error(tmp_path):
     r = _run_new("summary", tmp_path / "does-not-exist")
     assert r.returncode == 1
+
+
+def test_validate_passes_on_analyze_output(inputs, tmp_path):
+    out = tmp_path / "out"
+    assert _run_new("analyze", inputs, "--out", out).returncode == 0
+    r = _run_new("validate", out)
+    assert r.returncode == 0, r.stderr
+    assert "OK" in r.stdout
+
+
+def test_validate_fails_on_corrupted_meta(inputs, tmp_path):
+    out = tmp_path / "out"
+    assert _run_new("analyze", inputs, "--out", out).returncode == 0
+    meta_path = next(out.glob("*.sigmf-meta"))
+    broken = json.loads(meta_path.read_text())
+    broken.pop("global", None)                     # required SigMF top-level key
+    meta_path.write_text(json.dumps(broken))
+    r = _run_new("validate", out)
+    assert r.returncode != 0
+
+
+def test_validate_no_meta_files_is_a_usage_error(tmp_path):
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    r = _run_new("validate", empty)
+    assert r.returncode == 1
