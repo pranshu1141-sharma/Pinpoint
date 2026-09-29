@@ -74,3 +74,24 @@ def test_json_flag_with_out_also_writes_files(inputs, tmp_path):
     assert (out / "summary.csv").exists()
     lines = [json.loads(line) for line in r.stdout.splitlines() if line.strip()]
     assert lines
+
+
+def test_jobs_4_matches_jobs_1_byte_for_byte(inputs, tmp_path):
+    out1, out4 = tmp_path / "j1", tmp_path / "j4"
+    r1 = _run_new("analyze", inputs, "--out", out1, "--jobs", "1")
+    r4 = _run_new("analyze", inputs, "--out", out4, "--jobs", "4")
+    assert r1.returncode == r4.returncode == 0, (r1.stderr, r4.stderr)
+    names1 = sorted(p.name for p in out1.iterdir())
+    names4 = sorted(p.name for p in out4.iterdir())
+    assert names1 == names4
+    for name in names1:
+        assert (out1 / name).read_bytes() == (out4 / name).read_bytes(), name
+
+
+def test_jobs_4_json_output_matches_jobs_1(inputs):
+    r1 = _run_new("analyze", inputs, "--json", "--jobs", "1")
+    r4 = _run_new("analyze", inputs, "--json", "--jobs", "4")
+    assert r1.returncode == r4.returncode == 0, (r1.stderr, r4.stderr)
+    lines1 = sorted(r1.stdout.splitlines())
+    lines4 = sorted(r4.stdout.splitlines())
+    assert lines1 == lines4
