@@ -147,3 +147,60 @@ def test_validate_no_meta_files_is_a_usage_error(tmp_path):
     empty.mkdir()
     r = _run_new("validate", empty)
     assert r.returncode == 1
+
+
+def test_watch_once_processes_a_stable_file_and_skips_it_next_time(tmp_path):
+    from backend.pinpoint_cli import _watch_once, build_parser
+
+    src = tmp_path / "in"
+    src.mkdir()
+    out = tmp_path / "out"
+    out.mkdir()
+    shutil.copy(ROOT / "backend/data/demo/demo.sigmf-data", src / "demo.sigmf-data")
+    shutil.copy(ROOT / "backend/data/demo/demo.sigmf-meta", src / "demo.sigmf-meta")
+
+    args = build_parser().parse_args(["watch", str(src), "--out", str(out)])
+    sizes, processed = {}, set()
+
+    _watch_once(args, sizes, processed)             # first poll: just records the size, not yet "stable"
+    assert not (out / "demo.json").exists()
+    assert not processed
+
+    _watch_once(args, sizes, processed)              # second poll: size unchanged -> stable -> analysed
+    assert (out / "demo.json").exists()
+    assert len(processed) == 1
+
+    _watch_once(args, sizes, processed)               # third poll: already processed -> skipped, not re-written
+    written_at = (out / "demo.json").stat().st_mtime
+    _watch_once(args, sizes, processed)
+    assert (out / "demo.json").stat().st_mtime == written_at
+
+
+def test_watch_state_file_persists_processed_files_across_restarts(tmp_path):
+    from backend.pinpoint_cli import _load_processed, _save_processed
+
+    out = tmp_path / "out"
+    out.mkdir()
+    assert _load_processed(out) == set()
+    _save_processed(out, {"/a/b.wav", "/a/c.wav"})
+    assert _load_processed(out) == {"/a/b.wav", "/a/c.wav"}
+    assert (out / ".pinpoint-watch-state.json").exists()
+
+
+def test_watch_stops_cleanly_on_sigint(tmp_path):
+    import signal
+    import time
+
+    src = tmp_path / "in"
+    src.mkdir()
+    out = tmp_path / "out"
+    proc = subprocess.Popen([sys.executable, "-m", "backend.pinpoint_cli", "watch", str(src), "--out", str(out),
+                             "--poll-interval", "0.1"], cwd=ROOT, stderr=subprocess.PIPE, text=True)
+    # Give the subprocess plenty of time to finish its (heavy scipy/sigmf) module imports and
+    # reach the try/except KeyboardInterrupt in cmd_watch before we signal it; a short sleep here
+    # is flaky since the SIGINT can otherwise arrive mid-import, before the handler is installed.
+    time.sleep(2.0)
+    proc.send_signal(signal.SIGINT)
+    returncode = proc.wait(timeout=5)
+    assert returncode == 0
+    assert "stopped" in proc.stderr.read()

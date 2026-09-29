@@ -5,6 +5,7 @@ import argparse
 import csv
 import json
 import sys
+import time
 from pathlib import Path
 
 from backend._version import __version__
@@ -45,6 +46,66 @@ def _write_outputs(name, blob, out_dir):
     (out_dir / f"{stem}.json").write_text(
         json.dumps({k: v for k, v in blob.items() if k != "sigmf"}, indent=1, sort_keys=True) + "\n")
     (out_dir / f"{stem}.sigmf-meta").write_text(json.dumps(sigmf, indent=1, sort_keys=True) + "\n")
+
+
+def _state_path(out_dir):
+    return out_dir / ".pinpoint-watch-state.json"
+
+
+def _load_processed(out_dir):
+    path = _state_path(out_dir)
+    return set(json.loads(path.read_text())["processed"]) if path.exists() else set()
+
+
+def _save_processed(out_dir, processed):
+    _state_path(out_dir).write_text(json.dumps({"processed": sorted(processed)}, indent=1, sort_keys=True) + "\n")
+
+
+def _watch_once(args, sizes, processed):
+    """One poll cycle: analyses every capture whose size has been unchanged since the
+    previous cycle and that hasn't been processed before. Mutates sizes/processed in place."""
+    if not args.target.is_dir():
+        raise FileNotFoundError(f"{args.target} does not exist")
+    candidates = [p for p in find_inputs(args.target) if str(p.resolve()) not in processed]
+    seen = {str(p.resolve()) for p in candidates}
+    stable = []
+    for p in candidates:
+        key = str(p.resolve())
+        size = p.stat().st_size
+        if sizes.get(key) == size:
+            stable.append(p)
+        else:
+            sizes[key] = size
+    for key in [k for k in sizes if k not in seen]:
+        del sizes[key]
+    if not stable:
+        return
+    for name, blob, err in _run_batch(stable, args, args.jobs):
+        path = next(p for p in stable if p.name == name)
+        processed.add(str(path.resolve()))
+        if err is not None:
+            print(f"{name}: {err}", file=sys.stderr)
+            continue
+        _write_outputs(name, blob, args.out)
+        print(f"analysed {name}", file=sys.stderr)
+    _save_processed(args.out, processed)
+
+
+def cmd_watch(args):
+    args.out.mkdir(parents=True, exist_ok=True)
+    processed = _load_processed(args.out)
+    sizes = {}
+    print(f"watching {args.target} (poll every {args.poll_interval}s, Ctrl-C to stop)", file=sys.stderr)
+    try:
+        while True:
+            _watch_once(args, sizes, processed)
+            time.sleep(args.poll_interval)
+    except KeyboardInterrupt:
+        print("stopped", file=sys.stderr)
+        return 0
+    except FileNotFoundError as exc:
+        print(exc, file=sys.stderr)
+        return 1
 
 
 def cmd_summary(args):
@@ -151,6 +212,14 @@ def build_parser():
     va = sub.add_parser("validate", help="validate every .sigmf-meta in an --out folder")
     va.add_argument("out_dir", type=Path)
     va.set_defaults(func=cmd_validate)
+
+    wa = sub.add_parser("watch", help="poll a folder and analyse new captures as they arrive")
+    wa.add_argument("target", type=Path)
+    wa.add_argument("--out", type=Path, required=True)
+    wa.add_argument("--jobs", type=int, default=1)
+    wa.add_argument("--poll-interval", type=float, default=2.0)
+    _add_shared_analyze_args(wa)
+    wa.set_defaults(func=cmd_watch)
     return ap
 
 
