@@ -1,7 +1,8 @@
 """WP3: why does the product abstain? One cause per candidate, with the evidence values.
 
     python -m experiments.readiness.diagnose            # G3 + G5 test files, and a G4 sample
-    -> artifacts/readiness/diagnosis.json, docs/reports/WP3_abstentions.md (tables)
+    -> artifacts/readiness/diagnosis.json; tables: python -m experiments.readiness.diagnose_report
+    (follow-ups: fsk_split_probe.py, oracle_bounds.py)
 
 Each file goes through the batch-CLI path (backend.cli.analyze_file) with verify_candidate wrapped,
 so the raw margins behind every published or withheld label are recorded (the product output is
