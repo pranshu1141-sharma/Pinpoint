@@ -54,3 +54,23 @@ def test_analyze_without_out_or_json_is_a_usage_error(inputs, tmp_path):
     r = _run_new("analyze", inputs)
     assert r.returncode == 1
     assert "--out" in r.stderr
+
+
+def test_json_flag_writes_jsonl_to_stdout_and_progress_to_stderr(inputs):
+    r = _run_new("analyze", inputs, "--json")
+    assert r.returncode == 0, r.stderr
+    lines = [json.loads(line) for line in r.stdout.splitlines() if line.strip()]
+    assert lines, "expected at least one detection line"
+    assert all("file" in obj for obj in lines)
+    assert {obj["file"] for obj in lines} <= {"demo.sigmf-data", "audio_demo.wav", "01-steady-tone.wav"}
+    assert "analysed" in r.stderr           # progress went to stderr, not stdout
+    assert "analysed" not in r.stdout       # stdout is pure JSONL, pipeable to jq
+
+
+def test_json_flag_with_out_also_writes_files(inputs, tmp_path):
+    out = tmp_path / "out"
+    r = _run_new("analyze", inputs, "--json", "--out", out)
+    assert r.returncode == 0, r.stderr
+    assert (out / "summary.csv").exists()
+    lines = [json.loads(line) for line in r.stdout.splitlines() if line.strip()]
+    assert lines
