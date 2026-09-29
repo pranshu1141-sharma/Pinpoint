@@ -1,0 +1,4817 @@
+{
+ "_about": "python -m experiments.readiness.g5_build --work /tmp/g5work     # writes experiments/readiness/g5_manifest.json\n\nRun once. Everything is pinned: rtl_433_tests and rtl_433 at fixed commits, IQEngine entries by path.\n\nrtl_433_tests (github.com/merbanan/rtl_433_tests): each capture is `tests/<group>/<device>/<set>/*.cu8`,\n8-bit unsigned interleaved IQ, named `<name>_<MHz>M_<kS/s>k.cu8`; its sibling `.json` holds rtl_433's\nexpected decodes (one JSON object per line, with a `model`). Ground truth comes from the device's\nrtl_433 definition, the way the existing backend/data/real/*.rtl433-ground-truth.json files were made:\n`model` -> the decoder source that emits it -> its `r_device` (`.modulation`, `.short_width`,\n`.long_width`, microseconds). A directory is used only when that chain is unambiguous (every\ndefinition its models reach has the same modulation and widths). OOK_* -> label ASK2 (2-level\nunipolar ASK, off level allowed), FSK_* -> FSK2. A symbol rate is scored only where the definition\nfixes one: NRZ PCM (short == long width: 1e6/short) and Manchester (short = half bit: 1e6/short is\nthe keying/chip rate). Pulse-width/position codings have no single rate and are not rate-scored.\nOne capture per decoder source (protocol): the first directory and first file in sorted order.\n\nIQEngine entries: the curated public recordings whose modulation has a published source (listed with\nit); OFDM recordings are negatives (no single-carrier library label is correct).\n\nSplit (frozen before any pipeline run): stratified by (source, OOK/FSK or positive/negative); within a\nstratum protocols are sorted by sha256(protocol) and alternate test/calibration (test first). AIS is\nforced to test because AIS channel A is already a G3 test recording.",
+ "rtl_433_tests_commit": "1aa8c29d6b9383739d1aeed495dbc5069b704392",
+ "rtl_433_commit": "02cd4b69270cb27d4cb1a318d5a549fa8e848dc8",
+ "split_sha256": "d38bc7b66fa74b22fadef60705ff3240fc326257b1578ba50cdd9a9717284663",
+ "recordings": [
+  {
+   "id": "iqe_802_11ah_WiFi_HaLow_1mhz_mcs0_chan43",
+   "source": "IQEngine",
+   "protocol": "wifi-halow",
+   "stratum": "iqe-negative",
+   "url": "https://iqengine.org/api/datasources/local/local/802.11ah%20WiFi%20HaLow/1mhz-mcs0-chan43",
+   "path": "802.11ah WiFi HaLow/1mhz-mcs0-chan43",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": null,
+    "known": "802.11ah HaLow, 1 MHz channel, MCS0: OFDM",
+    "source": "IEEE 802.11ah-2016 S1G OFDM PHY; recording by S. Miller"
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "iqe_AIS_Collection_Fort_Smallwood_Pt1_162M025CF_240K0FS_20260730",
+   "source": "IQEngine",
+   "protocol": "ais",
+   "stratum": "iqe-positive",
+   "url": "https://iqengine.org/api/datasources/local/local/AIS-Collection-Fort-Smallwood-Pt1-162M025CF-240K0FS-20260730",
+   "path": "AIS-Collection-Fort-Smallwood-Pt1-162M025CF-240K0FS-20260730",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9600.0,
+   "truth": {
+    "label": "FSK2",
+    "known": "AIS channel B (162.025 MHz) bursts at the capture centre: GMSK, BT 0.4, 9,600 bit/s",
+    "source": "ITU-R M.1371-5 (GMSK, BT 0.4, 9,600 bit/s); recording by G. Schafer (CC BY 4.0)"
+   },
+   "split": "test"
+  },
+  {
+   "id": "iqe_bluetooth",
+   "source": "IQEngine",
+   "protocol": "bluetooth",
+   "stratum": "iqe-positive",
+   "url": "https://iqengine.org/api/datasources/local/local/bluetooth",
+   "path": "bluetooth",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 1000000.0,
+   "truth": {
+    "label": "FSK2",
+    "known": "Bluetooth BR / LE 1M bursts at 2.42 GHz: GFSK, 1 Msym/s",
+    "source": "Bluetooth Core Specification v5.3, Vol 2 Part A (BR: GFSK, BT 0.5, 1 Msym/s) and Vol 6 Part A (LE 1M PHY: GFSK, 1 Msym/s); recording by J. Gilbert (CC BY-SA)"
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "iqe_cellular_rx_waveform_td_rec_0_2023_02_23_17_01_38_653",
+   "source": "IQEngine",
+   "protocol": "nr-dl",
+   "stratum": "iqe-negative",
+   "url": "https://iqengine.org/api/datasources/local/local/cellular/rx-waveform-td-rec-0-2023_02_23-17_01_38_653",
+   "path": "cellular/rx-waveform-td-rec-0-2023_02_23-17_01_38_653",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": null,
+    "known": "5G NR FR1 downlink test model TM2, 10 MHz, 64-QAM subcarriers: OFDM",
+    "source": "3GPP TS 38.141 (NR-FR1-TM2) and TS 38.211 (OFDM); recording by A. Gaber (MIT licence)"
+   },
+   "split": "test"
+  },
+  {
+   "id": "iqe_cellular_rx_waveform_td_rec_0_2023_02_23_17_04_58_527",
+   "source": "IQEngine",
+   "protocol": "lte-dl",
+   "stratum": "iqe-negative",
+   "url": "https://iqengine.org/api/datasources/local/local/cellular/rx-waveform-td-rec-0-2023_02_23-17_04_58_527",
+   "path": "cellular/rx-waveform-td-rec-0-2023_02_23-17_04_58_527",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": null,
+    "known": "LTE FDD downlink test model E-TM3.1, 20 MHz: OFDM",
+    "source": "3GPP TS 36.141 (E-TM3.1) and TS 36.211 (OFDM downlink); recording by A. Gaber (MIT licence)"
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "iqe_northeastern_4G_Day_1_bes_s1",
+   "source": "IQEngine",
+   "protocol": "lte-powder",
+   "stratum": "iqe-negative",
+   "url": "https://iqengine.org/api/datasources/local/local/northeastern/4G_Day_1_bes_s1",
+   "path": "northeastern/4G_Day_1_bes_s1",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": null,
+    "known": "LTE transmission on the POWDER testbed: OFDM",
+    "source": "3GPP TS 36.211 (OFDM); POWDER (University of Utah)"
+   },
+   "split": "test"
+  },
+  {
+   "id": "iqe_northeastern_5G_Day_1_bes_s1",
+   "source": "IQEngine",
+   "protocol": "nr-powder",
+   "stratum": "iqe-negative",
+   "url": "https://iqengine.org/api/datasources/local/local/northeastern/5G_Day_1_bes_s1",
+   "path": "northeastern/5G_Day_1_bes_s1",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": null,
+    "known": "5G NR transmission on the POWDER testbed: OFDM",
+    "source": "3GPP TS 38.211 (OFDM); POWDER (University of Utah)"
+   },
+   "split": "test"
+  },
+  {
+   "id": "iqe_northeastern_WiFi_Day_1_meb_s4",
+   "source": "IQEngine",
+   "protocol": "wifi-ofdm",
+   "stratum": "iqe-negative",
+   "url": "https://iqengine.org/api/datasources/local/local/northeastern/WiFi_Day_1_meb_s4",
+   "path": "northeastern/WiFi_Day_1_meb_s4",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": null,
+    "known": "Wi-Fi transmission on the POWDER testbed: OFDM",
+    "source": "IEEE 802.11 OFDM PHY; POWDER (University of Utah)"
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "iqe_space_ISS_180412_sstv",
+   "source": "IQEngine",
+   "protocol": "iss-sstv",
+   "stratum": "iqe-positive",
+   "url": "https://iqengine.org/api/datasources/local/local/space/ISS_180412_sstv",
+   "path": "space/ISS_180412_sstv",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [
+    "FM"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "FM",
+    "known": "ISS SSTV event on 145.800 MHz: narrowband FM carrying SSTV audio",
+    "source": "ARISS SSTV events use 145.800 MHz FM; recording description by J.-M. Friedt (CC BY-SA)"
+   },
+   "split": "test"
+  },
+  {
+   "id": "iqe_space_MeteorM2N_180501_17h52_after_resampler",
+   "source": "IQEngine",
+   "protocol": "meteor-m2-lrpt",
+   "stratum": "iqe-positive",
+   "url": "https://iqengine.org/api/datasources/local/local/space/MeteorM2N_180501_17h52_after_resampler",
+   "path": "space/MeteorM2N_180501_17h52_after_resampler",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [
+    "QPSK"
+   ],
+   "expected_rate_hz": 72000.0,
+   "truth": {
+    "label": "QPSK",
+    "known": "Meteor-M N2 LRPT downlink at 137.9 MHz: QPSK, 72 ksym/s",
+    "source": "LRPT QPSK at 72,000 sym/s (the symbol rate meteor_demod and SatDump use); recording by J.-M. Friedt (CC BY-SA)"
+   },
+   "split": "test"
+  },
+  {
+   "id": "iqe_space_MeteorM2_180502_14h12",
+   "source": "IQEngine",
+   "protocol": "meteor-m2-lrpt",
+   "stratum": "iqe-positive",
+   "url": "https://iqengine.org/api/datasources/local/local/space/MeteorM2_180502_14h12",
+   "path": "space/MeteorM2_180502_14h12",
+   "truncate_bytes": 16000000,
+   "allowed_labels": [
+    "QPSK"
+   ],
+   "expected_rate_hz": 72000.0,
+   "truth": {
+    "label": "QPSK",
+    "known": "Meteor-M N2 LRPT downlink at 137.9 MHz: QPSK, 72 ksym/s",
+    "source": "LRPT QPSK at 72,000 sym/s (the symbol rate meteor_demod and SatDump use); recording by J.-M. Friedt (CC BY-SA)"
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_6sc2_01_g001_315_1M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "mic6sc2_car_remote.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/6sc2/01/g001_315.1M_250k.cu8",
+   "path": "tests/6sc2/01/g001_315.1M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 315100000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 4000.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 250.0,
+    "long_width_us": null,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/mic6sc2_car_remote.c: r_device six_sc_two_car_remote",
+    "models": [
+     "MIC6SC2-CarRemote"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_BurnhardBBQ_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "burnhardbbq.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/BurnhardBBQ/g001_433.92M_250k.cu8",
+   "path": "tests/BurnhardBBQ/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 240.0,
+    "long_width_us": 484.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/burnhardbbq.c: r_device burnhardbbq",
+    "models": [
+     "BurnhardBBQ"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Cotech_36_7900_g004_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "cotech_36_7900.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Cotech_36_7900/g004_433.92M_250k.cu8",
+   "path": "tests/Cotech_36_7900/g004_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 786432,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1000.0,
+    "long_width_us": 2000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/cotech_36_7900.c: r_device cotech_36_7900",
+    "models": [
+     "Cotech-367900"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_DeltaDore_X3D_g004_868_95M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "deltadore_x3d.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/DeltaDore-X3D/g004_868.95M_1000k.cu8",
+   "path": "tests/DeltaDore-X3D/g004_868.95M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868950000.0,
+   "bytes": 1966080,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 40000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 25.0,
+    "long_width_us": 25.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/deltadore_x3d.c: r_device deltadore_x3d",
+    "models": [
+     "DeltaDore-X3D"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_EEZ_Tire_TPMS_Model_618E_Tests_g001_433_88M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_eezrv.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/EEZ%20Tire%20TPMS/Model%20618E/Tests/g001_433.88M_1024k.cu8",
+   "path": "tests/EEZ Tire TPMS/Model 618E/Tests/g001_433.88M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 433880000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 20000.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 50.0,
+    "long_width_us": 50.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_eezrv.c: r_device tpms_eezrv",
+    "models": [
+     "EezTire-E618"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_ESIC_EMT7110_power_meter_g003_868_28M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "esic_emt7110.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/ESIC-EMT7110_power_meter/g003_868.28M_1024k.cu8",
+   "path": "tests/ESIC-EMT7110_power_meter/g003_868.28M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 868280000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9615.384615384615,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 104.0,
+    "long_width_us": 104.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/esic_emt7110.c: r_device esic_emt7110",
+    "models": [
+     "ESIC-EMT7110"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_EV1527_Universal_Remote_g018_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "smoke_gs558.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/EV1527-Universal-Remote/g018_433.92M_250k.cu8",
+   "path": "tests/EV1527-Universal-Remote/g018_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 436.0,
+    "long_width_us": 1202.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/smoke_gs558.c: r_device smoke_gs558",
+    "models": [
+     "Smoke-GS558"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_EcoEye_01_g033_432_5M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "ecoeye.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/EcoEye/01/g033_432.5M_250k.cu8",
+   "path": "tests/EcoEye/01/g033_432.5M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 432500000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 5000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 200.0,
+    "long_width_us": 200.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/ecoeye.c: r_device ecoeye",
+    "models": [
+     "EcoEye"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_EcoWitt_WH40_WH31_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "ambientweather_wh31e.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/EcoWitt-WH40/WH31_433.92M_250k.cu8",
+   "path": "tests/EcoWitt-WH40/WH31_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 17857.14285714286,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 56.0,
+    "long_width_us": 56.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/ambientweather_wh31e.c: r_device ambientweather_wh31e",
+    "models": [
+     "AmbientWeather-WH31E"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Elantra2012TPMS_g001_315M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_elantra2012.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Elantra2012TPMS/g001_315M_250k.cu8",
+   "path": "tests/Elantra2012TPMS/g001_315M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 315000000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 20408.163265306124,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 49.0,
+    "long_width_us": 49.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_elantra2012.c: r_device tpms_elantra2012",
+    "models": [
+     "Elantra2012"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Elsner_Solexa_01_g001_868_25M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "elsner_solexa.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Elsner-Solexa/01/g001_868.25M_1000k.cu8",
+   "path": "tests/Elsner-Solexa/01/g001_868.25M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868250000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 90909.09090909091,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 11.0,
+    "long_width_us": 11.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/elsner_solexa.c: r_device elsner_solexa",
+    "models": [
+     "Elsner-Solexa"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Eurochron_EFTH800_g002_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "efth800.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Eurochron-EFTH800/g002_433.92M_250k.cu8",
+   "path": "tests/Eurochron-EFTH800/g002_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 250.0,
+    "long_width_us": 500.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/efth800.c: r_device eurochron_efth800",
+    "models": [
+     "Eurochron-EFTH800"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_GT_WT_03_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "gt_wt_03.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/GT-WT-03/01/g001_433.92M_250k.cu8",
+   "path": "tests/GT-WT-03/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 256.0,
+    "long_width_us": 625.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/gt_wt_03.c: r_device gt_wt_03",
+    "models": [
+     "GT-WT03"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Globaltronics_GT_TMBBQ_05_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "gt_tmbbq05.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Globaltronics/GT-TMBBQ-05/01/g001_433.92M_250k.cu8",
+   "path": "tests/Globaltronics/GT-TMBBQ-05/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 786432,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2000.0,
+    "long_width_us": 4000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/gt_tmbbq05.c: r_device gt_tmbbq05",
+    "models": [
+     "GT-TMBBQ05"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Globaltronics_GT_WT_02_02_g170_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "gt_wt_02.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Globaltronics/GT-WT-02/02/g170_433.92M_250k.cu8",
+   "path": "tests/Globaltronics/GT-WT-02/02/g170_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2500.0,
+    "long_width_us": 5000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/gt_wt_02.c: r_device gt_wt_02",
+    "models": [
+     "GT-WT02"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Honda_TRW_TPMS_g001_315M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_honda.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Honda_TRW_TPMS/g001_315M_250k.cu8",
+   "path": "tests/Honda_TRW_TPMS/g001_315M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 315000000.0,
+   "bytes": 10000000,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 20000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 50.0,
+    "long_width_us": 50.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_honda.c: r_device tpms_honda",
+    "models": [
+     "Honda-TRW"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_IBIS_beacon_g001_433_92M_2560k",
+   "source": "rtl_433_tests",
+   "protocol": "ibis_beacon.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/IBIS_beacon/g001_433.92M_2560k.cu8",
+   "path": "tests/IBIS_beacon/g001_433.92M_2560k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2560000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 980492,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 33333.333333333336,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 30.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/ibis_beacon.c: r_device ibis_beacon",
+    "models": [
+     "IBIS-Beacon"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_IKEA_Sparsnas_01_g001_867_95M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "ikea_sparsnas.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/IKEA_Sparsnas/01/g001_867.95M_250k.cu8",
+   "path": "tests/IKEA_Sparsnas/01/g001_867.95M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 867950000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 37037.03703703704,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 27.0,
+    "long_width_us": 27.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/ikea_sparsnas.c: r_device ikea_sparsnas",
+    "models": [
+     "Ikea-Sparsnas"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Jansite_TPMS_01_FL_08_22_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_jansite.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Jansite_TPMS/01/FL-08-22_433.92M_250k.cu8",
+   "path": "tests/Jansite_TPMS/01/FL-08-22_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 170208,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 19230.76923076923,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 52.0,
+    "long_width_us": 52.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_jansite.c: r_device tpms_jansite",
+    "models": [
+     "Jansite"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Jansite_TPMS_02_g007_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_jansite_solar.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Jansite_TPMS/02/g007_433.92M_250k.cu8",
+   "path": "tests/Jansite_TPMS/02/g007_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 19607.843137254902,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 51.0,
+    "long_width_us": 51.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_jansite_solar.c: r_device tpms_jansite_solar",
+    "models": [
+     "Jansite-Solar"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Jeep_TPMS_g031_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_jeep.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Jeep_TPMS/g031_433.92M_250k.cu8",
+   "path": "tests/Jeep_TPMS/g031_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 19230.76923076923,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 52.0,
+    "long_width_us": 52.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_jeep.c: r_device tpms_jeep",
+    "models": [
+     "Jeep"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_KIDDE_RF_SM_ACDC_g001_434_37M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "kidde_smoke.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/KIDDE_RF-SM-ACDC/g001_434.37M_250k.cu8",
+   "path": "tests/KIDDE_RF-SM-ACDC/g001_434.37M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 434370000.0,
+   "bytes": 4849664,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 2500.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 400.0,
+    "long_width_us": 400.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/kidde_smoke.c: r_device kidde_smoke",
+    "models": [
+     "Kidde-Smoke"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_NGE101_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "norgo.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/NGE101/01/g001_433.92M_250k.cu8",
+   "path": "tests/NGE101/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_DMC",
+    "coding": "DMC",
+    "short_width_us": 486.0,
+    "long_width_us": 972.0,
+    "rate_rule": "not scored: DMC coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/norgo.c: r_device norgo",
+    "models": [
+     "Norgo-NGE101"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Neptune_R900_01_g001_912M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "neptune_r900.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Neptune-R900/01/g001_912M_1024k.cu8",
+   "path": "tests/Neptune-R900/01/g001_912M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 912000000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 33333.333333333336,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 30.0,
+    "long_width_us": 30.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/neptune_r900.c: r_device neptune_r900, neptune_r900bcd",
+    "models": [
+     "Neptune-R900"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Nissan_TPMS_01_g001_315M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_nissan.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Nissan_TPMS/01/g001_315M_250k.cu8",
+   "path": "tests/Nissan_TPMS/01/g001_315M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 315000000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 8333.333333333334,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 120.0,
+    "long_width_us": 120.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_nissan.c: r_device tpms_nissan",
+    "models": [
+     "Nissan"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Opus_XT300_01_g005_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "opus_xt300.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Opus-XT300/01/g005_433.92M_250k.cu8",
+   "path": "tests/Opus-XT300/01/g005_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 544.0,
+    "long_width_us": 932.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/opus_xt300.c: r_device opus_xt300",
+    "models": [
+     "Opus-XT300"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Oregon_WMR500_01_g028_868_2M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "oregon_scientific_wmr500.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Oregon-WMR500/01/g028_868.2M_1000k.cu8",
+   "path": "tests/Oregon-WMR500/01/g028_868.2M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868200000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 38461.53846153846,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 26.0,
+    "long_width_us": 26.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/oregon_scientific_wmr500.c: r_device oregon_scientific_wmr500",
+    "models": [
+     "Oregon-WMR500"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Philips_AJ7010_01_21_1_ch2_B_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "philips_aj7010.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Philips-AJ7010/01/21.1_ch2_B_433.92M_250k.cu8",
+   "path": "tests/Philips-AJ7010/01/21.1_ch2_B_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 2000.0,
+    "long_width_us": 6000.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/philips_aj7010.c: r_device philips_aj7010",
+    "models": [
+     "Philips-AJ7010"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_RfxMeter_01_g004_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "rfxmeter.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/RfxMeter/01/g004_433.92M_250k.cu8",
+   "path": "tests/RfxMeter/01/g004_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 786432,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 500.0,
+    "long_width_us": 1500.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/rfxmeter.c: r_device rfxmeter",
+    "models": [
+     "RfxMeter"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Schou_g1083_433_89M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "schou_72543_rain.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Schou/g1083_433.89M_250k.cu8",
+   "path": "tests/Schou/g1083_433.89M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433890000.0,
+   "bytes": 2621440,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 972.0,
+    "long_width_us": 2680.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/schou_72543_rain.c: r_device schou_72543_rain",
+    "models": [
+     "Schou-72543"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Schrader_TPMS_PA66GF35_01_g001_433_92M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "schraeder.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Schrader_TPMS_PA66GF35/01/g001_433.92M_1024k.cu8",
+   "path": "tests/Schrader_TPMS_PA66GF35/01/g001_433.92M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 8130.081300813008,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 123.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/schraeder.c: r_device schrader_EG53MA4",
+    "models": [
+     "Schrader-EG53MA4"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Shenzhen_Wale_WL_TH6R_01_test_1_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "shenzhen_wale_wl_th6r.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Shenzhen%20Wale/WL-TH6R/01/test_1_433.92M_250k.cu8",
+   "path": "tests/Shenzhen Wale/WL-TH6R/01/test_1_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 365.0,
+    "long_width_us": 605.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/shenzhen_wale_wl_th6r.c: r_device shenzhen_wale_wl_th6r",
+    "models": [
+     "WL-TH6R"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_SmarTire_TPMS_01_g013_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_smartire.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/SmarTire_TPMS/01/g013_433.92M_250k.cu8",
+   "path": "tests/SmarTire_TPMS/01/g013_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 5988.023952095808,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 167.0,
+    "long_width_us": 167.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_smartire.c: r_device tpms_smartire",
+    "models": [
+     "SmarTire-AM"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_TFA_303307_01_g003_868M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "tfa_30_3307.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/TFA-303307/01/g003_868M_1000k.cu8",
+   "path": "tests/TFA-303307/01/g003_868M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868000000.0,
+   "bytes": 1572864,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_RZI",
+    "coding": "RZI",
+    "short_width_us": 30.0,
+    "long_width_us": 167.0,
+    "rate_rule": "not scored: RZI coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/tfa_30_3307.c: r_device tfa_30_3307",
+    "models": [
+     "TFA-303307"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_TFA_30_3196_TempHumid_g001_868_33M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tfa_30_3196.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/TFA_30.3196_TempHumid/g001_868.33M_250k.cu8",
+   "path": "tests/TFA_30.3196_TempHumid/g001_868.33M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 868330000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 4081.6326530612246,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 245.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tfa_30_3196.c: r_device tfa_303196",
+    "models": [
+     "TFA-303196"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_TFA_Drop_30_3233_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tfa_drop_30.3233.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/TFA-Drop-30.3233.01/g001_433.92M_250k.cu8",
+   "path": "tests/TFA-Drop-30.3233.01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 255.0,
+    "long_width_us": 510.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/tfa_drop_30.3233.c: r_device tfa_drop_303233",
+    "models": [
+     "TFA-Drop"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_TFA_KlimaLogg_30_3180_IT_02_g006_868_25M_1536k",
+   "source": "rtl_433_tests",
+   "protocol": "klimalogg.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/TFA-KlimaLogg-30.3180.IT/02/g006_868.25M_1536k.cu8",
+   "path": "tests/TFA-KlimaLogg-30.3180.IT/02/g006_868.25M_1536k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1536000.0,
+   "center_frequency": 868250000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_NRZS",
+    "coding": "NRZS",
+    "short_width_us": 26.0,
+    "long_width_us": 0.0,
+    "rate_rule": "not scored: NRZS coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/klimalogg.c: r_device klimalogg",
+    "models": [
+     "Klimalogg-Pro"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_TFA_Marbella_30_3238_06_g001_868M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "tfa_marbella.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/TFA-Marbella-30.3238.06/g001_868M_1000k.cu8",
+   "path": "tests/TFA-Marbella-30.3238.06/g001_868M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868000000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9523.809523809523,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 105.0,
+    "long_width_us": 105.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tfa_marbella.c: r_device tfa_marbella",
+    "models": [
+     "TFA-Marbella"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_TS_FT002_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "ts_ft002.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/TS-FT002/g001_433.92M_250k.cu8",
+   "path": "tests/TS-FT002/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 464.0,
+    "long_width_us": 948.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/ts_ft002.c: r_device ts_ft002",
+    "models": [
+     "TS-FT002"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Thermor_DG950_Data_g030_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "thermor.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Thermor%20DG950/Data/g030_433.92M_250k.cu8",
+   "path": "tests/Thermor DG950/Data/g030_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 680.0,
+    "long_width_us": 2100.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/thermor.c: r_device thermor",
+    "models": [
+     "Thermor-DG950"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_Toyota_TPMS_02_0d5aee3_g007_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_toyota.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Toyota_TPMS/02/0d5aee3_g007_433.92M_250k.cu8",
+   "path": "tests/Toyota_TPMS/02/0d5aee3_g007_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 19230.76923076923,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 52.0,
+    "long_width_us": 52.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_toyota.c: r_device tpms_toyota",
+    "models": [
+     "Toyota"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Toyota_TPMS_03_others_g001_314_98M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_pmv107j.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Toyota_TPMS/03/others/g001_314.98M_250k.cu8",
+   "path": "tests/Toyota_TPMS/03/others/g001_314.98M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 314980000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 10000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 100.0,
+    "long_width_us": 100.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_pmv107j.c: r_device tpms_pmv107j",
+    "models": [
+     "PMV-107J"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_WallarGe_CLTX001_01_test_1_433_92M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "wallarge_cltx001.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/WallarGe/CLTX001/01/test_1_433.92M_1000k.cu8",
+   "path": "tests/WallarGe/CLTX001/01/test_1_433.92M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 250.0,
+    "long_width_us": 500.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/wallarge_cltx001.c: r_device wallarge_cltx001",
+    "models": [
+     "WallarGe-CLTX001"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_Watts_WFHTRF_01_g004_433_92M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "watts_thermostat.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/Watts-WFHTRF/01/g004_433.92M_1000k.cu8",
+   "path": "tests/Watts-WFHTRF/01/g004_433.92M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 260.0,
+    "long_width_us": 600.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/watts_thermostat.c: r_device watts_thermostat",
+    "models": [
+     "Watts-WFHTRF"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_XC_0324_02_g001_433_917M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "digitech_xc0324.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/XC-0324/02/g001_433.917M_250k.cu8",
+   "path": "tests/XC-0324/02/g001_433.917M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433917000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 520.0,
+    "long_width_us": 1000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/digitech_xc0324.c: r_device digitech_xc0324",
+    "models": [
+     "Digitech-XC0324"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_abmt_01_g003_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "abmt.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/abmt/01/g003_433.92M_250k.cu8",
+   "path": "tests/abmt/01/g003_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 1818.1818181818182,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 550.0,
+    "long_width_us": 550.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/abmt.c: r_device abmt",
+    "models": [
+     "Basics-Meat"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_acurite_Acurite_3_in_1_02_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "acurite.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/acurite/Acurite_3-in-1/02/g001_433.92M_250k.cu8",
+   "path": "tests/acurite/Acurite_3-in-1/02/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 220.0,
+    "long_width_us": 408.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/acurite.c: r_device acurite_txr",
+    "models": [
+     "Acurite-3n1"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_alecto_ws_1200_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "fineoffset.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/alecto_ws_1200/01/g001_433.92M_250k.cu8",
+   "path": "tests/alecto_ws_1200/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 2752512,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 504.0,
+    "long_width_us": 1480.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/fineoffset.c: r_device fineoffset_WH0530",
+    "models": [
+     "Alecto-WS1200v1"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_alps_fwb1u545_01_lock_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "alps_fwb1u545.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/alps/fwb1u545/01/lock_433.92M_250k.cu8",
+   "path": "tests/alps/fwb1u545/01/lock_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 2000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 500.0,
+    "long_width_us": null,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/alps_fwb1u545.c: r_device alps_fwb1u545_car_remote",
+    "models": [
+     "Alps-FWB1U545"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_ambient_weather_03_g002_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "ambient_weather.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/ambient_weather/03/g002_433.92M_250k.cu8",
+   "path": "tests/ambient_weather/03/g002_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 2000.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 500.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/ambient_weather.c: r_device ambient_weather",
+    "models": [
+     "Ambientweather-F007TH"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_ambient_weather_05_CH1_77_7F_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "ambientweather_tx8300.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/ambient_weather/05/CH1_77.7F_433.92M_250k.cu8",
+   "path": "tests/ambient_weather/05/CH1_77.7F_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2000.0,
+    "long_width_us": 4000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/ambientweather_tx8300.c: r_device ambientweather_tx8300",
+    "models": [
+     "AmbientWeather-TX8300"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_arad_ms_meter_g001_916_2M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "arad_ms_meter.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/arad_ms_meter/g001_916.2M_1024k.cu8",
+   "path": "tests/arad_ms_meter/g001_916.2M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 916200000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 119047.61904761904,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 8.4,
+    "long_width_us": 8.4,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/arad_ms_meter.c: r_device arad_ms_meter",
+    "models": [
+     "AradMsMeter-Dialog3G"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_astroflex_astrostart_2000_01_lock_372_4M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "astrostart_2000.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/astroflex/astrostart_2000/01/lock_372.4M_250k.cu8",
+   "path": "tests/astroflex/astrostart_2000/01/lock_372.4M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 372400000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 326.0,
+    "long_width_us": 526.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/astrostart_2000.c: r_device astrostart_2000",
+    "models": [
+     "Astrostart-2000"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_audiovox_PRO_OE3B_01_lock_303_3M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "audiovox_pro_oe3b.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/audiovox/PRO-OE3B/01/lock_303.3M_250k.cu8",
+   "path": "tests/audiovox/PRO-OE3B/01/lock_303.3M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 303300000.0,
+   "bytes": 786432,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 445.0,
+    "long_width_us": 895.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/audiovox_pro_oe3b.c: r_device audiovox_pro_oe3b",
+    "models": [
+     "Audiovox-PROOE3B"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_auriol_06_g001_433_93M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "auriol_hg02832.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/auriol/06/g001_433.93M_250k.cu8",
+   "path": "tests/auriol/06/g001_433.93M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433930000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 252.0,
+    "long_width_us": 612.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/auriol_hg02832.c: r_device auriol_hg02832",
+    "models": [
+     "Auriol-HG02832"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_auriol_Auriol_AFT77A1_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "vauno_en8822c.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/auriol/Auriol_AFT77A1/g001_433.92M_250k.cu8",
+   "path": "tests/auriol/Auriol_AFT77A1/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2000.0,
+    "long_width_us": 4000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/vauno_en8822c.c: r_device vauno_en8822c",
+    "models": [
+     "Vauno-EN8822C"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_auriol_Auriol_AFT77B2_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "auriol_aft77b2.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/auriol/Auriol_AFT77B2/g001_433.92M_250k.cu8",
+   "path": "tests/auriol/Auriol_AFT77B2/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 500.0,
+    "long_width_us": 920.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/auriol_aft77b2.c: r_device auriol_aft77b2",
+    "models": [
+     "Auriol-AFT77B2"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_auriol_Auriol_AFW2A1_g017_433_91M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "auriol_afw2a1.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/auriol/Auriol_AFW2A1/g017_433.91M_250k.cu8",
+   "path": "tests/auriol/Auriol_AFW2A1/g017_433.91M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433910000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 576.0,
+    "long_width_us": 1536.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/auriol_afw2a1.c: r_device auriol_afw2a1",
+    "models": [
+     "Auriol-AFW2A1"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_auriol_Auriol_AHFL_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "auriol_ahfl.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/auriol/Auriol_AHFL/g001_433.92M_250k.cu8",
+   "path": "tests/auriol/Auriol_AHFL/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2100.0,
+    "long_width_us": 4150.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/auriol_ahfl.c: r_device auriol_ahfl",
+    "models": [
+     "Auriol-AHFL"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_baldr_therm_01_g233_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "baldr_therm.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/baldr_therm/01/g233_433.92M_250k.cu8",
+   "path": "tests/baldr_therm/01/g233_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1000.0,
+    "long_width_us": 2000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/baldr_therm.c: r_device baldr_therm",
+    "models": [
+     "Baldr-E0666TH"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_blueline_01_gap_45364_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "blueline.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/blueline/01/gap_45364_433.92M_250k.cu8",
+   "path": "tests/blueline/01/gap_45364_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 500.0,
+    "long_width_us": 1000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/blueline.c: r_device blueline",
+    "models": [
+     "Blueline-PowerCost"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_bm5v2_01_bm5v2_d1s1_433_92M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "bm5.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/bm5v2/01/bm5v2_d1s1_433.92M_1024k.cu8",
+   "path": "tests/bm5v2/01/bm5v2_d1s1_433.92M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 200000,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 225.0,
+    "long_width_us": 675.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/bm5.c: r_device bm5",
+    "models": [
+     "BM5-v2"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_bresser_5in1_01_g001_868_3M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "bresser_5in1.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/bresser_5in1/01/g001_868.3M_250k.cu8",
+   "path": "tests/bresser_5in1/01/g001_868.3M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 868300000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 8064.5161290322585,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 124.0,
+    "long_width_us": 124.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/bresser_5in1.c: r_device bresser_5in1",
+    "models": [
+     "Bresser-5in1"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_bresser_6in1_01_g002_868_3M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "bresser_6in1.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/bresser_6in1/01/g002_868.3M_1000k.cu8",
+   "path": "tests/bresser_6in1/01/g002_868.3M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868300000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 8064.5161290322585,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 124.0,
+    "long_width_us": 124.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/bresser_6in1.c: r_device bresser_6in1",
+    "models": [
+     "Bresser-6in1"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_cavius_g001_869_67M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "cavius.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/cavius/g001_869.67M_250k.cu8",
+   "path": "tests/cavius/g001_869.67M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 869670000.0,
+   "bytes": 3145728,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 4854.368932038835,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 206.0,
+    "long_width_us": 206.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/cavius.c: r_device cavius",
+    "models": [
+     "Cavius-Security"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_celsia_czc1_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "celsia_czc1.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/celsia-czc1/g001_433.92M_250k.cu8",
+   "path": "tests/celsia-czc1/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 819.672131147541,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 1220.0,
+    "long_width_us": 1220.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/celsia_czc1.c: r_device celsia_czc1",
+    "models": [
+     "Celsia-CZC1"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_chamberlain_cwpirc_01_g007_915M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "chamberlain_cwpirc.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/chamberlain_cwpirc/01/g007_915M_1000k.cu8",
+   "path": "tests/chamberlain_cwpirc/01/g007_915M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 915000000.0,
+   "bytes": 1179648,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 40000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 25.0,
+    "long_width_us": 25.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/chamberlain_cwpirc.c: r_device chamberlain_cwpirc",
+    "models": [
+     "Chamberlain-CWPIRC"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_chrysler_car_remote_01_lock_315_1M_920k",
+   "source": "rtl_433_tests",
+   "protocol": "chrysler_car_remote.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/chrysler_car_remote/01/lock_315.1M_920k.cu8",
+   "path": "tests/chrysler_car_remote/01/lock_315.1M_920k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 920000.0,
+   "center_frequency": 315100000.0,
+   "bytes": 2752512,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 350.0,
+    "long_width_us": 700.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/chrysler_car_remote.c: r_device chrysler_car_remote",
+    "models": [
+     "Chrysler-CarRemote"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_cmr113_g024_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "cmr113.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/cmr113/g024_433.92M_250k.cu8",
+   "path": "tests/cmr113/g024_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PIWM_DC",
+    "coding": "PIWM",
+    "short_width_us": 480.0,
+    "long_width_us": 976.0,
+    "rate_rule": "not scored: PIWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/cmr113.c: r_device cmr113",
+    "models": [
+     "Clipsal-CMR113"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_code_alarm_frdpc2002_01_lock_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "code_alarm_car_remote.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/code-alarm/frdpc2002/01/lock_433.92M_250k.cu8",
+   "path": "tests/code-alarm/frdpc2002/01/lock_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 1818.1818181818182,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 550.0,
+    "long_width_us": 1100.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/code_alarm_car_remote.c: r_device code_alarm_frdpc2000_car_remote",
+    "models": [
+     "CodeAlarm-FRDPC2002"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_companion_wtr001_01_g015_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "companion_wtr001.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/companion_wtr001/01/g015_433.92M_250k.cu8",
+   "path": "tests/companion_wtr001/01/g015_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 732.0,
+    "long_width_us": 2196.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/companion_wtr001.c: r_device companion_wtr001",
+    "models": [
+     "Companion-WTR001"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_compustar_1wg3r_01_lock_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "compustar_1wg3r.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/compustar/1wg3r/01/lock_433.92M_250k.cu8",
+   "path": "tests/compustar/1wg3r/01/lock_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 708.0,
+    "long_width_us": 1076.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/compustar_1wg3r.c: r_device compustar_1wg3r",
+    "models": [
+     "Compustar-1WG3R"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_continental_72147_SNA_A01_01_lock_313_8M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "continental_car_remote.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/continental/72147-SNA-A01/01/lock_313.8M_1024k.cu8",
+   "path": "tests/continental/72147-SNA-A01/01/lock_313.8M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 313800000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 10000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 100.0,
+    "long_width_us": 200.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/continental_car_remote.c: r_device continental_car_remote",
+    "models": [
+     "Continental-KR5V2X"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_cotech_cotech_36_7959_01_g001_433_92M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "cotech_36_7959.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/cotech/cotech_36-7959/01/g001_433.92M_1000k.cu8",
+   "path": "tests/cotech/cotech_36-7959/01/g001_433.92M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 2000.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 500.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/cotech_36_7959.c: r_device cotech_36_7959",
+    "models": [
+     "Cotech-367959"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_dickert_mahs_01_g024_433_92M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "dickert_mahs.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/dickert_mahs/01/g024_433.92M_1000k.cu8",
+   "path": "tests/dickert_mahs/01/g024_433.92M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 1835008,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 362.0,
+    "long_width_us": 770.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/dickert_mahs.c: r_device dickert_pwm",
+    "models": [
+     "Dickert-MAHS433"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_directv_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "directv.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/directv/01/g001_433.92M_250k.cu8",
+   "path": "tests/directv/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 1666.6666666666667,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 600.0,
+    "long_width_us": 600.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/directv.c: r_device directv",
+    "models": [
+     "DirecTV-RC66RX"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_dish_remote_6_3_01_cancel_384M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "dish_remote_6_3.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/dish_remote_6.3/01/cancel_384M_250k.cu8",
+   "path": "tests/dish_remote_6.3/01/cancel_384M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 384000000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1692.0,
+    "long_width_us": 2812.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/dish_remote_6_3.c: r_device dish_remote_6_3",
+    "models": [
+     "Dish-RC63"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_ecowitt_01_g3022_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "ecowitt.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/ecowitt/01/g3022_433.92M_250k.cu8",
+   "path": "tests/ecowitt/01/g3022_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 500.0,
+    "long_width_us": 1480.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/ecowitt.c: r_device ecowitt",
+    "models": [
+     "Ecowitt-WH53"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_efergy_emtx_g003_433_92M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "efergy_e2_classic.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/efergy_emtx/g003_433.92M_1024k.cu8",
+   "path": "tests/efergy_emtx/g003_433.92M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 64.0,
+    "long_width_us": 136.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/efergy_e2_classic.c: r_device efergy_e2_classic",
+    "models": [
+     "Efergy-e2CT"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_elero_01_g003_869_4M_2048k",
+   "source": "rtl_433_tests",
+   "protocol": "elero.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/elero/01/g003_869.4M_2048k.cu8",
+   "path": "tests/elero/01/g003_869.4M_2048k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2048000.0,
+   "center_frequency": 869400000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 76923.07692307692,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 13.0,
+    "long_width_us": 13.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/elero.c: r_device elero",
+    "models": [
+     "Elero"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_elster_01_elster_t2_cleartext_nbrtable_len189_03_910M_2048k",
+   "source": "rtl_433_tests",
+   "protocol": "elster_power_meter.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/elster/01/elster_t2_cleartext_nbrtable_len189_03_910M_2048k.cu8",
+   "path": "tests/elster/01/elster_t2_cleartext_nbrtable_len189_03_910M_2048k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2048000.0,
+   "center_frequency": 910000000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 142857.14285714287,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 7.0,
+    "long_width_us": 7.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/elster_power_meter.c: r_device elster_power_meter2",
+    "models": [
+     "Elster-PowerMeter2"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_en2058_01_g004_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "en2058.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/en2058/01/g004_433.92M_250k.cu8",
+   "path": "tests/en2058/01/g004_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 10000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 100.0,
+    "long_width_us": 100.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/en2058.c: r_device en2058",
+    "models": [
+     "EN2058"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_ert_scm_01_g001_912_6M_2400k",
+   "source": "rtl_433_tests",
+   "protocol": "ert_scm.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/ert/scm/01/g001_912.6M_2400k.cu8",
+   "path": "tests/ert/scm/01/g001_912.6M_2400k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2400000.0,
+   "center_frequency": 912600000.0,
+   "bytes": 40960,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 33333.333333333336,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 30.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/ert_scm.c: r_device ert_scm",
+    "models": [
+     "ERT-SCM"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_esun_en2053_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "esun_en2053.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/esun_en2053/01/g001_433.92M_250k.cu8",
+   "path": "tests/esun_en2053/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1024.0,
+    "long_width_us": 2000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/esun_en2053.c: r_device esun_en2053",
+    "models": [
+     "Esun-EN2053"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_eurochron_th_01_g004_433_8M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "eurochron.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/eurochron-th/01/g004_433.8M_250k.cu8",
+   "path": "tests/eurochron-th/01/g004_433.8M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433800000.0,
+   "bytes": 1048576,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1016.0,
+    "long_width_us": 2024.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/eurochron.c: r_device eurochron",
+    "models": [
+     "Eurochron-TH"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_fineoffset_ws90_01_g001_915M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "fineoffset_ws90.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/fineoffset_ws90/01/g001_915M_1000k.cu8",
+   "path": "tests/fineoffset_ws90/01/g001_915M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 915000000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 17241.379310344826,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 58.0,
+    "long_width_us": 58.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/fineoffset_ws90.c: r_device fineoffset_ws90",
+    "models": [
+     "Fineoffset-WS90"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_florabest_01_g045_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "florabest.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/florabest/01/g045_433.92M_250k.cu8",
+   "path": "tests/florabest/01/g045_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2000.0,
+    "long_width_us": 4000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/florabest.c: r_device florabest",
+    "models": [
+     "Florabest-FBTH1"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_flowis_01_g010_868M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "flowis.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/flowis/01/g010_868M_1000k.cu8",
+   "path": "tests/flowis/01/g010_868M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868000000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 100000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 10.0,
+    "long_width_us": 10.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/flowis.c: r_device flowis",
+    "models": [
+     "Flowis"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_fsl_scoreboard_01_g001_433_954M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "fsl_scoreboard.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/fsl_scoreboard/01/g001_433.954M_250k.cu8",
+   "path": "tests/fsl_scoreboard/01/g001_433.954M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433954000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 1893.939393939394,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 528.0,
+    "long_width_us": 528.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/fsl_scoreboard.c: r_device fsl_scoreboard",
+    "models": [
+     "FSL-Scoreboard"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_funkbus_remote_01_g001_433_92M_2000k",
+   "source": "rtl_433_tests",
+   "protocol": "funkbus.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/funkbus/remote/01/g001_433.92M_2000k.cu8",
+   "path": "tests/funkbus/remote/01/g001_433.92M_2000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2000000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_DMC",
+    "coding": "DMC",
+    "short_width_us": 500.0,
+    "long_width_us": 1000.0,
+    "rate_rule": "not scored: DMC coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/funkbus.c: r_device funkbus_remote",
+    "models": [
+     "Funkbus-Remote"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_gear_hive_tpms_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_gear_hive.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/gear_hive_tpms/01/g001_433.92M_250k.cu8",
+   "path": "tests/gear_hive_tpms/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 3145728,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 8333.333333333334,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 120.0,
+    "long_width_us": 224.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_gear_hive.c: r_device tmps_gear_hive",
+    "models": [
+     "Gear-Hive"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_geevon_tx16_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "geevon.c+geevon_tx19.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/geevon/tx16/01/g001_433.92M_250k.cu8",
+   "path": "tests/geevon/tx16/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 250.0,
+    "long_width_us": 500.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/geevon.c+geevon_tx19.c: r_device geevon_tx16, geevon_tx19",
+    "models": [
+     "Geevon-TX163",
+     "Geevon-TX191"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_general_motors_ABO1502T_01_g001_314_9M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "gm_car_remote.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/general_motors/ABO1502T/01/g001_314.9M_250k.cu8",
+   "path": "tests/general_motors/ABO1502T/01/g001_314.9M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 314900000.0,
+   "bytes": 1441792,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 300.0,
+    "long_width_us": 500.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/gm_car_remote.c: r_device gm_car_remote",
+    "models": [
+     "GM-ABO1502T"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_generic_4ch_black_remote_315mhz_01_g001_315M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "generic_remote.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/generic-4ch-black-remote-315mhz/01/g001_315M_250k.cu8",
+   "path": "tests/generic-4ch-black-remote-315mhz/01/g001_315M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 315000000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 464.0,
+    "long_width_us": 1404.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/generic_remote.c: r_device generic_remote",
+    "models": [
+     "Generic-Remote"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_gm_tpms_pres_0_temp_27_id_2017968551_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_gm.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/gm_tpms/pres_0_temp_27_id_2017968551_433.92M_250k.cu8",
+   "path": "tests/gm_tpms/pres_0_temp_27_id_2017968551_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 8333.333333333334,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 120.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_gm.c: r_device tpms_gm",
+    "models": [
+     "GM-Aftermarket"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_govee_h5059_g001_912_275M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "govee_h5059.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/govee_h5059/g001_912.275M_250k.cu8",
+   "path": "tests/govee_h5059/g001_912.275M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 912275000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 10000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 100.0,
+    "long_width_us": 100.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/govee_h5059.c: r_device govee_h5059",
+    "models": [
+     "Govee-H5059"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_govee_h5112_g001_912_375M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "govee_h5112.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/govee_h5112/g001_912.375M_250k.cu8",
+   "path": "tests/govee_h5112/g001_912.375M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 912375000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 10000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 100.0,
+    "long_width_us": 100.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/govee_h5112.c: r_device govee_h5112",
+    "models": [
+     "Govee-H5112"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_govee_h5310_g002_912_275M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "govee_h5310.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/govee_h5310/g002_912.275M_250k.cu8",
+   "path": "tests/govee_h5310/g002_912.275M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 912275000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 10000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 100.0,
+    "long_width_us": 100.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/govee_h5310.c: r_device govee_h5310",
+    "models": [
+     "Govee-H5310"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_hideki_05_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "hideki.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/hideki/05/g001_433.92M_250k.cu8",
+   "path": "tests/hideki/05/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_DMC",
+    "coding": "DMC",
+    "short_width_us": 520.0,
+    "long_width_us": 1040.0,
+    "rate_rule": "not scored: DMC coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/hideki.c: r_device hideki_ts04",
+    "models": [
+     "Hideki-Temperature"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_honeywell_2Gig_DW10_g001_344_975M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "honeywell.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/honeywell/2Gig-DW10/g001_344.975M_250k.cu8",
+   "path": "tests/honeywell/2Gig-DW10/g001_344.975M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 344975000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 7352.941176470588,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 136.0,
+    "long_width_us": 136.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/honeywell.c: r_device honeywell",
+    "models": [
+     "Honeywell-Security"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_iMars_TPMS_01_g004_433_92M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_imars_t240.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/iMars_TPMS/01/g004_433.92M_1000k.cu8",
+   "path": "tests/iMars_TPMS/01/g004_433.92M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 20000.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 50.0,
+    "long_width_us": 50.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_imars_t240.c: r_device tpms_imars_t240",
+    "models": [
+     "iMars-T240"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_idm_IDM_g002_912_6M_2359_3k",
+   "source": "rtl_433_tests",
+   "protocol": "ert_idm.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/idm/IDM/g002_912.6M_2359.3k.cu8",
+   "path": "tests/idm/IDM/g002_912.6M_2359.3k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2359300.0,
+   "center_frequency": 912600000.0,
+   "bytes": 297420,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 33333.333333333336,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 30.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/ert_idm.c: r_device ert_idm",
+    "models": [
+     "IDM"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_inkbird_IBS_P01R_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "inkbird_ith20r.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/inkbird/IBS-P01R/g001_433.92M_250k.cu8",
+   "path": "tests/inkbird/IBS-P01R/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 917504,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 10000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 100.0,
+    "long_width_us": 100.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/inkbird_ith20r.c: r_device inkbird_ith20r",
+    "models": [
+     "Inkbird-ITH20R"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_insteon_01_g001_915M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "insteon.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/insteon/01/g001_915M_1024k.cu8",
+   "path": "tests/insteon/01/g001_915M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 915000000.0,
+   "bytes": 169216,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9090.90909090909,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 110.0,
+    "long_width_us": 110.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/insteon.c: r_device insteon",
+    "models": [
+     "Insteon"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_interlogix_05_device_test_tamper_319_5M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "interlogix.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/interlogix/05/device_test_tamper_319.5M_250k.cu8",
+   "path": "tests/interlogix/05/device_test_tamper_319.5M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 319500000.0,
+   "bytes": 786432,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 122.0,
+    "long_width_us": 244.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/interlogix.c: r_device interlogix",
+    "models": [
+     "Interlogix-Security"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_kedsum_02_g004_433_74M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "kedsum.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/kedsum/02/g004_433.74M_250k.cu8",
+   "path": "tests/kedsum/02/g004_433.74M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433740000.0,
+   "bytes": 786432,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2000.0,
+    "long_width_us": 4000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/kedsum.c: r_device kedsum",
+    "models": [
+     "Kedsum-TH"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_lacrosse_ltv_BreezePro_LTV_WSDTH01_g001_914_938M_2400k",
+   "source": "rtl_433_tests",
+   "protocol": "lacrosse_breezepro.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/lacrosse_ltv/BreezePro_LTV-WSDTH01/g001_914.938M_2400k.cu8",
+   "path": "tests/lacrosse_ltv/BreezePro_LTV-WSDTH01/g001_914.938M_2400k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2400000.0,
+   "center_frequency": 914938000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9345.794392523365,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 107.0,
+    "long_width_us": 107.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/lacrosse_breezepro.c: r_device lacrosse_breezepro",
+    "models": [
+     "LaCrosse-BreezePro"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_lacrosse_ltv_LTV_WR1_g165_915M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "lacrosse_wr1.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/lacrosse_ltv/LTV-WR1/g165_915M_1000k.cu8",
+   "path": "tests/lacrosse_ltv/LTV-WR1/g165_915M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 915000000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9615.384615384615,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 104.0,
+    "long_width_us": 104.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/lacrosse_wr1.c: r_device lacrosse_wr1",
+    "models": [
+     "LaCrosse-WR1"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_lacrosse_tx141_bv2_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "lacrosse_tx141x.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/lacrosse/tx141-bv2/g001_433.92M_250k.cu8",
+   "path": "tests/lacrosse/tx141-bv2/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 208.0,
+    "long_width_us": 417.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/lacrosse_tx141x.c: r_device lacrosse_tx141x",
+    "models": [
+     "LaCrosse-TX141Bv2"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_lacrosse_tx34_it_g001_868_3M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "lacrosse_tx34.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/lacrosse/tx34-it/g001_868.3M_1000k.cu8",
+   "path": "tests/lacrosse/tx34-it/g001_868.3M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868300000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 17241.379310344826,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 58.0,
+    "long_width_us": 58.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/lacrosse_tx34.c: r_device lacrosse_tx34",
+    "models": [
+     "LaCrosse-TX34IT"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_lacrosse_ws6868_01_g002_868_3M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "lacrosse_ws6868.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/lacrosse_ws6868/01/g002_868.3M_1000k.cu8",
+   "path": "tests/lacrosse_ws6868/01/g002_868.3M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868300000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 17241.379310344826,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 58.0,
+    "long_width_us": 58.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/lacrosse_ws6868.c: r_device lacrosse_ws6868_tx232th",
+    "models": [
+     "LaCrosse-TX232TH"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_lacrosse_ws7000_WS2500_19_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "lacrosse_ws7000.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/lacrosse_ws7000/WS2500-19_g001_433.92M_250k.cu8",
+   "path": "tests/lacrosse_ws7000/WS2500-19_g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 400.0,
+    "long_width_us": 800.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/lacrosse_ws7000.c: r_device lacrosse_ws7000",
+    "models": [
+     "LaCrosse-WS250019"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_martec_mplcd_fan_remote_g002_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "martec_mplcd.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/martec/mplcd-fan-remote/g002_433.92M_250k.cu8",
+   "path": "tests/martec/mplcd-fan-remote/g002_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 1441792,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 292.0,
+    "long_width_us": 648.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/martec_mplcd.c: r_device martec_mplcd",
+    "models": [
+     "Martec-MPLCD"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_maverick_et_73_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "maverick_et73.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/maverick_et-73/01/g001_433.92M_250k.cu8",
+   "path": "tests/maverick_et-73/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1050.0,
+    "long_width_us": 2050.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/maverick_et73.c: r_device maverick_et73",
+    "models": [
+     "Maverick-ET73"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_missil_ml0757_01_freezer_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "missil_ml0757.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/missil_ml0757/01/freezer_433.92M_250k.cu8",
+   "path": "tests/missil_ml0757/01/freezer_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 917504,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 975.0,
+    "long_width_us": 1950.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/missil_ml0757.c: r_device missil_ml0757",
+    "models": [
+     "Missil-ML0757"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_nexus_03_g027_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "nexus.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/nexus/03/g027_433.92M_250k.cu8",
+   "path": "tests/nexus/03/g027_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1000.0,
+    "long_width_us": 2000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/nexus.c: r_device nexus",
+    "models": [
+     "Nexus-TH"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_nidec_OUCG8D_344H_A_01_lock_313_8M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "nidec_car_remote.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/nidec/OUCG8D-344H-A/01/lock_313.8M_1024k.cu8",
+   "path": "tests/nidec/OUCG8D-344H-A/01/lock_313.8M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 313800000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 250.0,
+    "long_width_us": 500.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/nidec_car_remote.c: r_device nidec_car_remote",
+    "models": [
+     "Nidec-OUCG8D"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_oil_watchman_05_g023_433_92M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "oil_watchman.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/oil_watchman/05/g023_433.92M_1000k.cu8",
+   "path": "tests/oil_watchman/05/g023_433.92M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 1000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 1000.0,
+    "long_width_us": 1000.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/oil_watchman.c: r_device oil_watchman",
+    "models": [
+     "Oil-SonicSmart"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_oil_watchman_sonic_advanced_03_g002_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "oil_watchman_advanced.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/oil_watchman_sonic_advanced/03/g002_433.92M_250k.cu8",
+   "path": "tests/oil_watchman_sonic_advanced/03/g002_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 2000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 500.0,
+    "long_width_us": 500.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/oil_watchman_advanced.c: r_device oil_watchman_advanced",
+    "models": [
+     "Oil-SonicAdv"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_olympia_9571_door_open_4ddf3b_868_4M_2048k",
+   "source": "rtl_433_tests",
+   "protocol": "olympia_9571.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/olympia/9571/door_open_4ddf3b_868.4M_2048k.cu8",
+   "path": "tests/olympia/9571/door_open_4ddf3b_868.4M_2048k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2048000.0,
+   "center_frequency": 868400000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 2732.24043715847,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 366.0,
+    "long_width_us": 366.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/olympia_9571.c: r_device olympia_9571",
+    "models": [
+     "Olympia-9571"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_omni_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "omni.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/omni/01/g001_433.92M_250k.cu8",
+   "path": "tests/omni/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 200.0,
+    "long_width_us": 400.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/omni.c: r_device omni",
+    "models": [
+     "Omni-Multisensor"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_oregon_scientific_WGR800X_01_WGR800X_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "oregon_scientific.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/oregon_scientific/WGR800X/01/WGR800X-g001_433.92M_250k.cu8",
+   "path": "tests/oregon_scientific/WGR800X/01/WGR800X-g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 2272.7272727272725,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 440.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/oregon_scientific.c: r_device oregon_scientific",
+    "models": [
+     "Oregon-WGR800"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_oria_wa150km_g037_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "oria_wa150km.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/oria_wa150km/g037_433.92M_250k.cu8",
+   "path": "tests/oria_wa150km/g037_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 2040.8163265306123,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 490.0,
+    "long_width_us": 490.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/oria_wa150km.c: r_device oria_wa150km",
+    "models": [
+     "Oria-WA150KM"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_prologue_03_g002_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "prologue.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/prologue/03/g002_433.92M_250k.cu8",
+   "path": "tests/prologue/03/g002_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2000.0,
+    "long_width_us": 4000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/prologue.c: r_device prologue",
+    "models": [
+     "Prologue-TH"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_prologue_04_g011_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "alecto.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/prologue/04/g011_433.92M_250k.cu8",
+   "path": "tests/prologue/04/g011_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2000.0,
+    "long_width_us": 4000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/alecto.c: r_device alectov1",
+    "models": [
+     "AlectoV1-Temperature"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_pt20tx_01_g005_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "bresser_st1005h.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/pt20tx/01/g005_433.92M_250k.cu8",
+   "path": "tests/pt20tx/01/g005_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 655360,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2500.0,
+    "long_width_us": 4500.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/bresser_st1005h.c: r_device bresser_st1005h",
+    "models": [
+     "Bresser-ST1005H"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_quhwa_03_g009_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "quhwa.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/quhwa/03/g009_433.92M_250k.cu8",
+   "path": "tests/quhwa/03/g009_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 917504,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 360.0,
+    "long_width_us": 1070.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/quhwa.c: r_device quhwa",
+    "models": [
+     "Quhwa-Doorbell"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_radiohead_ask_03_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "radiohead_ask.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/radiohead_ask/03/g001_433.92M_250k.cu8",
+   "path": "tests/radiohead_ask/03/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 1000.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 1000.0,
+    "long_width_us": 1000.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/radiohead_ask.c: r_device sensible_living",
+    "models": [
+     "SensibleLiving-Moisture"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_revolt_nc_5462_button_pressed_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "revolt_nc5462.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/revolt_nc_5462/button_pressed_433.92M_250k.cu8",
+   "path": "tests/revolt_nc_5462/button_pressed_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 917504,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 200.0,
+    "long_width_us": 320.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/revolt_nc5462.c: r_device revolt_nc5462",
+    "models": [
+     "Revolt-NC5462"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_rubicson_meat_thermometer_48659_01_g030_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "rubicson_48659.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/rubicson/meat_thermometer_48659/01/g030_433.92M_250k.cu8",
+   "path": "tests/rubicson/meat_thermometer_48659/01/g030_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 1048576,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 940.0,
+    "long_width_us": 1900.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/rubicson_48659.c: r_device rubicson_48659",
+    "models": [
+     "Rubicson-48659"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_rubicson_pool_thermometer_48942_01_ch1_10_6C_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "rubicson_pool_48942.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/rubicson/pool_thermometer_48942/01/ch1_10.6C_433.92M_250k.cu8",
+   "path": "tests/rubicson/pool_thermometer_48942/01/ch1_10.6C_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 280.0,
+    "long_width_us": 480.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/rubicson_pool_48942.c: r_device rubicson_pool_48942",
+    "models": [
+     "Rubicson-48942"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_scmplus_01_g002_912_6M_2359_3k",
+   "source": "rtl_433_tests",
+   "protocol": "scmplus.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/scmplus/01/g002_912.6M_2359.3k.cu8",
+   "path": "tests/scmplus/01/g002_912.6M_2359.3k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 2359300.0,
+   "center_frequency": 912600000.0,
+   "bytes": 96000,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 33333.333333333336,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 30.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/scmplus.c: r_device scmplus",
+    "models": [
+     "SCMplus"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_secplus_v1_g008_315_05M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "secplus_v1.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/secplus/v1/g008_315.05M_250k.cu8",
+   "path": "tests/secplus/v1/g008_315.05M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 315050000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 2000.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 500.0,
+    "long_width_us": 500.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/secplus_v1.c: r_device secplus_v1",
+    "models": [
+     "Secplus-v1"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_secplus_v2_g002_310_01M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "secplus_v2.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/secplus/v2/g002_310.01M_250k.cu8",
+   "path": "tests/secplus/v2/g002_310.01M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 310010000.0,
+   "bytes": 1179648,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 4000.0,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 250.0,
+    "long_width_us": 250.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/secplus_v2.c: r_device secplus_v2",
+    "models": [
+     "Secplus-v2"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_sharp_spc775_sharp_1_917_2M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "sharp_spc775.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/sharp/spc775/sharp-1_917.2M_250k.cu8",
+   "path": "tests/sharp/spc775/sharp-1_917.2M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 917200000.0,
+   "bytes": 79818,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 225.0,
+    "long_width_us": 425.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/sharp_spc775.c: r_device sharp_spc775",
+    "models": [
+     "Sharp-SPC775"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_siemens_5WY72XX_01_g001_315_1M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "siemens_5wy72xx.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/siemens/5WY72XX/01/g001_315.1M_250k.cu8",
+   "path": "tests/siemens/5WY72XX/01/g001_315.1M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 315100000.0,
+   "bytes": 1966080,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 4545.454545454545,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 220.0,
+    "long_width_us": null,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/siemens_5wy72xx.c: r_device siemens_5wy72xx_car_remote",
+    "models": [
+     "Siemens-5WY72XX"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_silver_spring_mesh_g003_904_4M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "silver_spring_mesh.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/silver_spring_mesh/g003_904.4M_1000k.cu8",
+   "path": "tests/silver_spring_mesh/g003_904.4M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 904400000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 100000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 10.0,
+    "long_width_us": 10.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/silver_spring_mesh.c: r_device silver_spring_mesh",
+    "models": [
+     "SilverSpring-Mesh"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_silvercrest_03_g007_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "silvercrest.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/silvercrest/03/g007_433.92M_250k.cu8",
+   "path": "tests/silvercrest/03/g007_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 264.0,
+    "long_width_us": 744.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/silvercrest.c: r_device silvercrest",
+    "models": [
+     "Silvercrest-Remote"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_somfy_situo_5_rts_pure_ii_01_g006_433_414M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "somfy_rts.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/somfy/situo_5_rts_pure_ii/01/g006_433.414M_250k.cu8",
+   "path": "tests/somfy/situo_5_rts_pure_ii/01/g006_433.414M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433414000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 1655.6291390728477,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 604.0,
+    "long_width_us": 604.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/somfy_rts.c: r_device somfy_rts",
+    "models": [
+     "Somfy-RTS"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_steelmate_TPMS_03_leak_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "steelmate.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/steelmate-TPMS/03/leak_433.92M_250k.cu8",
+   "path": "tests/steelmate-TPMS/03/leak_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 35402,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 20000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 50.0,
+    "long_width_us": 50.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/steelmate.c: r_device steelmate",
+    "models": [
+     "Steelmate"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_tfa_14_1504_v2_194C_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tfa_14_1504_v2.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/tfa_14_1504_v2/194C_433.92M_250k.cu8",
+   "path": "tests/tfa_14_1504_v2/194C_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 1179648,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 2777.777777777778,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 360.0,
+    "long_width_us": 360.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tfa_14_1504_v2.c: r_device tfa_14_1504_v2",
+    "models": [
+     "TFA-141504v2"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_thermopro_211b_01_g002_915_1M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "thermopro_tp211b.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/thermopro-211b/01/g002_915.1M_1000k.cu8",
+   "path": "tests/thermopro-211b/01/g002_915.1M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 915100000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9523.809523809523,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 105.0,
+    "long_width_us": 105.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/thermopro_tp211b.c: r_device thermopro_tp211b",
+    "models": [
+     "ThermoPro-TP211B"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_thermopro_tp28b_01_g003_915M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "thermopro_tp28b.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/thermopro_tp28b/01/g003_915M_1000k.cu8",
+   "path": "tests/thermopro_tp28b/01/g003_915M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 915000000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9523.809523809523,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 105.0,
+    "long_width_us": 105.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/thermopro_tp28b.c: r_device thermopro_tp28b",
+    "models": [
+     "ThermoPro-TP28b"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_thermopro_tp86xb_01_g001_915M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "thermopro_tp86xb.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/thermopro-tp86xb/01/g001_915M_1000k.cu8",
+   "path": "tests/thermopro-tp86xb/01/g001_915M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 915000000.0,
+   "bytes": 393216,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 9615.384615384615,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 104.0,
+    "long_width_us": 104.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/thermopro_tp86xb.c: r_device thermopro_tp86xb",
+    "models": [
+     "ThermoPro-TempSpikeXR"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_thermopro_tx2_tx2_ch_1_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "thermopro_tx2.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/thermopro-tx2/tx2_ch_1_433.92M_250k.cu8",
+   "path": "tests/thermopro-tx2/tx2_ch_1_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 2000.0,
+    "long_width_us": 4000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/thermopro_tx2.c: r_device thermopro_tx2",
+    "models": [
+     "Thermopro-TX2"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_thermopro_tx2c_channel1_868M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "thermopro_tx2c.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/thermopro-tx2c/channel1_868M_1000k.cu8",
+   "path": "tests/thermopro-tx2c/channel1_868M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868000000.0,
+   "bytes": 2621440,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1958.0,
+    "long_width_us": 3825.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/thermopro_tx2c.c: r_device thermopro_tx2c",
+    "models": [
+     "Thermopro-TX2C"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_thermor_A6N_132TX_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "thermor_a6n_132tx.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/thermor-A6N-132TX/01/g001_433.92M_250k.cu8",
+   "path": "tests/thermor-A6N-132TX/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1000.0,
+    "long_width_us": 2000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/thermor_a6n_132tx.c: r_device thermor_a6n_132tx",
+    "models": [
+     "Thermor-A6N132TX"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_tpms_mercedes_benz_01_g030_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_mercedes_benz.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/tpms_mercedes_benz/01/g030_433.92M_250k.cu8",
+   "path": "tests/tpms_mercedes_benz/01/g030_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 40000.0,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 25.0,
+    "long_width_us": 25.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_mercedes_benz.c: r_device tpms_mercedes_benz",
+    "models": [
+     "MercedesBenz-Sprinter"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_tpms_sefis_m3_01_g001_433_92M_1024k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_sefis_m3.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/tpms_sefis_m3/01/g001_433.92M_1024k.cu8",
+   "path": "tests/tpms_sefis_m3/01/g001_433.92M_1024k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1024000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 614400,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 19230.76923076923,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 52.0,
+    "long_width_us": 52.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_sefis_m3.c: r_device tpms_sefis_m3",
+    "models": [
+     "Sefis-M3"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_tr_502msv_samples_soc1_off_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tr_502msv.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/tr-502msv/samples/soc1_off_433.92M_250k.cu8",
+   "path": "tests/tr-502msv/samples/soc1_off_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 740.0,
+    "long_width_us": 1400.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/tr_502msv.c: r_device tr_502msv",
+    "models": [
+     "TR-502MSV"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_truck_tpms_g010_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "tpms_truck.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/truck_tpms/g010_433.92M_250k.cu8",
+   "path": "tests/truck_tpms/g010_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 19230.76923076923,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 52.0,
+    "long_width_us": 52.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/tpms_truck.c: r_device tpms_truck",
+    "models": [
+     "Truck"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_ttx201_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "ttx201.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/ttx201/01/g001_433.92M_250k.cu8",
+   "path": "tests/ttx201/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 1960.7843137254902,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 510.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/ttx201.c: r_device ttx201",
+    "models": [
+     "Emos-TTX201"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_visonic_powercode_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "visonic_powercode.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/visonic_powercode/01/g001_433.92M_250k.cu8",
+   "path": "tests/visonic_powercode/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 400.0,
+    "long_width_us": 800.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/visonic_powercode.c: r_device visonic_powercode",
+    "models": [
+     "Visonic-Powercode"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_vivint_V_DW21R_345_01_g001_344_975M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "vivint.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/vivint/V-DW21R-345/01/g001_344.975M_250k.cu8",
+   "path": "tests/vivint/V-DW21R-345/01/g001_344.975M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 344975000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 6666.666666666667,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 150.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/vivint.c: r_device vivint",
+    "models": [
+     "Vivint-Security"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_watts_WFHT_RF_pairing_thermostat_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "watts_wfht_rf.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/watts/WFHT-RF/pairing_thermostat_433.92M_250k.cu8",
+   "path": "tests/watts/WFHT-RF/pairing_thermostat_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 2097152,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": 2173.913043478261,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_MANCHESTER_ZEROBIT",
+    "coding": "Manchester",
+    "short_width_us": 460.0,
+    "long_width_us": 0.0,
+    "rate_rule": "1e6 / short_width (Manchester half bit: the keying rate)",
+    "source": "rtl_433 @02cd4b69270c src/devices/watts_wfht_rf.c: r_device watts_wfht_rf",
+    "models": [
+     "Watts-WFHTLCDRF"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_watts_vision_01_g001_868_25M_1000k",
+   "source": "rtl_433_tests",
+   "protocol": "watts_vision.c",
+   "stratum": "rtl433-FSK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/watts_vision/01/g001_868.25M_1000k.cu8",
+   "path": "tests/watts_vision/01/g001_868.25M_1000k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 1000000.0,
+   "center_frequency": 868250000.0,
+   "bytes": 131072,
+   "allowed_labels": [
+    "FSK2"
+   ],
+   "expected_rate_hz": 38461.53846153846,
+   "truth": {
+    "label": "FSK2",
+    "keying": "FSK_PULSE_PCM",
+    "coding": "PCM",
+    "short_width_us": 26.0,
+    "long_width_us": 26.0,
+    "rate_rule": "1e6 / short_width (NRZ PCM bit period)",
+    "source": "rtl_433 @02cd4b69270c src/devices/watts_vision.c: r_device watts_vision",
+    "models": [
+     "Watts-Vision"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_wssensor_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "wssensor.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/wssensor/01/g001_433.92M_250k.cu8",
+   "path": "tests/wssensor/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 524288,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 1000.0,
+    "long_width_us": 2000.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/wssensor.c: r_device wssensor",
+    "models": [
+     "Hyundai-WS"
+    ]
+   },
+   "split": "test"
+  },
+  {
+   "id": "rtl433_wt0122_wt0124_01_g001_433_92M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "wt0124.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/wt0122_wt0124/01/g001_433.92M_250k.cu8",
+   "path": "tests/wt0122_wt0124/01/g001_433.92M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 433920000.0,
+   "bytes": 262144,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PWM",
+    "coding": "PWM",
+    "short_width_us": 680.0,
+    "long_width_us": 1850.0,
+    "rate_rule": "not scored: PWM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/wt0124.c: r_device wt1024",
+    "models": [
+     "WT0124-Pool"
+    ]
+   },
+   "split": "calibration"
+  },
+  {
+   "id": "rtl433_x10_sec_x10_sec_DS10A_test_delay_low_battery_310_808M_250k",
+   "source": "rtl_433_tests",
+   "protocol": "x10_sec.c",
+   "stratum": "rtl433-OOK",
+   "url": "https://raw.githubusercontent.com/merbanan/rtl_433_tests/1aa8c29d6b9383739d1aeed495dbc5069b704392/tests/x10_sec/x10_sec-DS10A-test-delay-low-battery_310.808M_250k.cu8",
+   "path": "tests/x10_sec/x10_sec-DS10A-test-delay-low-battery_310.808M_250k.cu8",
+   "datatype": "cu8",
+   "sample_rate": 250000.0,
+   "center_frequency": 310808000.0,
+   "bytes": 732590,
+   "allowed_labels": [
+    "ASK2"
+   ],
+   "expected_rate_hz": null,
+   "truth": {
+    "label": "ASK2",
+    "keying": "OOK_PULSE_PPM",
+    "coding": "PPM",
+    "short_width_us": 562.0,
+    "long_width_us": 1687.0,
+    "rate_rule": "not scored: PPM coding has no single symbol rate",
+    "source": "rtl_433 @02cd4b69270c src/devices/x10_sec.c: r_device x10_sec",
+    "models": [
+     "X10-Security"
+    ]
+   },
+   "split": "calibration"
+  }
+ ]
+}

@@ -26,6 +26,20 @@ class Thresholds:
     speed_pass_fraction: float = 0.95
     real_min_recordings: int = 5
 
+    # --- WP2 (registered before G4/G5/throughput were first measured) ---
+    # G4, impaired synthetic: the G1/G2 label/rate/abstention bars, applied to impaired captures.
+    g4_label_wrong_max: float = 0.03       # W1: published-wrong labels <= 3% of G4 test captures (as L1)
+    g4_label_correct_min: float = 0.60     # W2: published-correct >= 60% of in-library digital at >= 5 dB (as L2)
+    g4_ool_wrong_max: float = 0.10         # W3: held-out families (8-FSK, 8-QAM) -> <= 10% wrong labels (as C2)
+    g4_rate_wrong_max: float = 0.03        # W4: published-wrong rates <= 3% of G4 test captures (as R1)
+    # G5, real benchmark (rtl_433_tests + IQEngine test files): real coverage at a fixed wrong-label ceiling.
+    real_correct_min: float = 0.50         # RC1: a correct label published on >= 50% of test files that have one
+    real_wrong_max: float = 0.05           # RC2: a wrong label published on <= 5% of all test files
+    real_rate_wrong_max: float = 0.05      # RC3: a wrong rate published on <= 5% of rate-scored test files
+    # Batch throughput on a fixed folder (G3 + G5 test files): wall-clock of the batch CLI divided by the
+    # total recorded duration. <= 1 keeps pace with one receiver recording continuously.
+    throughput_rtf_max: float = 1.0        # T1
+
 
 THRESHOLDS = Thresholds()
 
@@ -38,3 +52,8 @@ OUT_OF_LIBRARY = frozenset({"FSK8", "QAM8"})
 
 G1_TEST_SEED = 7
 G1_TEST_N = 300
+
+# WP2 generators: G4 impaired synthetic (generators.g4_specs; calibration seeds from G4_CALIBRATION_SEED_BASE),
+# G5 real benchmark (g5_manifest.json, split frozen by protocol before anything was run on it).
+G5_MANIFEST = "g5_manifest.json"
+G5_SPLIT_SHA256 = "d38bc7b66fa74b22fadef60705ff3240fc326257b1578ba50cdd9a9717284663"   # frozen 2026-09-28, before any pipeline run on G5

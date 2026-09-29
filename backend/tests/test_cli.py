@@ -6,7 +6,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import numpy as np
 import pytest
+
+from backend.cli import main
 
 ROOT = Path(__file__).resolve().parents[2]
 BUNDLED = [ROOT / "backend/data/demo/demo.sigmf-data", ROOT / "backend/data/demo/demo.sigmf-meta",
@@ -70,3 +73,31 @@ def test_raw_iq_needs_explicit_rate_and_datatype(tmp_path):
     assert _run("analyze", raw, "--out", tmp_path / "o1").returncode != 0
     r = _run("analyze", raw, "--out", tmp_path / "o2", "--sample-rate", "48000", "--datatype", "cf32_le")
     assert r.returncode == 0, r.stderr
+
+
+def test_rtl433_named_cu8_needs_no_rate_or_datatype(tmp_path):
+    """WP2: raw 8-bit IQ as rtl_433 writes it; datatype from the suffix, rate and centre from the name."""
+    from backend.pipeline.ingest import raw_hints
+    assert raw_hints("g001_433.92M_250k.cu8") == {"datatype": "cu8", "sample_rate": 250000.0,
+                                                  "center_frequency_hz": 433920000.0}
+    assert raw_hints("capture.cu8") == {"datatype": "cu8", "sample_rate": None, "center_frequency_hz": None}
+    rng = np.random.default_rng(0)
+    n, fs = 131072, 250000
+    t = np.arange(n)
+    bits = np.repeat(rng.integers(0, 2, n // 50 + 1), 50)[:n]
+    x = bits * 0.6 * np.exp(2j * np.pi * 0.1 * t) + 0.02 * (rng.standard_normal(n) + 1j * rng.standard_normal(n))
+    raw = np.empty(2 * n, np.uint8)
+    raw[0::2] = np.clip(np.round(x.real * 127.5 + 127.5), 0, 255)
+    raw[1::2] = np.clip(np.round(x.imag * 127.5 + 127.5), 0, 255)
+    src = tmp_path / "in"
+    src.mkdir()
+    raw.tofile(src / "g001_433.92M_250k.cu8")
+    raw.tofile(src / "noname.cu8")
+    out = tmp_path / "out"
+    assert main(["analyze", str(src), "--out", str(out)]) == 2          # noname.cu8 has no rate: reported
+    blob = json.loads((out / "g001_433.92M_250k.json").read_text())
+    assert blob["metadata"]["sample_rate"] == fs and blob["metadata"]["datatype"] == "cu8"
+    assert blob["metadata"]["center_frequency_hz"] == 433.92e6
+    assert any(abs((d["freq_lower_hz"] + d["freq_upper_hz"]) / 2 - 25000) < 5000 for d in blob["detections"])
+    rows = list(csv.DictReader((out / "summary.csv").open()))
+    assert any(r["file"] == "noname.cu8" and r["error"] for r in rows)
