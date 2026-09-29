@@ -71,7 +71,10 @@ def _watch_once(args, sizes, processed):
     stable = []
     for p in candidates:
         key = str(p.resolve())
-        size = p.stat().st_size
+        try:
+            size = p.stat().st_size
+        except FileNotFoundError:
+            continue                      # file vanished mid-poll (e.g. a producer cleaning up); skip this cycle
         if sizes.get(key) == size:
             stable.append(p)
         else:

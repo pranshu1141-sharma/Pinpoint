@@ -176,6 +176,32 @@ def test_watch_once_processes_a_stable_file_and_skips_it_next_time(tmp_path):
     assert (out / "demo.json").stat().st_mtime == written_at
 
 
+def test_watch_once_skips_a_candidate_that_vanishes_mid_poll_without_raising(tmp_path):
+    from backend.pinpoint_cli import _watch_once, build_parser
+
+    src = tmp_path / "in"
+    src.mkdir()
+    out = tmp_path / "out"
+    out.mkdir()
+    stable_name = "demo.sigmf-data"
+    vanishing_name = "audio_demo.wav"
+    shutil.copy(ROOT / "backend/data/demo/demo.sigmf-data", src / stable_name)
+    shutil.copy(ROOT / "backend/data/demo/demo.sigmf-meta", src / "demo.sigmf-meta")
+    shutil.copy(ROOT / "backend/data/demo/audio_demo.wav", src / vanishing_name)
+
+    args = build_parser().parse_args(["watch", str(src), "--out", str(out)])
+    sizes, processed = {}, set()
+
+    _watch_once(args, sizes, processed)          # first poll: records sizes for both candidates
+
+    (src / vanishing_name).unlink()               # simulate a producer deleting the file mid-poll
+
+    _watch_once(args, sizes, processed)           # second poll: must not raise despite the missing file
+    assert (out / "demo.json").exists()           # the still-present, stable file is still analysed
+    assert len(processed) == 1
+    assert not any(vanishing_name in p for p in processed)
+
+
 def test_watch_state_file_persists_processed_files_across_restarts(tmp_path):
     from backend.pinpoint_cli import _load_processed, _save_processed
 
@@ -188,6 +214,7 @@ def test_watch_state_file_persists_processed_files_across_restarts(tmp_path):
 
 
 def test_watch_stops_cleanly_on_sigint(tmp_path):
+    import selectors
     import signal
     import time
 
@@ -196,11 +223,26 @@ def test_watch_stops_cleanly_on_sigint(tmp_path):
     out = tmp_path / "out"
     proc = subprocess.Popen([sys.executable, "-m", "backend.pinpoint_cli", "watch", str(src), "--out", str(out),
                              "--poll-interval", "0.1"], cwd=ROOT, stderr=subprocess.PIPE, text=True)
-    # Give the subprocess plenty of time to finish its (heavy scipy/sigmf) module imports and
-    # reach the try/except KeyboardInterrupt in cmd_watch before we signal it; a short sleep here
-    # is flaky since the SIGINT can otherwise arrive mid-import, before the handler is installed.
-    time.sleep(2.0)
-    proc.send_signal(signal.SIGINT)
-    returncode = proc.wait(timeout=5)
-    assert returncode == 0
-    assert "stopped" in proc.stderr.read()
+    try:
+        # Wait for the subprocess's own readiness signal (the "watching ..." line cmd_watch prints
+        # right before entering the try/except KeyboardInterrupt) instead of a blind sleep: a fixed
+        # sleep can race against cold-import latency (scipy/sigmf) and send SIGINT before the
+        # handler is installed. Bound the wait so a genuinely broken process still fails fast.
+        sel = selectors.DefaultSelector()
+        sel.register(proc.stderr, selectors.EVENT_READ)
+        deadline = time.monotonic() + 10
+        line = ""
+        while "watching" not in line:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0 or not sel.select(timeout=remaining):
+                pytest.fail("subprocess never printed its 'watching' readiness line within 10s")
+            line = proc.stderr.readline()
+
+        proc.send_signal(signal.SIGINT)
+        returncode = proc.wait(timeout=5)
+        assert returncode == 0
+        assert "stopped" in proc.stderr.read()
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait(timeout=5)
