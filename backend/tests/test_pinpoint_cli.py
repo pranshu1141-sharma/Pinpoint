@@ -1,0 +1,56 @@
+"""Terminal CLI (pinpoint) subcommands: thin wrappers over backend.cli, no analysis-behaviour changes."""
+import csv
+import json
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+BUNDLED = [ROOT / "backend/data/demo/demo.sigmf-data", ROOT / "backend/data/demo/demo.sigmf-meta",
+           ROOT / "backend/data/demo/audio_demo.wav", ROOT / "test-audio/01-steady-tone.wav"]
+
+
+def _run_old(*args):
+    return subprocess.run([sys.executable, "-m", "backend.cli", *map(str, args)], cwd=ROOT,
+                          capture_output=True, text=True)
+
+
+def _run_new(*args):
+    return subprocess.run([sys.executable, "-m", "backend.pinpoint_cli", *map(str, args)], cwd=ROOT,
+                          capture_output=True, text=True)
+
+
+@pytest.fixture
+def inputs(tmp_path):
+    d = tmp_path / "in"
+    d.mkdir()
+    for f in BUNDLED:
+        shutil.copy(f, d / f.name)
+    return d
+
+
+def test_analyze_jobs1_matches_old_backend_cli_byte_for_byte(inputs, tmp_path):
+    old_out, new_out = tmp_path / "old", tmp_path / "new"
+    r_old = _run_old("analyze", inputs, "--out", old_out)
+    r_new = _run_new("analyze", inputs, "--out", new_out, "--jobs", "1")
+    assert r_old.returncode == r_new.returncode == 0, (r_old.stderr, r_new.stderr)
+    old_files = sorted(p.name for p in old_out.iterdir())
+    new_files = sorted(p.name for p in new_out.iterdir())
+    assert old_files == new_files
+    for name in old_files:
+        assert (old_out / name).read_bytes() == (new_out / name).read_bytes(), name
+
+
+def test_version_flag():
+    r = _run_new("--version")
+    assert r.returncode == 0
+    assert r.stdout.strip() == "pinpoint 0.1.0"
+
+
+def test_analyze_without_out_or_json_is_a_usage_error(inputs, tmp_path):
+    r = _run_new("analyze", inputs)
+    assert r.returncode == 1
+    assert "--out" in r.stderr
