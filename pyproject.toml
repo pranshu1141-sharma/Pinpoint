@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pinpoint"
+dynamic = ["version"]
+description = "PinPoint offline RF capture detector: batch analysis terminal CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=2.2,<3",
+    "scipy>=1.15,<2",
+    "sigmf>=1.2,<2",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.34,<1",
+    "python-multipart>=0.0.20,<1",
+]
+test = [
+    "pytest>=8,<10",
+    "httpx>=0.28,<1",
+]
+
+[project.scripts]
+pinpoint = "backend.pinpoint_cli:run"
+
+[tool.setuptools.dynamic]
+version = { attr = "backend._version.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["backend*"]
+exclude = ["backend.tests*"]
