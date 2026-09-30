@@ -53,6 +53,57 @@ DECODE_MIN_SNR_DB = {"bpsk": 10.0, "qpsk": 10.0, "8psk": 15.0}
 # qam_order.py's own tail-window convention.
 DECODE_MIN_TAIL_SYMBOLS = 2000
 
+# D1: 2-FSK/GMSK (discriminator) and OOK/ASK2, gated at the SNR each family's
+# own measured BER-vs-SNR sweep clears 2% mean BER over 10 seeds (see
+# backend/tests/test_decode_fsk_ask.py and DECODING.md's D1 sweep). Timing
+# for both uses oerder_meyer_symbol_epoch, not Gardner: Gardner is a decision-
+# directed loop tuned for the long, continuous PSK streams this module
+# already validates (2,000+ symbol tails); AIS/rtl_433 bursts are far
+# shorter, and the bake-off in experiments/decode_bakeoff/timing_bakeoff.py
+# measured a non-data-aided feedforward estimator (Oerder & Meyer, 1988)
+# beating a Mueller-Mueller decision-directed loop at every SNR from 10 dB
+# up (100-seed mean BER, realistic random start delay: 2.05% vs 3.45% at
+# 10 dB, 0.32% vs 1.38% at 15 dB) -- a decision-directed loop's early hard
+# decisions are wrong more often at these SNRs, and that feeds back into its
+# own timing estimate, which a block estimate with no feedback cannot do.
+FSK_ASK_MIN_SNR_DB = {"fsk2": 10.0, "ask2": 8.0}
+DECODE_MIN_SNR_DB.update(FSK_ASK_MIN_SNR_DB)
+
+# fsk2/ask2 need only a handful of symbols to lock (Oerder-Meyer is a
+# feedforward block estimate, not a loop needing thousands of symbols to
+# converge like DECODE_MIN_TAIL_SYMBOLS below) -- but the confidence
+# statistic both demappers gate on (FSK_MIN_CONFIDENCE/ASK_MIN_CONFIDENCE)
+# needs enough symbols to be a stable estimate of its own spread; measured
+# stable from 200 symbols up in backend/tests/test_decode_fsk_ask.py's
+# fixtures (2,000-symbol bursts, comfortably above this floor).
+FSK_ASK_MIN_SYMBOLS = 200
+
+# The false-decode gate is NOT oerder_meyer_symbol_epoch's raw lock_fraction:
+# measured (see DECODING.md's D1 section), that fraction stays small (~0.01
+# -0.04 for FSK even at a workable 10-15 dB) because most of a discriminator
+# or envelope signal's squared-nonlinearity power sits at DC, not because the
+# timing estimate is unreliable there -- it does not separate real signal
+# from pure noise at these SNRs (noise's own fraction, ~0.001-0.013, already
+# overlaps a real 8 dB FSK signal's ~0.004-0.028). The gate that DOES
+# separate cleanly, measured the same way, is the post-integrate-and-dump
+# decision confidence (demap_fsk_bits'/demap_ask_bits' own returned
+# `confidence`): pure complex AWGN's confidence tops out at 0.434 (FSK) /
+# 0.453 (ASK) over 1,000/500 seeds, while a signal at each family's SNR gate
+# sits at 0.50-0.90 (FSK) / 0.79-0.90 (ASK), and a wrong-hypothesis BPSK
+# segment fed to either demapper scores 0.04 (FSK) / 0.40 (ASK) -- below
+# both floors below. These thresholds carry the actual 0-false-decode
+# requirement; see test_demap_fsk_bits_on_pure_noise_declines,
+# test_demap_ask_bits_on_pure_noise_declines and
+# test_demap_fsk_bits_on_wrong_hypothesis_declines.
+FSK_MIN_CONFIDENCE = 0.46
+ASK_MIN_CONFIDENCE = 0.55
+
+# A CPFSK/GMSK symbol needs 2 samples either side of its centre for the
+# integrate-and-dump window (see _integrate_and_dump); this is the same
+# floor timing_recovery.gardner_timing_recovery states for its own linear
+# interpolation, applied here to the integration window instead.
+FSK_ASK_MIN_SPS = 4
+
 
 def estimate_phase_offset(symbols, order):
     """Blind Mth-power residual carrier-phase estimate, ambiguous mod
@@ -95,30 +146,152 @@ def demap_psk_symbols(symbols, order):
     return idx, phase_hat, confidence
 
 
-def decode_candidate(capture, candidate):
-    """Decode symbols for a confirmed bpsk/qpsk/8psk candidate.
+def fsk_discriminator(x):
+    """Instantaneous frequency, cycles/sample, via the angle of each
+    consecutive-sample product (a non-coherent FM discriminator; phase-
+    insensitive by construction, unlike the PSK path above)."""
+    x = np.asarray(x, dtype=np.complex128)
+    d = np.angle(x[1:] * np.conj(x[:-1])) / (2 * np.pi)
+    return np.append(d, d[-1] if len(d) else 0.0)
 
-    Returns candidate merged with: decoded_symbol_indices (list[int] or
-    None), decoded_symbol_count, decode_phase_offset_rad,
-    decode_confidence, decode_rotation_ambiguity_modulus (order, or None),
-    decode_status (always explains the result, whether decoded or declined).
+
+def oerder_meyer_symbol_epoch(y, sps):
+    """Non-data-aided feedforward symbol-timing epoch (Oerder & Meyer, 1988):
+    the DFT bin of y**2 at the symbol rate (1/sps cycles/sample) carries a
+    tone at the true symbol epoch for any signal whose relevant nonlinearity
+    (discriminator output for FSK/GMSK, envelope for ASK/OOK) transitions at
+    symbol boundaries. Returns (tau, lock_fraction): tau in samples, 0..sps;
+    lock_fraction is |bin| / sum(|y**2 - mean|), in [0, 1] by the triangle
+    inequality, near 0 for signals with no periodic component at 1/sps (pure
+    noise) and typically >0.5 for a genuine symbol stream at a workable SNR
+    (see OERDER_MEYER_MIN_LOCK_FRACTION and its measured basis above). None
+    if y is degenerate (empty or exactly flat).
     """
-    out = {**candidate, "decoded_symbol_indices": None, "decoded_symbol_count": None,
-           "decode_phase_offset_rad": None, "decode_confidence": None,
-           "decode_rotation_ambiguity_modulus": None,
-           "decode_status": "not attempted (requires a confirmed bpsk/qpsk/8psk fine label)"}
-    label = candidate.get("fine_modulation_label")
-    order = DECODE_ORDERS.get(label)
-    if order is None:
-        return out
-    snr = candidate.get("snr_db")
-    if snr is None or not np.isfinite(snr):
-        out["decode_status"] = "not attempted (unknown SNR)"
-        return out
-    min_snr = DECODE_MIN_SNR_DB[label]
-    if snr < min_snr:
-        out["decode_status"] = f"not attempted (SNR below validated {min_snr} dB gate)"
-        return out
+    y = np.asarray(y, dtype=np.float64)
+    if len(y) < sps:
+        return None
+    y2 = (y - np.mean(y)) ** 2
+    ac = y2 - np.mean(y2)   # the DC term of y2 carries no timing information
+    total = np.sum(np.abs(ac))
+    if total == 0 or not np.isfinite(total):
+        return None
+    n = np.arange(len(ac))
+    bin_ = np.sum(ac * np.exp(-2j * np.pi * n / sps))
+    if not np.isfinite(bin_):
+        return None
+    tau = float((-np.angle(bin_) / (2 * np.pi)) % 1.0 * sps)
+    lock_fraction = float(min(1.0, abs(bin_) / total))
+    return tau, lock_fraction
+
+
+def _integrate_and_dump(y, tau, sps, n_symbols):
+    """Mean of y over each sps-sample window centred on tau + k*sps, for
+    k=0..n_symbols-1 -- the matched filter for a signal constant within a
+    symbol interval (both the discriminator output of an unshaped CPFSK
+    symbol and the envelope of an unshaped ASK symbol are exactly that).
+    Symbols whose window would run past either end of y are dropped."""
+    win = int(round(sps))
+    centers = tau + np.arange(n_symbols) * sps
+    half = sps / 2.0
+    in_range = (centers - half >= 0) & (centers + half <= len(y))
+    centers = centers[in_range]
+    los = np.round(centers - half).astype(int)
+    vals = np.array([float(np.mean(y[lo:lo + win])) for lo in los])
+    return vals, in_range
+
+
+def demap_fsk_bits(x, sps, min_confidence=FSK_MIN_CONFIDENCE):
+    """Non-coherent discriminator demapper for binary CPFSK/GMSK: Oerder-Meyer
+    timing on the squared discriminator output, then integrate-and-dump per
+    symbol, hard-thresholded at zero (the two frequency deviations are
+    symmetric around the segment's own median instantaneous frequency by
+    construction of the discriminator itself needing no absolute phase or
+    frequency reference).
+
+    Returns (bits, tau, confidence), all None if confidence does not clear
+    min_confidence -- declines rather than guesses; see FSK_MIN_CONFIDENCE's
+    docstring for why confidence, not the timing estimate's own raw lock
+    fraction, is what actually separates a real signal from noise or a
+    wrong-hypothesis input here. confidence is 1 minus the mean normalized
+    distance of each integrated value's magnitude from the mean magnitude,
+    an explainable diagnostic matching demap_psk_symbols' convention, not a
+    calibrated probability.
+    """
+    x = np.asarray(x, dtype=np.complex128)
+    if len(x) < 2 * sps:
+        return None, None, None
+    y = fsk_discriminator(x)
+    result = oerder_meyer_symbol_epoch(y, sps)
+    if result is None:
+        return None, None, None
+    tau, _lock = result
+    n_symbols = int((len(y) - tau) // sps)
+    vals, _ = _integrate_and_dump(y, tau, sps, n_symbols)
+    if len(vals) == 0:
+        return None, None, None
+    spread = np.std(vals)
+    if spread == 0:
+        return None, None, None
+    dist = np.abs(np.abs(vals) - np.mean(np.abs(vals)))
+    confidence = float(max(0.0, 1.0 - np.mean(dist) / (np.mean(np.abs(vals)) + 1e-30)))
+    if confidence < min_confidence:
+        return None, None, None
+    bits = (vals > 0).astype(int)
+    return bits, tau, confidence
+
+
+def demap_ask_bits(x, sps, min_confidence=ASK_MIN_CONFIDENCE):
+    """Envelope demapper for unipolar 2-level ASK (OOK when the off level is
+    zero): Oerder-Meyer timing directly on the squared envelope (already the
+    right nonlinearity -- an ASK symbol's envelope, unlike its complex value,
+    needs no carrier-phase reference), integrate-and-dump per symbol, then a
+    2-means threshold between the two integrated levels (not a fixed
+    zero-threshold like demap_fsk_bits: ASK's two levels are not symmetric
+    around zero, and the "off" level is not always exactly zero -- see
+    g5_manifest.json's OOK_* note that the off level is allowed to be
+    nonzero).
+
+    Returns (bits, tau, confidence); all None if confidence does not clear
+    min_confidence (see ASK_MIN_CONFIDENCE's docstring) or the two levels
+    cannot be separated (degenerate: every integrated value equal).
+    """
+    x = np.asarray(x, dtype=np.complex128)
+    if len(x) < 2 * sps:
+        return None, None, None
+    y = np.abs(x) ** 2
+    result = oerder_meyer_symbol_epoch(y, sps)
+    if result is None:
+        return None, None, None
+    tau, _lock = result
+    n_symbols = int((len(y) - tau) // sps)
+    vals, _ = _integrate_and_dump(y, tau, sps, n_symbols)
+    if len(vals) == 0 or np.ptp(vals) == 0:
+        return None, None, None
+    lo, hi = float(np.min(vals)), float(np.max(vals))
+    for _ in range(10):
+        thresh = (lo + hi) / 2
+        low_mask = vals <= thresh
+        if not low_mask.any() or low_mask.all():
+            break
+        new_lo, new_hi = float(np.mean(vals[low_mask])), float(np.mean(vals[~low_mask]))
+        if new_lo == lo and new_hi == hi:
+            break
+        lo, hi = new_lo, new_hi
+    thresh = (lo + hi) / 2
+    bits = (vals > thresh).astype(int)
+    span = (hi - lo) or 1e-30
+    dist_to_level = np.where(bits == 1, np.abs(vals - hi), np.abs(vals - lo))
+    confidence = float(max(0.0, 1.0 - np.mean(dist_to_level) / (span / 2)))
+    if confidence < min_confidence:
+        return None, None, None
+    return bits, tau, confidence
+
+
+DECODE_FAMILY_METHOD = {"bpsk": "psk", "qpsk": "psk", "8psk": "psk", "fsk2": "fsk", "ask2": "ask"}
+
+
+def _decode_psk(capture, candidate, out, label):
+    order = DECODE_ORDERS[label]
     symbol_rate = candidate.get("symbol_rate_hz")
     if symbol_rate is None or not np.isfinite(symbol_rate) or symbol_rate <= 0:
         out["decode_status"] = "not attempted (no reliable symbol-rate estimate)"
@@ -153,3 +326,67 @@ def decode_candidate(capture, candidate):
             "and an unknown start offset -- see DECODING.md"),
     )
     return out
+
+
+def _decode_fsk_or_ask(capture, candidate, out, label, method):
+    symbol_rate = candidate.get("symbol_rate_hz")
+    if symbol_rate is None or not np.isfinite(symbol_rate) or symbol_rate <= 0:
+        out["decode_status"] = "not attempted (no reliable symbol-rate estimate)"
+        return out
+    sps = capture.sample_rate / symbol_rate
+    if sps < FSK_ASK_MIN_SPS:
+        out["decode_status"] = "not attempted (insufficient samples/symbol for timing recovery)"
+        return out
+    frequency_hz = candidate.get("center_frequency_refined_hz") or candidate.get("center_frequency_hz")
+    segment = corrected_segment(capture, candidate, frequency_hz)
+    if segment is None or len(segment) < 2 * FSK_ASK_MIN_SYMBOLS * sps:
+        out["decode_status"] = "not attempted (segment too short for a stable confidence estimate)"
+        return out
+    demapper, method_name = (
+        (demap_fsk_bits, "non-coherent discriminator demapping") if method == "fsk"
+        else (demap_ask_bits, "envelope demapping"))
+    bits, tau, confidence = demapper(segment, sps)
+    if bits is None:
+        out["decode_status"] = "not attempted (confidence below the validated false-decode gate)"
+        return out
+    out.update(
+        decoded_symbol_indices=bits.tolist(),
+        decoded_symbol_count=int(len(bits)),
+        decode_phase_offset_rad=None,
+        decode_confidence=confidence,
+        decode_rotation_ambiguity_modulus=2,
+        decode_status=(
+            f"decoded (Oerder-Meyer symbol timing + {method_name}); "
+            "bits are correct only up to an unknown polarity/level assignment mod 2 "
+            "and an unknown start offset -- see DECODING.md"),
+    )
+    return out
+
+
+def decode_candidate(capture, candidate):
+    """Decode symbols/bits for a confirmed bpsk/qpsk/8psk/fsk2/ask2 candidate.
+
+    Returns candidate merged with: decoded_symbol_indices (list[int] or
+    None), decoded_symbol_count, decode_phase_offset_rad (PSK only),
+    decode_confidence, decode_rotation_ambiguity_modulus (order, or None),
+    decode_status (always explains the result, whether decoded or declined).
+    """
+    out = {**candidate, "decoded_symbol_indices": None, "decoded_symbol_count": None,
+           "decode_phase_offset_rad": None, "decode_confidence": None,
+           "decode_rotation_ambiguity_modulus": None,
+           "decode_status": "not attempted (requires a confirmed bpsk/qpsk/8psk/fsk2/ask2 fine label)"}
+    label = candidate.get("fine_modulation_label")
+    method = DECODE_FAMILY_METHOD.get(label)
+    if method is None:
+        return out
+    snr = candidate.get("snr_db")
+    if snr is None or not np.isfinite(snr):
+        out["decode_status"] = "not attempted (unknown SNR)"
+        return out
+    min_snr = DECODE_MIN_SNR_DB[label]
+    if snr < min_snr:
+        out["decode_status"] = f"not attempted (SNR below validated {min_snr} dB gate)"
+        return out
+    if method == "psk":
+        return _decode_psk(capture, candidate, out, label)
+    return _decode_fsk_or_ask(capture, candidate, out, label, method)
