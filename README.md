@@ -1,5 +1,7 @@
 # SIH26147 — PinPoint
 
+![tests](https://github.com/pranshu1141-sharma/Pinpoint/actions/workflows/tests.yml/badge.svg)
+
 An offline RF capture detector and dashboard for the Smart India Hackathon NTRO software track. It locates candidate time/frequency regions, measures pulse timing and per-candidate parameters (centre frequency, −3 dB/99% bandwidth, SNR), and **estimates modulation label and symbol rate for each IQ candidate** in synchronous uploads, demos, async large uploads, the API, detail table and JSON export. A label or rate is published only when its margin passes a threshold fit on a cross-generator calibration split; otherwise the output says *unknown family* or *not reliably estimated*. Everything is validated on synthetic generators only; see the measured [readiness scoreboard](docs/READINESS.md) and the conditioned [claims table](docs/CLAIMS.md). No FM/AM demodulation exists; a gated M-PSK symbol-recovery module (`backend/pipeline/decode.py`, [DECODING.md](DECODING.md)) exists but is not wired into the API or dashboard. See [integration verification](docs/INTEGRATION_VALIDATION.md).
 
 ## Screenshots
@@ -32,6 +34,69 @@ The dashboard runs the bundled IQ capture through the real Detect pipeline and k
 ```
 
 Analyses a file or every capture in a folder (`.sigmf-data` + `.sigmf-meta`, `.wav`, or raw `.iq` with `--sample-rate` and `--datatype`) through the same pipeline as the API and writes one JSON and one SigMF meta per file plus `summary.csv`, rows needing review first. Deterministic (no timings in the files); exit status 2 if any input is malformed or ambiguous (still listed in the summary). `--estimator legacy` selects the fixture-validated heuristics.
+
+## Terminal usage (`pinpoint`)
+
+Install once (editable, so code changes take effect immediately):
+
+```bash
+pip install -e .          # core: numpy, scipy, sigmf
+pip install -e ".[server]" # + FastAPI/uvicorn, if you also want the dashboard API
+```
+
+Exit codes, for every subcommand below: `0` everything analysed/validated cleanly, `1` a usage
+error (bad path, missing required flag), `2` at least one input was malformed, ambiguous, or
+failed validation (still listed in `summary.csv` / printed, never silently skipped).
+
+**`analyze`** — same behaviour as `python -m backend.cli analyze`:
+
+```bash
+pinpoint analyze path/to/captures --out results/
+```
+
+**`analyze --json`** — per-detection JSON Lines on stdout (progress/logs go to stderr), for piping:
+
+```bash
+pinpoint analyze path/to/captures --json | jq -c 'select(.needs_review == false) | {file, label: .modulation_label, snr_db}'
+```
+
+**`analyze --jobs N`** — one worker process per file; `--jobs 1` (the default) and `--jobs 4`
+produce byte-identical output, just faster:
+
+```bash
+pinpoint analyze path/to/captures --out results/ --jobs 4
+```
+
+**`watch`** — polls a folder, analyses each capture once its size stops changing between polls,
+and never re-analyses a file it's already processed (tracked in `results/.pinpoint-watch-state.json`).
+Stops cleanly on Ctrl-C:
+
+```bash
+pinpoint watch incoming/ --out results/
+```
+
+**`summary`** — a terminal table from an existing `--out` folder's `summary.csv`, rows needing
+review first, plus totals:
+
+```bash
+pinpoint summary results/
+```
+
+**`validate`** — validates every `.sigmf-meta` written into an `--out` folder with the `sigmf`
+library's own validator:
+
+```bash
+pinpoint validate results/
+```
+
+**`--version`**:
+
+```bash
+pinpoint --version
+```
+
+`--estimator`, `--sample-rate`, `--datatype`, `--wav-mode` and `--margin-db` work the same way on
+every subcommand above as they do on `python -m backend.cli analyze`.
 
 ## Complete project documentation
 

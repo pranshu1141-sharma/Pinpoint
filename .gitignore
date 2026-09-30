@@ -8,6 +8,7 @@ backend/data/jobs/
 *.log
 .env
 *.tsbuildinfo
+*.egg-info/
 
 # Local tooling and operating-system metadata
 reference-review/plot-packages/
