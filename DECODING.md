@@ -180,3 +180,176 @@ constellation isn't a simple phase ring); analog AM/FM-to-audio was
 originally sketched as `docs/master context.md`'s "Stage 6 (optional, zero
 allocated hours)" and never built. Both are separate, independently
 gated efforts — not started, no acceptance criterion measured yet.
+
+---
+
+# SIH26147 decode track (D0–D4)
+
+A separate, later effort layered on top of Phase 1 above: a stage-gated
+DECODE chain (demodulate → frame/sync → de-interleave → FEC-decode →
+verify) that publishes a decode **only when an algebraic check passes**
+(FEC syndrome, CRC, or bit-exact match to a public reference decode), aimed
+first at real AIS and rtl_433 recordings, not only synthetic signals. Full
+design: `docs/DECODE_DESIGN.md`. This section records D1's measured
+acceptance evidence, the same way Phase 1 above does for PSK.
+
+## D1 — 2-FSK/GMSK (discriminator) and OOK/ASK2 bit decoding
+
+**Status: complete, acceptance criteria met, on synthetic fixtures.**
+
+**Scope.** `backend/pipeline/decode.py`'s `demap_fsk_bits` (binary
+CPFSK/GMSK, non-coherent discriminator) and `demap_ask_bits` (unipolar
+2-level ASK/OOK, envelope), each built on a new shared timing primitive,
+`oerder_meyer_symbol_epoch`, and wired into `decode_candidate` alongside
+the existing PSK path via `DECODE_FAMILY_METHOD`. `decode_candidate` now
+accepts `fine_modulation_label` values `fsk2`/`ask2` in addition to
+`bpsk`/`qpsk`/`8psk`.
+
+### Timing-recovery bake-off (Oerder-Meyer vs Mueller-Mueller)
+
+`backend/pipeline/timing_recovery.py`'s Gardner recovery — already
+validated for the existing PSK path — is a decision-directed loop tuned for
+long, continuous streams (`DECODE_MIN_TAIL_SYMBOLS` = 2,000 symbols to
+converge). AIS/rtl_433 bursts are far shorter, so D0 registered a bake-off
+between a non-data-aided feedforward estimator (Oerder & Meyer, 1988) and a
+Mueller-Mueller (1976) decision-directed loop, both against the same
+short-burst CPFSK fixture with random start delay (independent
+implementation in `experiments/decode_bakeoff/timing_bakeoff.py`; not
+imported by production code).
+
+Mean bit error rate, 100 seeds per point, 300-bit bursts, h=0.5, sps=8,
+random start delay in [0, sps) per seed (so neither method's initial state
+gets a lucky exact alignment):
+
+| SNR (dB) | Oerder-Meyer BER | Mueller-Mueller BER |
+|---|---|---|
+| -2 | 29.78% | 29.90% |
+| 0 | 22.04% | 22.44% |
+| 3 | 12.37% | 12.49% |
+| 6 | 6.12% | 6.55% |
+| **10** | **2.05%** | **3.45%** |
+| **15** | **0.32%** | **1.38%** |
+
+**Winner: Oerder-Meyer**, at every SNR from 10 dB up (the range these
+gates actually target) — a decision-directed loop's early hard decisions
+are wrong more often at these SNRs, and that error feeds back into its own
+timing estimate, which a block estimate with no feedback cannot do. Its
+simplicity (one closed-form DFT-bin computation, no loop-gain parameters to
+tune or risk destabilizing on a short burst) was the secondary reason it
+was chosen for production; `decode.py` implements only Oerder-Meyer.
+Mueller-Mueller's numbers above are kept as the bake-off record, not
+deleted, per the task's stated rule.
+
+**A DSP result worth flagging explicitly (uncertain point, validated
+before wiring in):** the initial design assumed a signal's own raw
+`lock_fraction` (the Oerder-Meyer DFT bin's magnitude as a fraction of the
+squared-signal's total AC power) would separate a real signal from noise,
+the way `gardner_timing_recovery`'s loop-error std does for PSK. Measured,
+it does not: an unshaped CPFSK/OOK signal's squared nonlinearity is
+dominated by its DC term (the symbol amplitude itself), and the genuine
+periodic component at the symbol rate — which for a *rectangular* pulse
+comes only from the discriminator/envelope's transition-edge artifacts, not
+from the symbol values themselves (a perfectly rectangular random telegraph
+signal, squared, is mathematically flat) — is a small fraction of that,
+regardless of SNR (measured 0.01–0.04 at 10–15 dB, vs. pure noise's
+0.001–0.013: overlapping, not usable as a gate). What **does** separate
+cleanly, measured the same way, is the post-integrate-and-dump decision
+`confidence` each demapper already computes and returns (see next
+section) — that became the actual false-decode gate, not the raw lock
+fraction. `FSK_ASK_MIN_SNR_DB`'s and `FSK_MIN_CONFIDENCE`/
+`ASK_MIN_CONFIDENCE`'s docstrings in `decode.py` carry this derivation.
+
+### Acceptance criterion, stated before implementation
+
+Mean bit error rate ≤2% over 10 seeds at each family's gated SNR (same
+target and seed count as Phase 1's PSK criterion); false-decode rate must
+be 0% on pure noise and on a wrong-hypothesis input (a clean, high-SNR
+BPSK segment fed to the FSK/ASK demapper).
+
+### Measured results
+
+Mean BER over 10 seeds, `n_bits=2000` per trial, `sps=8`, random start
+delay per seed (`backend/tests/test_decode_fsk_ask.py`):
+
+| Modulation | SNR (dB) | Mean BER | Locked (of 10) |
+|---|---|---|---|
+| fsk2 | 2 | 8.44% | 5 |
+| fsk2 | 4 | 4.32% | 7 |
+| fsk2 | 6 | 1.49% | 7 |
+| fsk2 | 8 | 1.03% | 9 |
+| fsk2 | **10 (gate)** | **0.12%** | **10** |
+| fsk2 | 12 | 0.02% | 10 |
+| fsk2 | 15 | 0.00% | 10 |
+| fsk2 | 20 | 0.00% | 10 |
+| ask2 | 0 | 7.74% | 7 |
+| ask2 | 2 | 2.74% | 9 |
+| ask2 | 4 | 0.69% | 10 |
+| ask2 | 6 | 0.13% | 10 |
+| **ask2** | **8 (gate)** | **0.01%** | **10** |
+| ask2 | 10 | 0.00% | 10 |
+| ask2 | 15 | 0.00% | 10 |
+| ask2 | 20 | 0.00% | 10 |
+
+"Locked" means `decode_candidate`/the demapper published a bit stream at
+all (confidence cleared its family's gate); below the SNR gate, some seeds
+correctly decline rather than publish a high-BER guess — consistent with
+this project's existing "decline rather than guess" posture.
+
+**Why the gates sit where they do.** fsk2's gate (10 dB) matches the
+existing PSK bpsk/qpsk gate — both are set by their own measured BER cliff
+here (2% cleared by 6-8 dB, gated 2 dB higher for full 10/10 lock
+reliability), not copied from the PSK number. ask2's gate (8 dB) sits
+lower, matching ASK's generally easier detection problem (envelope-only,
+no discriminator noise-enhancement) already reflected in this project's
+existing `SYMBOL_RATE_MIN_SNR_DB = 4.5` dB for ASK/PSK symbol-rate
+estimation in `classify.py`, though this gate is set independently from a
+direct BER measurement, not inherited from that number.
+
+**False-decode rate (measured, not by construction):**
+
+| Test | Trials | False decodes |
+|---|---|---|
+| Pure complex AWGN → `demap_fsk_bits` | 500 | 0 |
+| Pure complex AWGN → `demap_ask_bits` | 500 | 0 |
+| Clean BPSK (5–30 dB) → `demap_fsk_bits` | 250 | 0 |
+| Clean BPSK (5–30 dB) → `demap_ask_bits` | 250 | 0 |
+
+0/1,500 across both false-decode categories and both families, meeting the
+task's 0% requirement. `FSK_MIN_CONFIDENCE = 0.46` and
+`ASK_MIN_CONFIDENCE = 0.55` were chosen with margin above the measured
+worst-case noise confidence (0.434 over 1,000 seeds for FSK, 0.453 over 500
+for ASK) and below the measured signal-confidence floor at each family's
+SNR gate (fsk2 ≥0.50 at 10 dB across 50 seeds sampled; ask2 ≥0.79 at 8 dB
+across 10 seeds) — not tuned against the test seeds used to report the BER
+table above (a disjoint, larger seed range: 20,000+ and 30,000+ bases vs.
+the BER table's 0–9).
+
+### Tests
+
+`backend/tests/test_decode_fsk_ask.py` — 12 tests, all passing: the shared
+`oerder_meyer_symbol_epoch` primitive against an independent grid-search
+reference (2), per-family at-gate and below-gate BER (4), per-family
+false-decode-on-noise (2), FSK false-decode-on-wrong-hypothesis (1), and
+`decode_candidate` end-to-end dispatch/gating for both families (3). Full
+existing suite (`backend/tests`, excluding two files requiring an
+unavailable `fastapi` install in this environment) still passes: 352
+passed, 3 skipped, no regressions.
+
+### Not attempted in D1 (explicitly, not silently)
+
+- **GMSK pulse shaping (BT=0.4):** this sweep uses unshaped (rectangular)
+  CPFSK. AIS's real BT=0.4 Gaussian shaping is D2's problem, validated
+  there directly against the real AIS recordings rather than a synthetic
+  proxy.
+- **4-FSK/8-FSK, higher-order ASK:** `demap_fsk_bits`/`demap_ask_bits` are
+  binary only; `FSK_ASK_MIN_SNR_DB` has no `fsk4`/`fsk8` entry, matching
+  `classify.py`'s existing `SYMBOL_RATE_LABELS` exclusion of FSK generally
+  from rate estimation, now narrowed specifically to "binary only" for
+  decode.
+- **G4 impairment sweep:** this section's fixtures are clean AWGN only (own
+  independent generator, like Phase 1's PSK fixture, not
+  `experiments/readiness/impaired.py`, which tracks no per-bit truth). A
+  G4-style impaired bit-level sweep (carrier drift, phase noise, IQ
+  imbalance) is unstarted; flagged here rather than silently assumed by the
+  clean-AWGN numbers above.
+- **Real captures:** D1 is synthetic only. D2 is the real-recording proof.
