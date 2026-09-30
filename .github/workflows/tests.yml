@@ -16,4 +16,4 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[server,test]"
-      - run: pytest backend/tests -v
+      - run: python -m pytest backend/tests -v
