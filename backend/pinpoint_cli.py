@@ -76,6 +76,10 @@ def _watch_once(args, sizes, processed):
         except FileNotFoundError:
             continue                      # file vanished mid-poll (e.g. a producer cleaning up); skip this cycle
         if sizes.get(key) == size:
+            if p.name.lower().endswith(".sigmf-data"):
+                meta_path = p.with_name(p.name[:-len(".sigmf-data")] + ".sigmf-meta")
+                if not meta_path.exists():
+                    continue               # data file stable but sidecar not written yet; wait, don't mark processed
             stable.append(p)
         else:
             sizes[key] = size
@@ -116,7 +120,8 @@ def cmd_summary(args):
     if not csv_path.exists():
         print(f"{csv_path} does not exist", file=sys.stderr)
         return 1
-    rows = list(csv.DictReader(csv_path.open()))
+    with csv_path.open() as fh:
+        rows = list(csv.DictReader(fh))
     rows.sort(key=lambda r: (r["needs_review"] != "true", r["file"], r["detection_id"]))
     cols = ["needs_review", "file", "detection_id", "label", "tier", "snr_db", "status", "error"]
     widths = {c: max([len(c)] + [len(r[c]) for r in rows]) for c in cols}
@@ -140,8 +145,8 @@ def cmd_validate(args):
         return 1
     failed = 0
     for path in metas:
-        metadata = json.loads(path.read_text())
         try:
+            metadata = json.loads(path.read_text())
             SigMFFile(metadata=metadata).validate()
             print(f"{path.name}: OK")
         except Exception as exc:
@@ -228,7 +233,7 @@ def build_parser():
 
 def run(argv=None):
     args = build_parser().parse_args(argv)
-    if hasattr(args, 'jobs') and args.jobs < 1:
+    if hasattr(args, "jobs") and args.jobs < 1:
         print("--jobs must be >= 1", file=sys.stderr)
         return 1
     return args.func(args)

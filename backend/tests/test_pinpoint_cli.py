@@ -44,6 +44,15 @@ def test_analyze_jobs1_matches_old_backend_cli_byte_for_byte(inputs, tmp_path):
         assert (old_out / name).read_bytes() == (new_out / name).read_bytes(), name
 
 
+def test_analyze_with_broken_input_matches_old_backend_cli_exit_code_and_summary(inputs, tmp_path):
+    (inputs / "broken.wav").write_bytes(b"not a wav file")
+    old_out, new_out = tmp_path / "old", tmp_path / "new"
+    r_old = _run_old("analyze", inputs, "--out", old_out)
+    r_new = _run_new("analyze", inputs, "--out", new_out, "--jobs", "1")
+    assert r_old.returncode == r_new.returncode == 2, (r_old.returncode, r_new.returncode, r_old.stderr, r_new.stderr)
+    assert (old_out / "summary.csv").read_bytes() == (new_out / "summary.csv").read_bytes()
+
+
 def test_version_flag():
     r = _run_new("--version")
     assert r.returncode == 0
@@ -142,6 +151,16 @@ def test_validate_fails_on_corrupted_meta(inputs, tmp_path):
     assert r.returncode != 0
 
 
+def test_validate_reports_unreadable_meta_and_continues_past_it(inputs, tmp_path):
+    out = tmp_path / "out"
+    assert _run_new("analyze", inputs, "--out", out).returncode == 0
+    (out / "0-broken.sigmf-meta").write_bytes(b"\xff\xfe\x00\x01not valid utf-8 or json")
+    r = _run_new("validate", out)
+    assert r.returncode == 2, (r.returncode, r.stdout, r.stderr)
+    assert "OK" in r.stdout                    # the valid files were still validated: loop continued past the bad one
+    assert "0-broken.sigmf-meta" in r.stderr
+
+
 def test_validate_no_meta_files_is_a_usage_error(tmp_path):
     empty = tmp_path / "empty"
     empty.mkdir()
@@ -200,6 +219,32 @@ def test_watch_once_skips_a_candidate_that_vanishes_mid_poll_without_raising(tmp
     assert (out / "demo.json").exists()           # the still-present, stable file is still analysed
     assert len(processed) == 1
     assert not any(vanishing_name in p for p in processed)
+
+
+def test_watch_once_waits_for_sigmf_meta_sidecar_before_treating_data_file_as_stable(tmp_path):
+    from backend.pinpoint_cli import _watch_once, build_parser
+
+    src = tmp_path / "in"
+    src.mkdir()
+    out = tmp_path / "out"
+    out.mkdir()
+    shutil.copy(ROOT / "backend/data/demo/demo.sigmf-data", src / "demo.sigmf-data")
+    # NOTE: no demo.sigmf-meta sidecar yet -- simulates a producer that writes the
+    # .sigmf-data file first and the .sigmf-meta sidecar a poll cycle later.
+
+    args = build_parser().parse_args(["watch", str(src), "--out", str(out)])
+    sizes, processed = {}, set()
+
+    _watch_once(args, sizes, processed)              # first poll: records the size
+    _watch_once(args, sizes, processed)               # second poll: size unchanged, but no sidecar yet
+    assert not (out / "demo.json").exists()
+    assert not processed                              # must NOT be blacklisted while waiting for the sidecar
+
+    shutil.copy(ROOT / "backend/data/demo/demo.sigmf-meta", src / "demo.sigmf-meta")
+
+    _watch_once(args, sizes, processed)                # sidecar now exists, size still unchanged -> stable
+    assert (out / "demo.json").exists()
+    assert len(processed) == 1
 
 
 def test_watch_state_file_persists_processed_files_across_restarts(tmp_path):

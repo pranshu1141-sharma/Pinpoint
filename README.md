@@ -44,9 +44,13 @@ pip install -e .          # core: numpy, scipy, sigmf
 pip install -e ".[server]" # + FastAPI/uvicorn, if you also want the dashboard API
 ```
 
-Exit codes, for every subcommand below: `0` everything analysed/validated cleanly, `1` a usage
-error (bad path, missing required flag), `2` at least one input was malformed, ambiguous, or
-failed validation (still listed in `summary.csv` / printed, never silently skipped).
+Exit codes: `analyze` and `validate` return `0` when everything succeeded, `2` if at least one
+input was malformed, ambiguous, or failed validation (still reported, never silently skipped),
+and `1` on a usage error such as a missing target path (note: argparse itself — an unrecognized
+flag, a missing required subcommand — exits `2`, not `1`). `summary` returns `0` if the report
+was printed, `1` if the `--out` folder has no `summary.csv` yet. `watch` runs until you stop it:
+it returns `0` on a clean Ctrl-C shutdown, `1` if the watched directory doesn't exist at
+startup, and otherwise keeps running and logging per-file errors to stderr without exiting.
 
 **`analyze`** — same behaviour as `python -m backend.cli analyze`:
 
@@ -76,7 +80,8 @@ pinpoint watch incoming/ --out results/
 ```
 
 **`summary`** — a terminal table from an existing `--out` folder's `summary.csv`, rows needing
-review first, plus totals:
+review first, plus totals. Reads a `summary.csv` written by `analyze` — `watch` never writes one,
+so pointing `summary` at a folder that only ever had `watch` run against it will exit 1:
 
 ```bash
 pinpoint summary results/
@@ -95,8 +100,9 @@ pinpoint validate results/
 pinpoint --version
 ```
 
-`--estimator`, `--sample-rate`, `--datatype`, `--wav-mode` and `--margin-db` work the same way on
-every subcommand above as they do on `python -m backend.cli analyze`.
+`--estimator`, `--sample-rate`, `--datatype`, `--wav-mode` and `--margin-db` apply to `analyze`
+and `watch` (the two subcommands that actually run analysis); `summary` and `validate` don't
+accept them. They work the same way as they do on `python -m backend.cli analyze`.
 
 ## Complete project documentation
 
