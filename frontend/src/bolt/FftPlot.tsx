@@ -92,14 +92,14 @@ export function FftPlot({
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    ctx.fillStyle = '#1e1e1e';
+    ctx.fillStyle = '#0a0a0b';
     ctx.fillRect(0, 0, width, height);
 
     // Grid — minor lines
-    ctx.strokeStyle = '#2a2a2a';
+    ctx.strokeStyle = '#1f1f23';
     ctx.lineWidth = 1;
     ctx.font = '10px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#7f7f7f';
+    ctx.fillStyle = '#6b6b74';
 
     const dbStep = 10;
     for (let db = Math.ceil(dbMin / dbStep) * dbStep; db <= dbMax; db += dbStep) {
@@ -132,7 +132,7 @@ export function FftPlot({
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#7f7f7f';
+    ctx.fillStyle = '#6b6b74';
     ctx.font = '10px Inter, sans-serif';
     ctx.fillText('PSD (dB/Hz)', 0, 0);
     ctx.restore();
@@ -144,7 +144,7 @@ export function FftPlot({
     // Noise floor reference line
     if (noiseFloorDb !== null) {
       const y = dbToY(noiseFloorDb);
-      ctx.strokeStyle = '#7f7f7f';
+      ctx.strokeStyle = '#6b6b74';
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -152,7 +152,7 @@ export function FftPlot({
       ctx.lineTo(width - PAD_RIGHT, y);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = '#7f7f7f';
+      ctx.fillStyle = '#6b6b74';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
       ctx.font = '9px "JetBrains Mono", monospace';
@@ -176,7 +176,7 @@ export function FftPlot({
       ctx.fill();
 
       // Line
-      ctx.strokeStyle = '#2a82da';
+      ctx.strokeStyle = '#5ecbe8';
       ctx.lineWidth = 1;
       ctx.beginPath();
       for (let i = 0; i < psdData.freqs.length; i++) {
@@ -197,8 +197,8 @@ export function FftPlot({
         const px = freqToX(centerFreq);
         const py = dbToY(peakMag);
         const isSelected = det.id === selectedDetectionId;
-        ctx.strokeStyle = isSelected ? '#2a82da' : '#4a4a4a';
-        ctx.fillStyle = isSelected ? '#2a82da' : '#4a4a4a';
+        ctx.strokeStyle = isSelected ? '#5ecbe8' : '#2a2a2f';
+        ctx.fillStyle = isSelected ? '#5ecbe8' : '#2a2a2f';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.arc(px, py, 2, 0, Math.PI * 2);
@@ -211,7 +211,7 @@ export function FftPlot({
       const x1 = freqToX(det.freq_lower_hz);
       const x2 = freqToX(det.freq_upper_hz);
       const isSelected = det.id === selectedDetectionId;
-      ctx.strokeStyle = isSelected ? '#2a82da' : '#4a4a4a';
+      ctx.strokeStyle = isSelected ? '#5ecbe8' : '#2a2a2f';
       ctx.lineWidth = isSelected ? 1.5 : 1;
       const bracketY = PAD_TOP + 2;
       const bracketH = 6;
@@ -222,7 +222,7 @@ export function FftPlot({
       ctx.lineTo(x2, bracketY + bracketH);
       ctx.stroke();
       if (det.needs_review) {
-        ctx.fillStyle = '#cc3c34';
+        ctx.fillStyle = '#e5484d';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         ctx.font = 'bold 9px "JetBrains Mono", monospace';
@@ -230,7 +230,7 @@ export function FftPlot({
       }
       // Detection ID label for selected
       if (isSelected) {
-        ctx.fillStyle = '#2a82da';
+        ctx.fillStyle = '#5ecbe8';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
         ctx.font = '9px "JetBrains Mono", monospace';
@@ -240,7 +240,7 @@ export function FftPlot({
 
     // Threshold line (draggable)
     const thresholdY = dbToY(thresholdDb);
-    ctx.strokeStyle = '#cc3c34';
+    ctx.strokeStyle = '#e5484d';
     ctx.lineWidth = hoveredThreshold || draggingThreshold ? 2 : 1;
     ctx.setLineDash([6, 3]);
     ctx.beginPath();
@@ -249,18 +249,18 @@ export function FftPlot({
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle = '#cc3c34';
+    ctx.fillStyle = '#e5484d';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
     ctx.font = '9px "JetBrains Mono", monospace';
     ctx.fillText(`${thresholdLabel} ${thresholdDb.toFixed(1)} dB`, width - PAD_RIGHT - 4, thresholdY - 2);
 
-    ctx.fillStyle = '#cc3c34';
+    ctx.fillStyle = '#e5484d';
     ctx.fillRect(PAD_LEFT - 2, thresholdY - 3, 4, 6);
 
     // Cursor crosshair
     if (cursorX !== null && cursorX >= PAD_LEFT && cursorX <= width - PAD_RIGHT) {
-      ctx.strokeStyle = '#7f7f7f';
+      ctx.strokeStyle = '#6b6b74';
       ctx.lineWidth = 1;
       ctx.setLineDash([2, 2]);
       ctx.beginPath();
@@ -283,12 +283,12 @@ export function FftPlot({
         const labelWidth = ctx.measureText(label).width + 8;
         let labelX = cursorX + 8;
         if (labelX + labelWidth > width - PAD_RIGHT) labelX = cursorX - labelWidth - 4;
-        ctx.fillStyle = '#353535';
+        ctx.fillStyle = '#121214';
         ctx.fillRect(labelX, PAD_TOP + 2, labelWidth, 16);
-        ctx.strokeStyle = '#4a4a4a';
+        ctx.strokeStyle = '#2a2a2f';
         ctx.lineWidth = 1;
         ctx.strokeRect(labelX, PAD_TOP + 2, labelWidth, 16);
-        ctx.fillStyle = '#d4d4d4';
+        ctx.fillStyle = '#e4e4e7';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText(label, labelX + 4, PAD_TOP + 4);

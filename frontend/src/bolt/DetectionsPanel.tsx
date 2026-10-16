@@ -156,9 +156,9 @@ export function DetectionsPanel({
                 const startTime = det.start_sample / sampleRate;
                 const endTime = det.end_sample / sampleRate;
                 const confColor =
-                  det.confidence >= 0.7 ? '#5cb85c' :
-                  det.confidence >= 0.5 ? '#d4d4d4' :
-                  '#cc3c34';
+                  det.confidence >= 0.7 ? '#4b9c6b' :
+                  det.confidence >= 0.5 ? '#e4e4e7' :
+                  '#e5484d';
 
                 return (
                   <tr tabIndex={0} aria-selected={isSelected} aria-label={`Candidate ${det.id}: ${formatFreq(det.freq_lower_hz)} to ${formatFreq(det.freq_upper_hz)}`}

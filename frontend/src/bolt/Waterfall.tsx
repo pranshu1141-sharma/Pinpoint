@@ -178,7 +178,7 @@ export function Waterfall({
     ctx.scale(dpr, dpr);
 
     // Clear
-    ctx.fillStyle = '#1e1e1e';
+    ctx.fillStyle = '#0a0a0b';
     ctx.fillRect(0, 0, width, height);
 
     if (spectrogram && spectrogram.magnitude_2d.length > 0) {
@@ -216,7 +216,7 @@ export function Waterfall({
       }
     } else {
       // Empty state
-      ctx.fillStyle = '#7f7f7f';
+      ctx.fillStyle = '#6b6b74';
       ctx.font = '11px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -224,10 +224,10 @@ export function Waterfall({
     }
 
     // X-axis labels (frequency, shared with FFT)
-    ctx.strokeStyle = '#2a2a2a';
+    ctx.strokeStyle = '#1f1f23';
     ctx.lineWidth = 1;
     ctx.font = '10px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#7f7f7f';
+    ctx.fillStyle = '#6b6b74';
     const freqStep = (view.freqHi - view.freqLo) / 8;
     for (let i = 0; i <= 8; i++) {
       const freq = view.freqLo + freqStep * i;
@@ -261,7 +261,7 @@ export function Waterfall({
       const tStart = timeToY(det.start_sample / sampleRate);
       const tEnd = timeToY(det.end_sample / sampleRate);
 
-      ctx.strokeStyle = isSelected ? '#2a82da' : '#9a9a9a';
+      ctx.strokeStyle = isSelected ? '#5ecbe8' : '#6b6b74';
       ctx.lineWidth = isSelected ? 1.5 : 1;
       ctx.setLineDash(det.is_pulsed || !isSelected ? [3, 2] : []);
 
@@ -305,7 +305,7 @@ export function Waterfall({
 
     // Cursor crosshair
     if (cursorX !== null && cursorX >= PAD_LEFT && cursorX <= width - PAD_RIGHT) {
-      ctx.strokeStyle = '#7f7f7f';
+      ctx.strokeStyle = '#6b6b74';
       ctx.lineWidth = 1;
       ctx.setLineDash([2, 2]);
       ctx.beginPath();
@@ -315,7 +315,7 @@ export function Waterfall({
       ctx.setLineDash([]);
     }
     if (cursorY !== null && cursorY >= PAD_TOP && cursorY <= height - PAD_BOTTOM) {
-      ctx.strokeStyle = '#7f7f7f';
+      ctx.strokeStyle = '#6b6b74';
       ctx.lineWidth = 1;
       ctx.setLineDash([2, 2]);
       ctx.beginPath();
@@ -329,7 +329,7 @@ export function Waterfall({
     // converted to absolute capture time, mirrored on the full spectrogram.
     if (playheadTime != null && playheadTime >= view.timeLo && playheadTime <= view.timeHi) {
       const py = timeToY(playheadTime);
-      ctx.strokeStyle = '#5cb85c';
+      ctx.strokeStyle = '#4b9c6b';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(PAD_LEFT, py);
@@ -339,8 +339,8 @@ export function Waterfall({
 
     // Pinned inspection point, independent of the transient hover crosshair.
     if (pin) {
-      ctx.strokeStyle = '#2a82da';
-      ctx.fillStyle = '#2a82da';
+      ctx.strokeStyle = '#5ecbe8';
+      ctx.fillStyle = '#5ecbe8';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(pin.x, pin.y, 4, 0, Math.PI * 2);

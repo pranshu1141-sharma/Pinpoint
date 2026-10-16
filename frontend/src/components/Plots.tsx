@@ -11,14 +11,14 @@ import {
 } from "recharts";
 import type { Analysis, Detection, Envelope, WavePoint } from "../api";
 
-const grid = "#253039",
-  muted = "#8e9ca8",
-  accent = "#72d8ef";
+const grid = "#1f1f23",
+  muted = "#9a9aa2",
+  accent = "#5ecbe8";
 const tooltip = {
-  background: "#111b22",
-  border: "1px solid #34414c",
-  fontFamily: "IBM Plex Mono",
-  fontSize: 12,
+  background: "#121214",
+  border: "1px solid #2a2a2f",
+  fontFamily: "JetBrains Mono",
+  fontSize: 11,
 };
 export function PSD({ analysis }: { analysis: Analysis }) {
   return (
@@ -48,19 +48,19 @@ export function PSD({ analysis }: { analysis: Analysis }) {
         />
         <ReferenceLine
           y={analysis.noise_floor_db}
-          stroke="#7a8b98"
+          stroke={muted}
           strokeDasharray="3 4"
         />
         <ReferenceLine
           y={analysis.threshold_db}
-          stroke={accent}
+          stroke="#e8a33d"
           strokeDasharray="7 4"
         />
         <Line
           dataKey="power_db"
-          stroke="#a5bbc9"
+          stroke={muted}
           dot={false}
-          strokeWidth={1.1}
+          strokeWidth={1}
           isAnimationActive={false}
         />
       </LineChart>
@@ -92,7 +92,7 @@ export function Waveform({ points }: { points: WavePoint[] }) {
           dataKey="value"
           stroke={accent}
           dot={false}
-          strokeWidth={1.2}
+          strokeWidth={1}
           isAnimationActive={false}
         />
       </LineChart>
@@ -105,7 +105,7 @@ export function PulsePlot({
   rate,
 }: {
   data: Envelope;
-  detection: Detection;
+  detection: Pick<Detection, 'pulse_width_samples' | 'pri_samples'>;
   rate: number;
 }) {
   const first = data.pulse_windows[0],
@@ -132,7 +132,7 @@ export function PulsePlot({
         <Tooltip contentStyle={tooltip} />
         <ReferenceLine
           y={data.threshold}
-          stroke="#efb257"
+          stroke="#e8a33d"
           strokeDasharray="3 3"
         />
         {first && (
@@ -166,6 +166,7 @@ export function PulsePlot({
           dataKey="value"
           stroke={accent}
           dot={false}
+          strokeWidth={1}
           isAnimationActive={false}
         />
       </LineChart>

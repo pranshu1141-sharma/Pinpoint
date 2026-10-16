@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, FolderOpen, Loader2, Radio, Upload, Settings2, ChevronDown, ChevronRight, Download, Copy, Check, HelpCircle, X } from 'lucide-react';
+import { Activity, FolderOpen, Loader2, Radio, Upload, Settings2, ChevronDown, ChevronRight, Download, Copy, Check, HelpCircle, X, ExternalLink } from 'lucide-react';
 import { request, rerunJob, uploadCapture, waitForAnalysis, type Analysis, type AnalysisProgress, type Spectrogram, type AccuracyCurve as AccuracyCurveData } from './api';
 import { AccuracyCurve } from './bolt/AccuracyCurve';
 import { adaptDetections, adaptSpectrogram, describeFile } from './bolt/adapter';
@@ -14,6 +14,7 @@ import { PipelineLogPanel } from './bolt/PipelineLogPanel';
 import { StatusBar } from './bolt/StatusBar';
 import { ColormapLegend } from './bolt/ColormapLegend';
 import { SignalBreakdown } from './bolt/SignalBreakdown';
+import { AnalysisPage } from './bolt/AnalysisPage';
 
 type Run = { demo?: 'iq' | 'audio'; resume?: string };
 type HistoryEntry = { job_id: string; filename: string; timestamp: number; detectionCount: number; sourceKind: string };
@@ -106,6 +107,8 @@ export default function App() {
   const [jumpTo, setJumpTo] = useState<{ id: string; token: number } | null>(null);
   const selectAndJump = (id: string) => { select(id); setJumpTo({ id, token: Date.now() }); };
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [analysisView, setAnalysisView] = useState(false);
+  useEffect(() => { if (!viewDetection) setAnalysisView(false); }, [viewDetection]);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target instanceof Element ? e.target : null;
@@ -156,7 +159,8 @@ export default function App() {
     {!connected && !health.isPending && <div className="bolt-error" role="alert">Not connected. Start the FastAPI backend to analyze captures.<button onClick={() => health.refetch()}>Reconnect</button></div>}
     {(error || spec.isError) && <div className="bolt-error" role="alert">{error || spec.error?.message}<button onClick={() => { setError(''); if(spec.isError) spec.refetch(); }}>Dismiss / retry</button></div>}
     {pending && <div className="bolt-progress" role="status"><Loader2 size={13} className="animate-spin" /><span>{progress?.message ?? 'Analyzing the capture…'}</span><progress max="1" value={progress?.fraction ?? undefined} />{progress?.fraction != null && <span>{Math.round(progress.fraction * 100)}%</span>}</div>}
-    {!shown ? <main className="bolt-welcome"><div className={`welcome-drop ${dragging ? 'dragging' : ''}`} onDragOver={e => {e.preventDefault(); setDragging(true);}} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); assign(Array.from(e.dataTransfer.files)); }}>
+    {shown && analysisView && viewDetection ? <AnalysisPage analysis={shown} detection={viewDetection} spectrum={spectrum} psd={psd} freqMin={freqMin} freqMax={freqMax} dbMin={dbMin} dbMax={dbMax} sampleRate={sampleRate} onBack={() => setAnalysisView(false)} /> :
+    !shown ? <main className="bolt-welcome"><div className={`welcome-drop ${dragging ? 'dragging' : ''}`} onDragOver={e => {e.preventDefault(); setDragging(true);}} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); assign(Array.from(e.dataTransfer.files)); }}>
       <Radio size={40} /><h1>SIH26147 Signal Analysis</h1><p>Detect-stage pipeline — candidate signal region identification</p><button disabled={pending} onClick={() => input.current?.click()}><Upload size={14} />Drop IQ file here or click to browse</button>
       {files.length > 0 && <div className="selected-files">{files.map(f => <div key={f.name}>{f.name} · {(f.size / 1024 ** 2).toFixed(2)} MiB</div>)}<button className="primary" disabled={pending || !connected} onClick={() => mutation.mutate({})}>Analyze selected capture</button></div>}
       <small><FolderOpen size={12} />Supports: .wav, .iq, .sigmf-data + .sigmf-meta</small><p className="welcome-help">After loading a file, click Analyze to run the detection pipeline.<br />Use Settings to specify raw IQ or stereo WAV interpretation.</p><div className="demo-buttons"><button disabled={pending || !connected} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending || !connected} onClick={() => startDemo('audio')}>Audio demo</button></div><small>Bundled captures processed by the real pipeline.</small>
@@ -168,7 +172,7 @@ export default function App() {
       <section className={`bolt-breakdown ${breakdownOpen ? 'open' : ''}`}><button className="dock-toggle" aria-expanded={breakdownOpen} onClick={() => setBreakdownOpen(v => !v)}>{breakdownOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}Signal Breakdown — Detect Stage<span>{selected !== null ? `C${Number(selected)+1}` : 'Select a candidate'}</span><small>Space to toggle</small></button>{breakdownOpen && <SignalBreakdown key={`${shown.job_id}:${selected}`} analysis={shown} detection={detection} onPlayheadChange={setPlayheadTime} />}</section>
     </div><aside className="bolt-sidebar">
       <DockPanel title="Detections" className="detections-dock" actions={<label className="confidence-filter" title="Hide candidates below this confidence from the list and spectrogram"><span>Min conf</span><input type="range" min="0" max="1" step="0.01" value={confidenceFilter} onChange={e => setConfidenceFilter(Number(e.target.value))} /><span className="confidence-filter-value">{Math.round(confidenceFilter * 100)}%</span></label>}><DetectionsPanel detections={visibleDetections} selectedDetectionId={selected} onSelectDetection={selectAndJump} sampleRate={sampleRate} /><p className="evidence-note">Confidence is a heuristic evidence score, not a probability.{detections.length !== visibleDetections.length && ` ${detections.length - visibleDetections.length} candidate(s) hidden below ${Math.round(confidenceFilter * 100)}% confidence.`}</p></DockPanel>
-      <DockPanel title="Detection Detail" className="detail-dock"><DetectionDetailPanel detection={viewDetection} sampleRate={sampleRate} jobId={shown?.job_id} /></DockPanel>
+      <DockPanel title="Detection Detail" className="detail-dock" actions={<span className={`analyze-action${viewDetection ? '' : ' disabled'}`} role="button" tabIndex={viewDetection ? 0 : -1} title="Open the focused Analysis page for this candidate" onClick={() => viewDetection && setAnalysisView(true)} onKeyDown={e => { if (viewDetection && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setAnalysisView(true); } }}><ExternalLink size={11} />Analyze</span>}><DetectionDetailPanel detection={viewDetection} sampleRate={sampleRate} jobId={shown?.job_id} /></DockPanel>
       <DockPanel title="File Info" className="file-dock"><FileInfoPanel fileInfo={fileInfo} /><p className="evidence-note">{shown.metadata.wav_disambiguation.reason}</p></DockPanel>
       <DockPanel title="Pipeline Log" className="log-dock" defaultOpen={false}><PipelineLogPanel logLines={shown.pipeline_log} /></DockPanel>
       <DockPanel title="Export" defaultOpen={false}>

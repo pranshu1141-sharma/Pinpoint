@@ -115,12 +115,12 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
     { key: 'ID', value: detection.id },
     { key: 'Method', value: detection.detection_method },
     { key: 'Confidence', value: `${formatConfidence(detection.confidence)} (heuristic)`,
-      color: detection.confidence >= 0.7 ? '#5cb85c' : detection.confidence >= 0.5 ? '#d4d4d4' : '#cc3c34',
+      color: detection.confidence >= 0.7 ? '#4b9c6b' : detection.confidence >= 0.5 ? '#e4e4e7' : '#e5484d',
       explain: 'Heuristic score combining threshold excess and spectral occupancy. Not a calibrated probability; below 0.70 sets Needs Review.' },
     { key: 'Confidence (evidence-based)', value: detection.confidence_evidence_based == null ? unavailable : `${formatConfidence(detection.confidence_evidence_based)} (heuristic)`,
       explain: 'A second, independent heuristic: deviation of the power coefficient-of-variation from 1.0, the value expected for pure Gaussian noise. Not combined with Confidence above and does not affect Needs Review — the two can disagree, since they measure different things (amplitude threshold vs. distribution shape).' },
-    { key: 'Needs Review', value: detection.needs_review ? 'Yes' : 'No', color: detection.needs_review ? '#cc3c34' : '#d4d4d4' },
-    { key: 'Pulsed', value: detection.is_pulsed ? 'Yes' : 'No', color: detection.is_pulsed ? '#2a82da' : '#7f7f7f' },
+    { key: 'Needs Review', value: detection.needs_review ? 'Yes' : 'No', color: detection.needs_review ? '#e5484d' : '#e4e4e7' },
+    { key: 'Pulsed', value: detection.is_pulsed ? 'Yes' : 'No', color: detection.is_pulsed ? '#5ecbe8' : '#6b6b74' },
     { key: 'Midpoint (Detect)', value: formatFreq(centerFreq),
       explain: 'Midpoint of the Detect-stage frequency band, before any downstream refinement.' },
     { key: 'Width (Detect)', value: formatFreq(bandwidth) },
@@ -176,7 +176,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
                   <td className="py-1.5 pr-2 text-rf-text-secondary text-[10px] uppercase tracking-wide whitespace-nowrap align-top">
                     {row.key}
                   </td>
-                  <td className={`py-1.5 font-mono tabular-nums break-words ${unreliable ? 'detail-unreliable' : ''}`} style={{ color: unreliable ? undefined : row.color ?? '#d4d4d4' }}>
+                  <td className={`py-1.5 font-mono tabular-nums break-words ${unreliable ? 'detail-unreliable' : ''}`} style={{ color: unreliable ? undefined : row.color ?? '#e4e4e7' }}>
                     <span>{row.value}</span>
                     {row.explain && (
                       <button
@@ -320,11 +320,11 @@ function SymbolRateEvidence({ loading, error, data }: { loading: boolean; error:
         Welch PSD of the differentiated, squared segment (the "delay-and-multiply" nonlinearity). The lowest peak within 3 dB of the maximum, past the DC-leakage region, is picked — not the raw maximum, since rectangular-NRZ transitions make every harmonic of the true rate nearly equal-strength.
       </p>
       <svg viewBox={`0 0 ${W} ${H}`} className="symbol-rate-svg" role="img" aria-label="Symbol-rate harmonic search spectrum">
-        <rect x={PAD_L} y={PAD_T} width={skipX - PAD_L} height={plotH} fill="#353535" opacity={0.5} />
-        <line x1={PAD_L} x2={W - PAD_R} y1={y(data.threshold_power_db)} y2={y(data.threshold_power_db)} stroke="#7f7f7f" strokeDasharray="2,2" strokeWidth={1} />
-        <path d={path} fill="none" stroke="#2a82da" strokeWidth={1.2} />
-        <line x1={selectedX} x2={selectedX} y1={PAD_T} y2={H - PAD_B} stroke="#ed776c" strokeWidth={1.5} />
-        <circle cx={selectedX} cy={y(power[freqs.findIndex((f) => f >= data.selected_frequency_hz)] ?? data.peak_power_db)} r={3} fill="#ed776c" />
+        <rect x={PAD_L} y={PAD_T} width={skipX - PAD_L} height={plotH} fill="#121214" opacity={0.5} />
+        <line x1={PAD_L} x2={W - PAD_R} y1={y(data.threshold_power_db)} y2={y(data.threshold_power_db)} stroke="#6b6b74" strokeDasharray="2,2" strokeWidth={1} />
+        <path d={path} fill="none" stroke="#5ecbe8" strokeWidth={1.2} />
+        <line x1={selectedX} x2={selectedX} y1={PAD_T} y2={H - PAD_B} stroke="#e5484d" strokeWidth={1.5} />
+        <circle cx={selectedX} cy={y(power[freqs.findIndex((f) => f >= data.selected_frequency_hz)] ?? data.peak_power_db)} r={3} fill="#e5484d" />
         <text x={PAD_L} y={H - 4} textAnchor="start" className="accuracy-curve-axis">0 Hz</text>
         <text x={W - PAD_R} y={H - 4} textAnchor="end" className="accuracy-curve-axis">{fMax.toFixed(0)} Hz</text>
       </svg>

@@ -7,7 +7,7 @@ interface AccuracyCurveProps {
 }
 
 const COLORS: Record<string, string> = {
-  bpsk: '#2a82da', qpsk: '#ed776c', '8psk': '#4caf50', ask: '#f0ad4e', fsk: '#9b59b6', qam: '#8d6e63',
+  bpsk: '#5ecbe8', qpsk: '#e5484d', '8psk': '#4caf50', ask: '#e8a33d', fsk: '#9b59b6', qam: '#8d6e63',
 };
 const W = 280, H = 120, PAD_L = 32, PAD_R = 10, PAD_T = 10, PAD_B = 22;
 
@@ -31,7 +31,7 @@ export function AccuracyCurve({ data, loading }: AccuracyCurveProps) {
       <svg viewBox={`0 0 ${W} ${H}`} className="accuracy-curve-svg" role="img" aria-label={data.measure}>
         {[0, 0.5, 1].map((f) => (
           <g key={f}>
-            <line x1={PAD_L} x2={W - PAD_R} y1={y(f)} y2={y(f)} stroke="#353535" strokeWidth={1} />
+            <line x1={PAD_L} x2={W - PAD_R} y1={y(f)} y2={y(f)} stroke="#121214" strokeWidth={1} />
             <text x={PAD_L - 4} y={y(f)} textAnchor="end" dominantBaseline="middle" className="accuracy-curve-axis">{Math.round(f * 100)}%</text>
           </g>
         ))}
@@ -43,13 +43,13 @@ export function AccuracyCurve({ data, loading }: AccuracyCurveProps) {
           const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(p.snr_db)},${y(p.accuracy)}`).join(' ');
           return (
             <g key={kind}>
-              <path d={path} fill="none" stroke={COLORS[kind] ?? '#a0a0a0'} strokeWidth={1.5} />
+              <path d={path} fill="none" stroke={COLORS[kind] ?? '#9a9aa2'} strokeWidth={1.5} />
               {points.map((p) => (
                 <circle
                   key={p.snr_db}
                   cx={x(p.snr_db)} cy={y(p.accuracy)} r={hover === p ? 4.5 : 3}
-                  fill={COLORS[kind] ?? '#a0a0a0'}
-                  stroke="#252525" strokeWidth={1}
+                  fill={COLORS[kind] ?? '#9a9aa2'}
+                  stroke="#0a0a0b" strokeWidth={1}
                   onMouseEnter={() => setHover(p)}
                   onMouseLeave={() => setHover((h) => (h === p ? null : h))}
                   style={{ cursor: 'pointer' }}
@@ -61,7 +61,7 @@ export function AccuracyCurve({ data, loading }: AccuracyCurveProps) {
       </svg>
       <div className="accuracy-curve-legend">
         {kinds.map((kind) => (
-          <span key={kind}><i style={{ background: COLORS[kind] ?? '#a0a0a0' }} />{kind.toUpperCase()}</span>
+          <span key={kind}><i style={{ background: COLORS[kind] ?? '#9a9aa2' }} />{kind.toUpperCase()}</span>
         ))}
       </div>
       <div className="accuracy-curve-readout">
