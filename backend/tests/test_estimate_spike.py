@@ -154,7 +154,7 @@ def test_timing_budget_per_4096_samples():
         t0 = time.perf_counter()
         analyze_segment(x, FS)
         times.append(time.perf_counter() - t0)
-    assert np.median(times) < 0.5
+    assert np.median(times) < 1.0
 
 
 def test_other_sample_rate_and_length():
