@@ -15,8 +15,8 @@ Every number below comes from `docs/readiness.json`, written by `python -m exper
 
 | Claim | G1 | G2 |
 |---|---|---|
-| Captures with a **wrong** label published (all captures, including noise and held-out families) | <!--rj:stats.verify.G1.label.published_wrong--> 0.3% | <!--rj:stats.verify.G2.label.published_wrong--> 1.3% |
-| In-library digital captures at ≥ 5 dB labelled **correctly** (BPSK, QPSK, 8PSK, 16-QAM, 2-FSK, 4-FSK, 2-ASK present in that generator) | <!--rj:stats.verify.G1.label.published_correct_in_library--> 97.6% | <!--rj:stats.verify.G2.label.published_correct_in_library--> 93.9% |
+| Captures with a **wrong** label published (all captures, including noise and held-out families) | <!--rj:stats.verify.G1.label.published_wrong--> 0.3% | <!--rj:stats.verify.G2.label.published_wrong--> 1.2% |
+| In-library digital captures at ≥ 5 dB labelled **correctly** (BPSK, QPSK, 8PSK, 16-QAM, 2-FSK, 4-FSK, 2-ASK present in that generator) | <!--rj:stats.verify.G1.label.published_correct_in_library--> 97.6% | <!--rj:stats.verify.G2.label.published_correct_in_library--> 95.0% |
 | Noise-only captures given a label | <!--rj:stats.verify.G1.confidence.noise_labelled--> 0.0% | <!--rj:stats.verify.G2.confidence.noise_labelled--> 0.0% |
 | Held-out families (8-FSK, rectangular 8-QAM; G2 only) given a **wrong** label | – | <!--rj:stats.verify.G2.confidence.ool_wrong--> 12.5% |
 
@@ -24,15 +24,15 @@ Every number below comes from `docs/readiness.json`, written by `python -m exper
 
 | Claim | G1 | G2 |
 |---|---|---|
-| Captures with a **wrong** rate published (> 5% error) | <!--rj:stats.verify.G1.rate.published_wrong--> 1.0% | <!--rj:stats.verify.G2.rate.published_wrong--> 0.5% |
-| Digital captures at ≥ 5 dB with a **correct** rate published (within 5%) | <!--rj:stats.verify.G1.rate.published_correct_digital--> 95.2% | <!--rj:stats.verify.G2.rate.published_correct_digital--> 84.6% |
+| Captures with a **wrong** rate published (> 5% error) | <!--rj:stats.verify.G1.rate.published_wrong--> 1.3% | <!--rj:stats.verify.G2.rate.published_wrong--> 0.3% |
+| Digital captures at ≥ 5 dB with a **correct** rate published (within 5%) | <!--rj:stats.verify.G1.rate.published_correct_digital--> 94.0% | <!--rj:stats.verify.G2.rate.published_correct_digital--> 86.0% |
 
 ## Parameters (linear modulations for frequency and bandwidth; all signals for SNR; ≥ 5 dB)
 
 | Claim | G1 | G2 |
 |---|---|---|
-| Centre frequency within 10% of the true −3 dB bandwidth | <!--rj:stats.verify.G1.params.cf_ok--> 97.0% | <!--rj:stats.verify.G2.params.cf_ok--> 99.2% |
-| −3 dB bandwidth within ±25% of the pulse-shape truth | <!--rj:stats.verify.G1.params.bw3_ok--> 92.4% | <!--rj:stats.verify.G2.params.bw3_ok--> 98.6% |
+| Centre frequency within 10% of the true −3 dB bandwidth | <!--rj:stats.verify.G1.params.cf_ok--> 97.0% | <!--rj:stats.verify.G2.params.cf_ok--> 98.7% |
+| −3 dB bandwidth within ±25% of the pulse-shape truth | <!--rj:stats.verify.G1.params.bw3_ok--> 92.4% | <!--rj:stats.verify.G2.params.bw3_ok--> 97.9% |
 | SNR within 2 dB | <!--rj:stats.verify.G1.params.snr_ok--> 99.2% | <!--rj:stats.verify.G2.params.snr_ok--> 98.3% |
 
 ## Detect
@@ -49,7 +49,7 @@ Some fixes (WP5, WP6) were debugged on specific test captures, so the scoreboard
 
 ## What we do not claim
 
-- **Speed:** the verify estimator does not yet meet 0.5 s per candidate. The share of candidates within 0.5 s is <!--rj:stats.verify.G1.speed.within--> 100.0% on G1 and <!--rj:stats.verify.G2.speed.within--> 90.4% on G2.
+- **Speed:** the verify estimator does not yet meet 0.5 s per candidate. The share of candidates within 0.5 s is <!--rj:stats.verify.G1.speed.within--> 98.4% on G1 and <!--rj:stats.verify.G2.speed.within--> 88.4% on G2.
 - **FM coverage on G1:** the FM-over-digital margin gate needed to stop 8-FSK/4-FSK being published as FM also withholds most G1 FM labels. FM is labelled on <!--rj:stats.verify.G1.confidence.fm_labelled--> 17.9% of G1 FM captures and <!--rj:stats.verify.G2.confidence.fm_labelled--> 100.0% of G2 FM captures.
 - **Real recordings (G3):** six public IQEngine SigMF files, with expectations written before running them (`experiments/readiness/real_manifest.json`; results in `artifacts/readiness/real_results.json`). None crashed; all 6 pass their sanity checks. Labels are published on 2 of the 6: `bpsk_rect_20sps` (BPSK at 50,000 Hz) and `iridium_cf32` (one of 18 detections: QPSK at 25,017 Hz, consistent with Iridium's 25 kBd DE-QPSK). `analog_FM_France` gave two wideband detections, one per station; the first run had merged them, which led to the final-review merge fix, so that file was not blind for the fix. `pulsed_ASK` and AIS were detected as bursts with no label published, so nothing wrong but no positive evidence. `dect6` failed before WP1 (its 4 M-sample track exceeded the 2 M-sample estimation bound, so no bandwidth was measured); WP1's sampled spans measure a 1.31 MHz 99% bandwidth, inside the pre-registered 0.5–2.5 MHz range, and publish no label (no span passed the margins).
 - **Calibrated probabilities:** margins are nats, not probabilities. Detect's isotonic confidence was fit on one synthetic corpus and is labelled "uncalibrated across generators".

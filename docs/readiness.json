@@ -1,7 +1,7 @@
 {
  "meta": {
-  "commit": "3c2ec6c",
-  "date": "2026-09-29",
+  "commit": "a762ad0",
+  "date": "2026-10-23",
   "thresholds": {
    "min_snr_db": 5.0,
    "detect_recall_min": 0.95,
@@ -27,7 +27,12 @@
    "real_correct_min": 0.5,
    "real_wrong_max": 0.05,
    "real_rate_wrong_max": 0.05,
-   "throughput_rtf_max": 1.0
+   "throughput_rtf_max": 1.0,
+   "bounds_ratio_lo": 0.5,
+   "bounds_ratio_hi": 2.0,
+   "bounds_ok_min_g4": 0.85,
+   "g4_fragmentation_max": 0.05,
+   "bounds_ok_min_g5": 0.6
   },
   "seeds": {
    "g1": 7,
@@ -52,17 +57,17 @@
    "n_with_label": 84,
    "n_rate_scored": 45,
    "correct": 0.0,
-   "wrong": 0.14942528735632185,
+   "wrong": 0.16091954022988506,
    "rate_wrong": 0.0,
    "rate_correct": 0.0,
    "crashed": 0,
-   "rtf": 0.8210921087404577,
-   "wall_s": 132.10450175000005,
+   "rtf": 0.8349353628589312,
+   "wall_s": 134.33172591699986,
    "duration_s": 160.88877282312
   }
  },
  "product": "verify",
- "bars": "```\nDetect                    \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2713 G3 \u2013 G4 \u2013 G5 \u2013]\nParameters                \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013 G4 \u2013 G5 \u2013]\nModulation label          \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013 G4 \u2013 G5 \u2013]\nSymbol rate               \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013 G4 \u2013 G5 \u2013]\nConfidence/abstention     \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013 G4 \u2013 G5 \u2013]\nSpeed                     \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013 G4 \u2013 G5 \u2013]\nImpaired synthetic (G4)   \u2588\u2588\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591  25%  (1/4 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013 G4 \u2717 G5 \u2013]\nReal benchmark (G5)       \u2588\u2588\u2588\u2591\u2591\u2591\u2591\u2591\u2591\u2591  33%  (1/3 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013 G4 \u2013 G5 \u2717]\nThroughput                \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013 G4 \u2013 G5 \u2713]\nReal data (G3)            \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713 G4 \u2013 G5 \u2013]\nAutomation                \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713 G4 \u2013 G5 \u2013]\nDocs                      \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713 G4 \u2013 G5 \u2013]\n--------------------\nOverall                   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  68%  (17/25 criteria)\n```",
+ "bars": "```\nDetect                    \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2717 G2 \u2713 G3 \u2013 G4 \u2013 G5 \u2013]\nParameters                \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (3/3 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013 G4 \u2013 G5 \u2013]\nModulation label          \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013 G4 \u2013 G5 \u2013]\nSymbol rate               \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (2/2 criteria)  [G1 \u2713 G2 \u2713 G3 \u2013 G4 \u2013 G5 \u2013]\nConfidence/abstention     \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  67%  (2/3 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013 G4 \u2013 G5 \u2013]\nSpeed                     \u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591   0%  (0/1 criteria)  [G1 \u2713 G2 \u2717 G3 \u2013 G4 \u2013 G5 \u2013]\nImpaired synthetic (G4)   \u2588\u2588\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591  25%  (1/4 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013 G4 \u2717 G5 \u2013]\nDetect bounds             \u2588\u2588\u2588\u2591\u2591\u2591\u2591\u2591\u2591\u2591  33%  (1/3 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013 G4 \u2717 G5 \u2713]\nReal benchmark (G5)       \u2588\u2588\u2588\u2591\u2591\u2591\u2591\u2591\u2591\u2591  33%  (1/3 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013 G4 \u2013 G5 \u2717]\nThroughput                \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2013 G4 \u2013 G5 \u2713]\nReal data (G3)            \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713 G4 \u2013 G5 \u2013]\nAutomation                \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713 G4 \u2013 G5 \u2013]\nDocs                      \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  100%  (1/1 criteria)  [G1 \u2013 G2 \u2013 G3 \u2713 G4 \u2013 G5 \u2013]\n--------------------\nOverall                   \u2588\u2588\u2588\u2588\u2588\u2588\u2591\u2591\u2591\u2591  64%  (18/28 criteria)\n```",
  "phases": [
   {
    "name": "Detect",
@@ -138,7 +143,7 @@
        "n": 66
       },
       "G2": {
-       "value": 0.9919871794871795,
+       "value": 0.9871794871794872,
        "passed": true,
        "n": 624
       }
@@ -155,7 +160,7 @@
        "n": 66
       },
       "G2": {
-       "value": 0.9855769230769231,
+       "value": 0.9791666666666666,
        "passed": true,
        "n": 624
       }
@@ -196,7 +201,7 @@
        "n": 300
       },
       "G2": {
-       "value": 0.012596899224806201,
+       "value": 0.011627906976744186,
        "passed": true,
        "n": 1032
       }
@@ -213,7 +218,7 @@
        "n": 83
       },
       "G2": {
-       "value": 0.9386574074074074,
+       "value": 0.9502314814814815,
        "passed": true,
        "n": 864
       }
@@ -232,12 +237,12 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.01,
+       "value": 0.013333333333333334,
        "passed": true,
        "n": 300
       },
       "G2": {
-       "value": 0.0048449612403100775,
+       "value": 0.0029069767441860465,
        "passed": true,
        "n": 1032
       }
@@ -249,12 +254,12 @@
      "passed": true,
      "gens": {
       "G1": {
-       "value": 0.9518072289156626,
+       "value": 0.9397590361445783,
        "passed": true,
        "n": 83
       },
       "G2": {
-       "value": 0.8458333333333333,
+       "value": 0.8604166666666667,
        "passed": true,
        "n": 960
       }
@@ -331,12 +336,12 @@
      "passed": false,
      "gens": {
       "G1": {
-       "value": 1.0,
+       "value": 0.9841269841269841,
        "passed": true,
        "n": 63
       },
       "G2": {
-       "value": 0.9036144578313253,
+       "value": 0.8835341365461847,
        "passed": false,
        "n": 249
       }
@@ -355,7 +360,7 @@
      "passed": false,
      "gens": {
       "G4": {
-       "value": 0.044642857142857144,
+       "value": 0.0625,
        "passed": false,
        "n": 336
       }
@@ -367,7 +372,7 @@
      "passed": false,
      "gens": {
       "G4": {
-       "value": 0.07142857142857142,
+       "value": 0.10714285714285714,
        "passed": false,
        "n": 168
       }
@@ -379,7 +384,7 @@
      "passed": true,
      "gens": {
       "G4": {
-       "value": 0.046875,
+       "value": 0.078125,
        "passed": true,
        "n": 64
       }
@@ -391,9 +396,52 @@
      "passed": false,
      "gens": {
       "G4": {
-       "value": 0.03571428571428571,
+       "value": 0.047619047619047616,
        "passed": false,
        "n": 336
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Detect bounds",
+   "passed": 1,
+   "total": 3,
+   "criteria": [
+    {
+     "id": "B1",
+     "desc": "band 0.5-2x the true occupied width on >= 85% of G4 emitter captures",
+     "passed": false,
+     "gens": {
+      "G4": {
+       "value": 0.665625,
+       "passed": false,
+       "n": 320
+      }
+     }
+    },
+    {
+     "id": "B2",
+     "desc": "<= 5% of G4 emitter captures split into several detections",
+     "passed": false,
+     "gens": {
+      "G4": {
+       "value": 0.071875,
+       "passed": false,
+       "n": 320
+      }
+     }
+    },
+    {
+     "id": "B3",
+     "desc": "band 0.5-2x (tone split + 2 x rate) on >= 60% of rated G5 FSK2 test files",
+     "passed": true,
+     "gens": {
+      "G5": {
+       "value": 0.9259259259259259,
+       "passed": 1.0,
+       "n": 27
       }
      }
     }
@@ -422,7 +470,7 @@
      "passed": false,
      "gens": {
       "G5": {
-       "value": 0.14942528735632185,
+       "value": 0.16091954022988506,
        "passed": false,
        "n": 87
       }
@@ -453,7 +501,7 @@
      "passed": true,
      "gens": {
       "G5": {
-       "value": "0.821x",
+       "value": "0.835x",
        "passed": true,
        "n": 93
       }
@@ -576,7 +624,7 @@
         "n": 300
        },
        "G2": {
-        "value": 0.06298449612403101,
+        "value": 0.06201550387596899,
         "passed": false,
         "n": 1032
        }
@@ -593,7 +641,7 @@
         "n": 83
        },
        "G2": {
-        "value": 0.6111111111111112,
+        "value": 0.6168981481481481,
         "passed": true,
         "n": 864
        }
@@ -634,7 +682,7 @@
         "n": 83
        },
        "G2": {
-        "value": 0.378125,
+        "value": 0.38333333333333336,
         "passed": false,
         "n": 960
        }
@@ -755,9 +803,9 @@
     "speed": {
      "n": 254,
      "within": 1.0,
-     "p50_s": 0.00549514549493324,
-     "p95_s": 0.012495468310953583,
-     "max_s": 0.015995583002222702
+     "p50_s": 0.0055070210073608905,
+     "p95_s": 0.011101731809321789,
+     "max_s": 0.015444457996636629
     },
     "detect": {
      "n_strong": 125,
@@ -775,21 +823,28 @@
      "snr_ok": 0.68,
      "median_bw3_ratio": 0.9593670893975519,
      "median_snr_err_db": -0.4601190092213123
+    },
+    "bounds": {
+     "n": 256,
+     "ok_bounds": 0.80859375,
+     "too_wide": 0.00390625,
+     "too_narrow": 0.1796875,
+     "fragmented": 0.08203125
     }
    },
    "G2": {
     "label": {
      "n": 1032,
-     "published_wrong": 0.06298449612403101,
+     "published_wrong": 0.06201550387596899,
      "n_in_library": 864,
-     "published_correct_in_library": 0.6111111111111112,
+     "published_correct_in_library": 0.6168981481481481,
      "published": 0.6201550387596899
     },
     "rate": {
      "n": 1032,
      "published_wrong": 0.06298449612403101,
      "n_digital": 960,
-     "published_correct_digital": 0.378125,
+     "published_correct_digital": 0.38333333333333336,
      "harmonic_errors": 0.06770833333333333
     },
     "confidence": {
@@ -804,9 +859,9 @@
     "speed": {
      "n": 996,
      "within": 1.0,
-     "p50_s": 0.027626707989838906,
-     "p95_s": 0.0397712502599461,
-     "max_s": 0.05391883398988284
+     "p50_s": 0.028322187485173345,
+     "p95_s": 0.04430446898913942,
+     "max_s": 0.0657226659823209
     },
     "detect": {
      "n_strong": 996,
@@ -818,12 +873,19 @@
     },
     "params": {
      "n_linear": 624,
-     "cf_ok": 0.9471153846153846,
-     "bw3_ok": 0.9855769230769231,
+     "cf_ok": 0.9407051282051282,
+     "bw3_ok": 0.9791666666666666,
      "n_signal": 996,
      "snr_ok": 0.9829317269076305,
      "median_bw3_ratio": 0.9590650926114732,
      "median_snr_err_db": -0.08266270702335987
+    },
+    "bounds": {
+     "n": 996,
+     "ok_bounds": 0.8192771084337349,
+     "too_wide": 0.0,
+     "too_narrow": 0.18072289156626506,
+     "fragmented": 0.008032128514056224
     }
    },
    "G4": {
@@ -852,10 +914,10 @@
     },
     "speed": {
      "n": 336,
-     "within": 0.6011904761904762,
-     "p50_s": 0.45625095849391073,
-     "p95_s": 0.7775921042411937,
-     "max_s": 0.8490086249948945
+     "within": 0.5952380952380952,
+     "p50_s": 0.4597174580267165,
+     "p95_s": 0.7708596664888319,
+     "max_s": 0.9009279580204748
     },
     "detect": {
      "n_strong": 240,
@@ -873,6 +935,13 @@
      "snr_ok": 0.07916666666666666,
      "median_bw3_ratio": 0.8477122036081192,
      "median_snr_err_db": 5.243691234776076
+    },
+    "bounds": {
+     "n": 320,
+     "ok_bounds": 0.665625,
+     "too_wide": 0.29375,
+     "too_narrow": 0.040625,
+     "fragmented": 0.071875
     }
    }
   },
@@ -887,10 +956,10 @@
     },
     "rate": {
      "n": 300,
-     "published_wrong": 0.01,
+     "published_wrong": 0.013333333333333334,
      "n_digital": 83,
-     "published_correct_digital": 0.9518072289156626,
-     "harmonic_errors": 0.012048192771084338
+     "published_correct_digital": 0.9397590361445783,
+     "harmonic_errors": 0.024096385542168676
     },
     "confidence": {
      "n_noise": 44,
@@ -903,10 +972,10 @@
     },
     "speed": {
      "n": 63,
-     "within": 1.0,
-     "p50_s": 0.3032737920002546,
-     "p95_s": 0.4588404413865646,
-     "max_s": 0.47459283299394883,
+     "within": 0.9841269841269841,
+     "p50_s": 0.30112274998100474,
+     "p95_s": 0.4455761918856297,
+     "max_s": 0.5006267499993555,
      "measured": "sequential, every 4th capture"
     },
     "detect": {
@@ -924,23 +993,30 @@
      "n_signal": 125,
      "snr_ok": 0.992,
      "median_bw3_ratio": 0.9593670893975519,
-     "median_snr_err_db": -0.04857876853635368
+     "median_snr_err_db": -0.05190243243045067
+    },
+    "bounds": {
+     "n": 256,
+     "ok_bounds": 0.80859375,
+     "too_wide": 0.00390625,
+     "too_narrow": 0.1796875,
+     "fragmented": 0.08203125
     }
    },
    "G2": {
     "label": {
      "n": 1032,
-     "published_wrong": 0.012596899224806201,
+     "published_wrong": 0.011627906976744186,
      "n_in_library": 864,
-     "published_correct_in_library": 0.9386574074074074,
-     "published": 0.8333333333333334
+     "published_correct_in_library": 0.9502314814814815,
+     "published": 0.8420542635658915
     },
     "rate": {
      "n": 1032,
-     "published_wrong": 0.0048449612403100775,
+     "published_wrong": 0.0029069767441860465,
      "n_digital": 960,
-     "published_correct_digital": 0.8458333333333333,
-     "harmonic_errors": 0.005208333333333333
+     "published_correct_digital": 0.8604166666666667,
+     "harmonic_errors": 0.003125
     },
     "confidence": {
      "n_noise": 36,
@@ -953,10 +1029,10 @@
     },
     "speed": {
      "n": 249,
-     "within": 0.9036144578313253,
-     "p50_s": 0.3458282499923371,
-     "p95_s": 0.5316808418137953,
-     "max_s": 0.6123185420001391,
+     "within": 0.8835341365461847,
+     "p50_s": 0.33987345901550725,
+     "p95_s": 0.5605473921867087,
+     "max_s": 0.6666391249746084,
      "measured": "sequential, every 4th capture"
     },
     "detect": {
@@ -969,34 +1045,41 @@
     },
     "params": {
      "n_linear": 624,
-     "cf_ok": 0.9919871794871795,
-     "bw3_ok": 0.9855769230769231,
+     "cf_ok": 0.9871794871794872,
+     "bw3_ok": 0.9791666666666666,
      "n_signal": 996,
      "snr_ok": 0.9829317269076305,
      "median_bw3_ratio": 0.9590650926114732,
-     "median_snr_err_db": 0.009214628492003385
+     "median_snr_err_db": 0.04697297321681759
+    },
+    "bounds": {
+     "n": 996,
+     "ok_bounds": 0.8192771084337349,
+     "too_wide": 0.0,
+     "too_narrow": 0.18072289156626506,
+     "fragmented": 0.008032128514056224
     }
    },
    "G4": {
     "label": {
      "n": 336,
-     "published_wrong": 0.044642857142857144,
+     "published_wrong": 0.0625,
      "n_in_library": 168,
-     "published_correct_in_library": 0.07142857142857142,
-     "published": 0.10119047619047619
+     "published_correct_in_library": 0.10714285714285714,
+     "published": 0.13690476190476192
     },
     "rate": {
      "n": 336,
-     "published_wrong": 0.03571428571428571,
+     "published_wrong": 0.047619047619047616,
      "n_digital": 216,
-     "published_correct_digital": 0.05555555555555555,
+     "published_correct_digital": 0.08333333333333333,
      "harmonic_errors": 0.0
     },
     "confidence": {
      "n_noise": 16,
      "noise_labelled": 0.0,
      "n_ool": 64,
-     "ool_wrong": 0.046875,
+     "ool_wrong": 0.078125,
      "n_fm": 32,
      "fm_labelled": 0.0,
      "calibration_claims": 0
@@ -1019,12 +1102,19 @@
     },
     "params": {
      "n_linear": 120,
-     "cf_ok": 0.4166666666666667,
+     "cf_ok": 0.425,
      "bw3_ok": 0.55,
      "n_signal": 240,
      "snr_ok": 0.07916666666666666,
      "median_bw3_ratio": 0.8477122036081192,
      "median_snr_err_db": 5.243691234776076
+    },
+    "bounds": {
+     "n": 320,
+     "ok_bounds": 0.665625,
+     "too_wide": 0.29375,
+     "too_narrow": 0.040625,
+     "fragmented": 0.071875
     }
    }
   }

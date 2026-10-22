@@ -15,13 +15,14 @@ Symbol rate               ██████████  100%  (2/2 criteria)  
 Confidence/abstention     ██████░░░░  67%  (2/3 criteria)  [G1 ✓ G2 ✗ G3 – G4 – G5 –]
 Speed                     ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✓ G2 ✗ G3 – G4 – G5 –]
 Impaired synthetic (G4)   ██░░░░░░░░  25%  (1/4 criteria)  [G1 – G2 – G3 – G4 ✗ G5 –]
+Detect bounds             ███░░░░░░░  33%  (1/3 criteria)  [G1 – G2 – G3 – G4 ✗ G5 ✓]
 Real benchmark (G5)       ███░░░░░░░  33%  (1/3 criteria)  [G1 – G2 – G3 – G4 – G5 ✗]
 Throughput                ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 – G4 – G5 ✓]
 Real data (G3)            ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
 Automation                ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
 Docs                      ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
 --------------------
-Overall                   ██████░░░░  68%  (17/25 criteria)
+Overall                   ██████░░░░  64%  (18/28 criteria)
 ```
 <!-- readiness:end -->
 
