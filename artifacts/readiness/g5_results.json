@@ -1,9 +1,9 @@
 {
- "wall_s": 132.10450175000005,
+ "wall_s": 134.33172591699986,
  "duration_s": 160.88877282312,
- "rtf": 0.8210921087404577,
+ "rtf": 0.8349353628589312,
  "cli_exit": 0,
- "cli_stderr": "  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint-readiness/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 697, using nperseg = 697\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint-readiness/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 477, using nperseg = 477\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint-readiness/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 353, using nperseg = 353\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint-readiness/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 485, using nperseg = 485\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint-readiness/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 313, using nperseg = 313\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint-readiness/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 835, using nperseg = 835\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint-readiness/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 890, using nperseg = 890\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n",
+ "cli_stderr": "ter than signal length max(len(x), len(y)) = 456, using nperseg = 456\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 697, using nperseg = 697\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 477, using nperseg = 477\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 353, using nperseg = 353\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 485, using nperseg = 485\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 313, using nperseg = 313\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 835, using nperseg = 835\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n/Users/devariwala/Desktop/sih/files/Sound/proj/Pinpoint/backend/pipeline/detect.py:58: UserWarning: nperseg=1024 is greater than signal length max(len(x), len(y)) = 890, using nperseg = 890\n  f, psd = signal.welch(x, fs=sample_rate, window=\"hann\", nperseg=nperseg,\n",
  "files": [
   {
    "file": "bpsk_rect_20sps",
@@ -62,11 +62,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -120000.0,
-     "freq_upper_hz": 119882.8125,
+     "freq_lower_hz": -8132.8125,
+     "freq_upper_hz": 8460.9375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 9843.75,
-     "snr_db": 64.89035677659972,
+     "snr_db": 65.52583207506325,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -74,11 +74,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -78398.4375,
-     "freq_upper_hz": 73242.1875,
+     "freq_lower_hz": -98085.9375,
+     "freq_upper_hz": -97148.4375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 10312.5,
-     "snr_db": 70.37708323380227,
+     "bandwidth_99pct_hz": null,
+     "snr_db": null,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -110,39 +110,39 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -55195.3125,
-     "freq_upper_hz": 56601.5625,
-     "is_pulsed": true,
-     "bandwidth_99pct_hz": null,
-     "snr_db": null,
+     "freq_lower_hz": -59648.4375,
+     "freq_upper_hz": -56132.8125,
+     "is_pulsed": false,
+     "bandwidth_99pct_hz": 3515.625,
+     "snr_db": 55.40853347693067,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (pulsed bursts not validated)"
+     "verify_status": "not reliably estimated (margins below thresholds)"
     },
     {
      "id": 5,
-     "freq_lower_hz": -52382.8125,
-     "freq_upper_hz": 56367.1875,
-     "is_pulsed": true,
-     "bandwidth_99pct_hz": 10546.875,
-     "snr_db": 72.74216958547696,
+     "freq_lower_hz": -54960.9375,
+     "freq_upper_hz": -53085.9375,
+     "is_pulsed": false,
+     "bandwidth_99pct_hz": 1875.0,
+     "snr_db": 56.528830073567434,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (pulsed bursts not validated)"
+     "verify_status": "not reliably estimated (margins below thresholds)"
     },
     {
      "id": 6,
-     "freq_lower_hz": -70195.3125,
-     "freq_upper_hz": 68085.9375,
-     "is_pulsed": true,
-     "bandwidth_99pct_hz": 9843.75,
-     "snr_db": 65.03533334093659,
+     "freq_lower_hz": -73945.3125,
+     "freq_upper_hz": -71601.5625,
+     "is_pulsed": false,
+     "bandwidth_99pct_hz": 2343.75,
+     "snr_db": 52.70118320254468,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (pulsed bursts not validated)"
+     "verify_status": "not reliably estimated (margins below thresholds)"
     }
    ]
   },
@@ -152,8 +152,10 @@
    "crashed": false,
    "g5": true,
    "correct": false,
-   "wrong": false,
-   "published": [],
+   "wrong": true,
+   "published": [
+    "QAM16"
+   ],
    "rate_scored": false,
    "rate_wrong": false,
    "rate_correct": false,
@@ -165,10 +167,10 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -5437500.0,
-     "freq_upper_hz": -2167500.0,
+     "freq_lower_hz": -4638000.0,
+     "freq_upper_hz": -2982000.0,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 1110000.0,
+     "bandwidth_99pct_hz": 1095000.0,
      "snr_db": 38.14560792232144,
      "modulation_label": null,
      "estimate_tier": "abstain",
@@ -177,22 +179,22 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -1087500.0,
-     "freq_upper_hz": 1432500.0,
+     "freq_lower_hz": -135000.0,
+     "freq_upper_hz": 465000.0,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 480000.0,
+     "bandwidth_99pct_hz": 420000.0,
      "snr_db": 38.14560792232144,
-     "modulation_label": null,
-     "estimate_tier": "abstain",
-     "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (margins below thresholds)"
+     "modulation_label": "QAM16",
+     "estimate_tier": "labelled",
+     "symbol_rate_hz": 27992.531862551117,
+     "verify_status": "estimated (label margin passed)"
     },
     {
      "id": 2,
-     "freq_lower_hz": 2872500.0,
-     "freq_upper_hz": 5332500.0,
+     "freq_lower_hz": 3825000.0,
+     "freq_upper_hz": 4425000.0,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 480000.0,
+     "bandwidth_99pct_hz": 420000.0,
      "snr_db": 38.1204721807909,
      "modulation_label": null,
      "estimate_tier": "abstain",
@@ -982,7 +984,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 16,
@@ -1200,10 +1202,10 @@
     {
      "id": 2,
      "freq_lower_hz": -103149.4140625,
-     "freq_upper_hz": -70678.7109375,
+     "freq_upper_hz": -72875.9765625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 26367.1875,
-     "snr_db": 10.459441166066961,
+     "bandwidth_99pct_hz": 25634.765625,
+     "snr_db": 10.459420238264412,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -1379,10 +1381,10 @@
     {
      "id": 7,
      "freq_lower_hz": -52368.1640625,
-     "freq_upper_hz": 49682.6171875,
+     "freq_upper_hz": 37182.6171875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 67626.953125,
-     "snr_db": 24.920646200095042,
+     "bandwidth_99pct_hz": 66650.390625,
+     "snr_db": 24.920676086481937,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -1507,15 +1509,15 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -369628.90625,
-     "freq_upper_hz": 332519.53125,
-     "is_pulsed": true,
-     "bandwidth_99pct_hz": 485351.5625,
-     "snr_db": 23.622622952213934,
+     "freq_lower_hz": -368652.34375,
+     "freq_upper_hz": -340332.03125,
+     "is_pulsed": false,
+     "bandwidth_99pct_hz": 28320.3125,
+     "snr_db": 17.360880523928873,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (pulsed bursts not validated)"
+     "verify_status": "not reliably estimated (margins below thresholds)"
     },
     {
      "id": 3,
@@ -1527,7 +1529,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 4,
@@ -1567,11 +1569,11 @@
     },
     {
      "id": 7,
-     "freq_lower_hz": -270996.09375,
-     "freq_upper_hz": 331542.96875,
+     "freq_lower_hz": -181640.625,
+     "freq_upper_hz": 169921.875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 458984.375,
-     "snr_db": 22.352630379611334,
+     "bandwidth_99pct_hz": 282226.5625,
+     "snr_db": 23.36800643655234,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -1656,12 +1658,12 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 3,
-     "freq_lower_hz": -50170.8984375,
-     "freq_upper_hz": -10864.2578125,
+     "freq_lower_hz": -43774.4140625,
+     "freq_upper_hz": -14086.9140625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -1849,11 +1851,11 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -26977.5390625,
+     "freq_lower_hz": -26953.125,
      "freq_upper_hz": -26000.9765625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 732.421875,
-     "snr_db": 15.997500088241054,
+     "snr_db": 15.998625850623064,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -1869,12 +1871,12 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 6,
-     "freq_lower_hz": -17700.1953125,
-     "freq_upper_hz": 14770.5078125,
+     "freq_lower_hz": -5053.7109375,
+     "freq_upper_hz": 4321.2890625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -1897,7 +1899,7 @@
     },
     {
      "id": 8,
-     "freq_lower_hz": 23315.4296875,
+     "freq_lower_hz": 23339.84375,
      "freq_upper_hz": 24291.9921875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 732.421875,
@@ -1945,11 +1947,11 @@
     },
     {
      "id": 12,
-     "freq_lower_hz": 85571.2890625,
+     "freq_lower_hz": 85595.703125,
      "freq_upper_hz": 86547.8515625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 976.5625,
-     "snr_db": 16.039627054062663,
+     "snr_db": 16.04080612225578,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -1957,11 +1959,11 @@
     },
     {
      "id": 13,
-     "freq_lower_hz": 90454.1015625,
+     "freq_lower_hz": 103710.9375,
      "freq_upper_hz": 124633.7890625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 24658.203125,
-     "snr_db": 15.795740892612145,
+     "bandwidth_99pct_hz": 14892.578125,
+     "snr_db": 15.819404465481753,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2051,10 +2053,10 @@
     {
      "id": 5,
      "freq_lower_hz": -47485.3515625,
-     "freq_upper_hz": 89965.8203125,
+     "freq_upper_hz": 70800.78125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 109863.28125,
-     "snr_db": 23.462325080233725,
+     "bandwidth_99pct_hz": 91308.59375,
+     "snr_db": 23.46507651541809,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2095,11 +2097,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -31860.3515625,
-     "freq_upper_hz": 19653.3203125,
+     "freq_lower_hz": -16284.1796875,
+     "freq_upper_hz": 903.3203125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 26611.328125,
-     "snr_db": 17.087951770420016,
+     "bandwidth_99pct_hz": 11718.75,
+     "snr_db": 17.08872578526131,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2188,15 +2190,15 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -34301.7578125,
-     "freq_upper_hz": 2807.6171875,
+     "freq_lower_hz": -23828.125,
+     "freq_upper_hz": -13281.25,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 22460.9375,
+     "bandwidth_99pct_hz": 8544.921875,
      "snr_db": 12.931050239268417,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 5,
@@ -2212,7 +2214,7 @@
     },
     {
      "id": 6,
-     "freq_lower_hz": 31127.9296875,
+     "freq_lower_hz": 31152.34375,
      "freq_upper_hz": 32104.4921875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -2224,15 +2226,15 @@
     },
     {
      "id": 7,
-     "freq_lower_hz": 50170.8984375,
-     "freq_upper_hz": 60913.0859375,
+     "freq_lower_hz": 51489.2578125,
+     "freq_upper_hz": 60083.0078125,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 10009.765625,
+     "bandwidth_99pct_hz": 7568.359375,
      "snr_db": 15.007932687384834,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 8,
@@ -2269,15 +2271,15 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -100463.8671875,
-     "freq_upper_hz": -79467.7734375,
+     "freq_lower_hz": -96118.1640625,
+     "freq_upper_hz": -86743.1640625,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 15380.859375,
+     "bandwidth_99pct_hz": 7812.5,
      "snr_db": 9.466287036788886,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 1,
@@ -2293,11 +2295,11 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -5004.8828125,
-     "freq_upper_hz": 5004.8828125,
+     "freq_lower_hz": -585.9375,
+     "freq_upper_hz": 585.9375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 732.421875,
-     "snr_db": 19.4908580182402,
+     "snr_db": 19.49153797298829,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2386,11 +2388,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -128750.0,
-     "freq_upper_hz": 143750.0,
+     "freq_lower_hz": -47250.0,
+     "freq_upper_hz": 64750.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 175000.0,
-     "snr_db": 13.228365253842153,
+     "bandwidth_99pct_hz": 102500.0,
+     "snr_db": 13.227791047818926,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2431,10 +2433,10 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -20629.8828125,
-     "freq_upper_hz": 97534.1796875,
+     "freq_lower_hz": -2563.4765625,
+     "freq_upper_hz": 79467.7734375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 66894.53125,
+     "bandwidth_99pct_hz": 65673.828125,
      "snr_db": 35.05455206181367,
      "modulation_label": null,
      "estimate_tier": "abstain",
@@ -2476,11 +2478,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -101684.5703125,
-     "freq_upper_hz": -100463.8671875,
+     "freq_lower_hz": -101660.15625,
+     "freq_upper_hz": -100488.28125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 976.5625,
-     "snr_db": 24.760460870410267,
+     "snr_db": 24.760478636124212,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2488,8 +2490,8 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -92163.0859375,
-     "freq_upper_hz": -90942.3828125,
+     "freq_lower_hz": -92138.671875,
+     "freq_upper_hz": -90966.796875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -2512,11 +2514,11 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -63598.6328125,
-     "freq_upper_hz": -62377.9296875,
+     "freq_lower_hz": -63574.21875,
+     "freq_upper_hz": -62402.34375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 976.5625,
-     "snr_db": 24.760943489657667,
+     "snr_db": 24.76093340229569,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2560,11 +2562,11 @@
     },
     {
      "id": 8,
-     "freq_lower_hz": 51391.6015625,
-     "freq_upper_hz": 52612.3046875,
+     "freq_lower_hz": 51416.015625,
+     "freq_upper_hz": 52587.890625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 976.5625,
-     "snr_db": 24.75089456457241,
+     "snr_db": 24.750951060819343,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2573,7 +2575,7 @@
     {
      "id": 9,
      "freq_lower_hz": 54321.2890625,
-     "freq_upper_hz": 55297.8515625,
+     "freq_upper_hz": 55273.4375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -2608,11 +2610,11 @@
     },
     {
      "id": 12,
-     "freq_lower_hz": 89477.5390625,
-     "freq_upper_hz": 90698.2421875,
+     "freq_lower_hz": 89501.953125,
+     "freq_upper_hz": 90673.828125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 976.5625,
-     "snr_db": 24.76097564317626,
+     "snr_db": 24.760926661976207,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -2632,7 +2634,7 @@
     },
     {
      "id": 14,
-     "freq_lower_hz": 108764.6484375,
+     "freq_lower_hz": 108789.0625,
      "freq_upper_hz": 109741.2109375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -2689,7 +2691,7 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": 72631.8359375,
+     "freq_lower_hz": 74780.2734375,
      "freq_upper_hz": 76293.9453125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -2712,7 +2714,7 @@
    "rate_scored": true,
    "rate_wrong": false,
    "rate_correct": false,
-   "n_detections": 29,
+   "n_detections": 30,
    "stratum": "rtl433-OOK",
    "protocol": "kidde_smoke.c",
    "allowed": [
@@ -2782,15 +2784,15 @@
     },
     {
      "id": 5,
-     "freq_lower_hz": -67504.8828125,
-     "freq_upper_hz": 52612.3046875,
+     "freq_lower_hz": -66528.3203125,
+     "freq_upper_hz": -65795.8984375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (a label on 0 of 8 sampled spans, fewer than half)"
+     "verify_status": "not reliably estimated (pulsed bursts not validated)"
     },
     {
      "id": 6,
@@ -2806,15 +2808,15 @@
     },
     {
      "id": 7,
-     "freq_lower_hz": -58715.8203125,
-     "freq_upper_hz": 47485.3515625,
+     "freq_lower_hz": -34716.796875,
+     "freq_upper_hz": 27392.578125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (pulsed bursts not validated)"
+     "verify_status": "not reliably estimated (a label on 0 of 8 sampled spans, fewer than half)"
     },
     {
      "id": 8,
@@ -2926,6 +2928,18 @@
     },
     {
      "id": 17,
+     "freq_lower_hz": -66528.3203125,
+     "freq_upper_hz": -65795.8984375,
+     "is_pulsed": true,
+     "bandwidth_99pct_hz": null,
+     "snr_db": null,
+     "modulation_label": null,
+     "estimate_tier": "abstain",
+     "symbol_rate_hz": null,
+     "verify_status": "not reliably estimated (pulsed bursts not validated)"
+    },
+    {
+     "id": 18,
      "freq_lower_hz": -65063.4765625,
      "freq_upper_hz": -59448.2421875,
      "is_pulsed": true,
@@ -2937,7 +2951,7 @@
      "verify_status": "not reliably estimated (pulsed bursts not validated)"
     },
     {
-     "id": 18,
+     "id": 19,
      "freq_lower_hz": -63842.7734375,
      "freq_upper_hz": -59448.2421875,
      "is_pulsed": false,
@@ -2947,18 +2961,6 @@
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
      "verify_status": "not reliably estimated (margins below thresholds)"
-    },
-    {
-     "id": 19,
-     "freq_lower_hz": -58715.8203125,
-     "freq_upper_hz": 52612.3046875,
-     "is_pulsed": true,
-     "bandwidth_99pct_hz": null,
-     "snr_db": null,
-     "modulation_label": null,
-     "estimate_tier": "abstain",
-     "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (pulsed bursts not validated)"
     },
     {
      "id": 20,
@@ -3034,8 +3036,8 @@
     },
     {
      "id": 26,
-     "freq_lower_hz": -60180.6640625,
-     "freq_upper_hz": -59204.1015625,
+     "freq_lower_hz": -62622.0703125,
+     "freq_upper_hz": -61889.6484375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -3046,8 +3048,8 @@
     },
     {
      "id": 27,
-     "freq_lower_hz": -55541.9921875,
-     "freq_upper_hz": -53588.8671875,
+     "freq_lower_hz": -60180.6640625,
+     "freq_upper_hz": -59228.515625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -3058,8 +3060,20 @@
     },
     {
      "id": 28,
-     "freq_lower_hz": -52856.4453125,
-     "freq_upper_hz": 47485.3515625,
+     "freq_lower_hz": -57495.1171875,
+     "freq_upper_hz": -56762.6953125,
+     "is_pulsed": true,
+     "bandwidth_99pct_hz": null,
+     "snr_db": null,
+     "modulation_label": null,
+     "estimate_tier": "abstain",
+     "symbol_rate_hz": null,
+     "verify_status": "not reliably estimated (pulsed bursts not validated)"
+    },
+    {
+     "id": 29,
+     "freq_lower_hz": -55541.9921875,
+     "freq_upper_hz": -53588.8671875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -3092,7 +3106,7 @@
     {
      "id": 0,
      "freq_lower_hz": -99731.4453125,
-     "freq_upper_hz": -82885.7421875,
+     "freq_upper_hz": -84619.140625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -3104,10 +3118,10 @@
     {
      "id": 1,
      "freq_lower_hz": -12817.3828125,
-     "freq_upper_hz": 80200.1953125,
+     "freq_upper_hz": 63281.25,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 70312.5,
-     "snr_db": 17.303212495492918,
+     "bandwidth_99pct_hz": 60546.875,
+     "snr_db": 17.303047045244625,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -3174,11 +3188,11 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -108032.2265625,
+     "freq_lower_hz": -101098.6328125,
      "freq_upper_hz": 35766.6015625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 106689.453125,
-     "snr_db": 30.755467165629785,
+     "bandwidth_99pct_hz": 106201.171875,
+     "snr_db": 30.7558857259998,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -3317,11 +3331,11 @@
     },
     {
      "id": 6,
-     "freq_lower_hz": -195800.78125,
-     "freq_upper_hz": 165527.34375,
+     "freq_lower_hz": -45117.1875,
+     "freq_upper_hz": 47070.3125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 111328.125,
-     "snr_db": 32.88760065758393,
+     "bandwidth_99pct_hz": 70312.5,
+     "snr_db": 32.88703194155809,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -3373,7 +3387,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 11,
@@ -3422,11 +3436,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -80444.3359375,
-     "freq_upper_hz": 97045.8984375,
+     "freq_lower_hz": -33447.265625,
+     "freq_upper_hz": 58349.609375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 110351.5625,
-     "snr_db": 17.988576785818317,
+     "bandwidth_99pct_hz": 59326.171875,
+     "snr_db": 17.99039628900957,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -3539,11 +3553,11 @@
     },
     {
      "id": 7,
-     "freq_lower_hz": -370500.0,
-     "freq_upper_hz": -57500.0,
+     "freq_lower_hz": -225800.0,
+     "freq_upper_hz": -160200.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 169000.0,
-     "snr_db": 19.369368630469182,
+     "bandwidth_99pct_hz": 46000.0,
+     "snr_db": 19.36826768185793,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -3659,7 +3673,7 @@
     },
     {
      "id": 17,
-     "freq_lower_hz": 189500.0,
+     "freq_lower_hz": 189600.0,
      "freq_upper_hz": 193500.0,
      "is_pulsed": false,
      "bandwidth_99pct_hz": 4000.0,
@@ -3836,11 +3850,11 @@
     },
     {
      "id": 12,
-     "freq_lower_hz": -26733.3984375,
-     "freq_upper_hz": 34790.0390625,
+     "freq_lower_hz": -1147.4609375,
+     "freq_upper_hz": 12133.7890625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 24902.34375,
-     "snr_db": 29.51920589115748,
+     "bandwidth_99pct_hz": 8789.0625,
+     "snr_db": 29.51784206239026,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -4133,11 +4147,11 @@
     },
     {
      "id": 14,
-     "freq_lower_hz": -69946.2890625,
-     "freq_upper_hz": 52856.4453125,
+     "freq_lower_hz": -50659.1796875,
+     "freq_upper_hz": 43090.8203125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 86914.0625,
-     "snr_db": 24.74965311230075,
+     "bandwidth_99pct_hz": 74707.03125,
+     "snr_db": 24.749837544582967,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -4356,15 +4370,15 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 3,
-     "freq_lower_hz": -60750.0,
-     "freq_upper_hz": 149250.0,
+     "freq_lower_hz": -54300.0,
+     "freq_upper_hz": 135300.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 159000.0,
-     "snr_db": 13.15007592873608,
+     "bandwidth_99pct_hz": 124500.0,
+     "snr_db": 13.147695590215246,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -4441,11 +4455,11 @@
     },
     {
      "id": 3,
-     "freq_lower_hz": -228027.34375,
-     "freq_upper_hz": 328613.28125,
+     "freq_lower_hz": -68554.6875,
+     "freq_upper_hz": 70507.8125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 178710.9375,
-     "snr_db": 41.75511979440298,
+     "bandwidth_99pct_hz": 105468.75,
+     "snr_db": 41.754371128878915,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -4570,11 +4584,11 @@
     },
     {
      "id": 7,
-     "freq_lower_hz": -40649.4140625,
-     "freq_upper_hz": 11840.8203125,
+     "freq_lower_hz": -22021.484375,
+     "freq_upper_hz": -10693.359375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 24169.921875,
-     "snr_db": 19.759981338394507,
+     "bandwidth_99pct_hz": 9277.34375,
+     "snr_db": 19.760288245733673,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -4594,11 +4608,11 @@
     },
     {
      "id": 9,
-     "freq_lower_hz": 45043.9453125,
-     "freq_upper_hz": 54809.5703125,
+     "freq_lower_hz": 45849.609375,
+     "freq_upper_hz": 53271.484375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 8544.921875,
-     "snr_db": 19.761011483913453,
+     "bandwidth_99pct_hz": 6591.796875,
+     "snr_db": 19.761113525305202,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -4606,7 +4620,7 @@
     },
     {
      "id": 10,
-     "freq_lower_hz": 78491.2109375,
+     "freq_lower_hz": 78515.625,
      "freq_upper_hz": 79467.7734375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -4675,7 +4689,7 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -100219.7265625,
+     "freq_lower_hz": -2905.2734375,
      "freq_upper_hz": 124877.9296875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -4756,7 +4770,7 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -103393.5546875,
+     "freq_lower_hz": -103369.140625,
      "freq_upper_hz": -102416.9921875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -4776,15 +4790,15 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 6,
-     "freq_lower_hz": -95581.0546875,
-     "freq_upper_hz": 66284.1796875,
+     "freq_lower_hz": -91772.4609375,
+     "freq_upper_hz": 59790.0390625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 124023.4375,
-     "snr_db": 28.001828541369598,
+     "bandwidth_99pct_hz": 123046.875,
+     "snr_db": 28.0014692002037,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -4885,7 +4899,7 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -27954.1015625,
+     "freq_lower_hz": -27929.6875,
      "freq_upper_hz": -26977.5390625,
      "is_pulsed": false,
      "bandwidth_99pct_hz": 976.5625,
@@ -4933,7 +4947,7 @@
     },
     {
      "id": 6,
-     "freq_lower_hz": -13549.8046875,
+     "freq_lower_hz": -13525.390625,
      "freq_upper_hz": -12573.2421875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -4981,11 +4995,11 @@
     },
     {
      "id": 10,
-     "freq_lower_hz": 7690.4296875,
+     "freq_lower_hz": 22436.5234375,
      "freq_upper_hz": 82153.3203125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 51757.8125,
-     "snr_db": 22.557617295528605,
+     "bandwidth_99pct_hz": 49316.40625,
+     "snr_db": 22.560164316070697,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -5042,7 +5056,7 @@
     {
      "id": 15,
      "freq_lower_hz": 94604.4921875,
-     "freq_upper_hz": 95581.0546875,
+     "freq_upper_hz": 95556.640625,
      "is_pulsed": false,
      "bandwidth_99pct_hz": 976.5625,
      "snr_db": 17.499818550622642,
@@ -5098,10 +5112,10 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -303500.0,
-     "freq_upper_hz": 317500.0,
+     "freq_lower_hz": -118500.0,
+     "freq_upper_hz": 281500.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 333000.0,
+     "bandwidth_99pct_hz": 307000.0,
      "snr_db": 32.102763753654905,
      "modulation_label": null,
      "estimate_tier": "abstain",
@@ -5130,7 +5144,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 4,
@@ -5416,11 +5430,11 @@
     },
     {
      "id": 12,
-     "freq_lower_hz": -36010.7421875,
-     "freq_upper_hz": 23559.5703125,
+     "freq_lower_hz": -12402.34375,
+     "freq_upper_hz": 3613.28125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": null,
-     "snr_db": null,
+     "bandwidth_99pct_hz": 11718.75,
+     "snr_db": 18.071712316764224,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -5589,19 +5603,19 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 2,
      "freq_lower_hz": -47729.4921875,
-     "freq_upper_hz": -39672.8515625,
+     "freq_upper_hz": -40478.515625,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 7568.359375,
+     "bandwidth_99pct_hz": 6591.796875,
      "snr_db": 13.743096792449386,
      "modulation_label": null,
-     "estimate_tier": "abstain",
+     "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (margins below thresholds)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 3,
@@ -5617,15 +5631,15 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -27465.8203125,
+     "freq_lower_hz": -23559.5703125,
      "freq_upper_hz": 33081.0546875,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 47851.5625,
+     "bandwidth_99pct_hz": 46386.71875,
      "snr_db": 12.43684245478619,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 5,
@@ -5637,7 +5651,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 6,
@@ -5724,15 +5738,15 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -22583.0078125,
-     "freq_upper_hz": 21362.3046875,
+     "freq_lower_hz": -5957.03125,
+     "freq_upper_hz": 3027.34375,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 21484.375,
+     "bandwidth_99pct_hz": 7324.21875,
      "snr_db": 16.239383036196973,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 5,
@@ -5794,7 +5808,7 @@
     {
      "id": 1,
      "freq_lower_hz": -53833.0078125,
-     "freq_upper_hz": -29907.2265625,
+     "freq_upper_hz": -34790.0390625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -5853,8 +5867,8 @@
     },
     {
      "id": 6,
-     "freq_lower_hz": -20874.0234375,
-     "freq_upper_hz": 46508.7890625,
+     "freq_lower_hz": 8618.1640625,
+     "freq_upper_hz": 21899.4140625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -5873,7 +5887,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     }
    ]
   },
@@ -5888,7 +5902,7 @@
    "rate_scored": true,
    "rate_wrong": false,
    "rate_correct": false,
-   "n_detections": 13,
+   "n_detections": 14,
    "stratum": "rtl433-FSK",
    "protocol": "cavius.c",
    "allowed": [
@@ -5922,8 +5936,8 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -58227.5390625,
-     "freq_upper_hz": 54077.1484375,
+     "freq_lower_hz": -54565.4296875,
+     "freq_upper_hz": -51635.7421875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -5934,11 +5948,11 @@
     },
     {
      "id": 3,
-     "freq_lower_hz": -49926.7578125,
-     "freq_upper_hz": 49438.4765625,
+     "freq_lower_hz": -13061.5234375,
+     "freq_upper_hz": 22338.8671875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 61767.578125,
-     "snr_db": 33.21508631328271,
+     "bandwidth_99pct_hz": 26611.328125,
+     "snr_db": 33.133914963574306,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -5959,7 +5973,7 @@
     {
      "id": 5,
      "freq_lower_hz": 53344.7265625,
-     "freq_upper_hz": 54321.2890625,
+     "freq_upper_hz": 54296.875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -6018,6 +6032,18 @@
     },
     {
      "id": 10,
+     "freq_lower_hz": 41381.8359375,
+     "freq_upper_hz": 45043.9453125,
+     "is_pulsed": false,
+     "bandwidth_99pct_hz": 3662.109375,
+     "snr_db": 33.47981463941271,
+     "modulation_label": null,
+     "estimate_tier": "abstain",
+     "symbol_rate_hz": null,
+     "verify_status": "not reliably estimated (margins below thresholds)"
+    },
+    {
+     "id": 11,
      "freq_lower_hz": 46264.6484375,
      "freq_upper_hz": 46752.9296875,
      "is_pulsed": false,
@@ -6029,7 +6055,7 @@
      "verify_status": "not reliably estimated (margins below thresholds)"
     },
     {
-     "id": 11,
+     "id": 12,
      "freq_lower_hz": -67260.7421875,
      "freq_upper_hz": -66040.0390625,
      "is_pulsed": false,
@@ -6041,7 +6067,7 @@
      "verify_status": "not reliably estimated (insufficient occupied samples (1536 < 2000))"
     },
     {
-     "id": 12,
+     "id": 13,
      "freq_lower_hz": 100708.0078125,
      "freq_upper_hz": 101928.7109375,
      "is_pulsed": true,
@@ -6078,11 +6104,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -354003.90625,
+     "freq_lower_hz": -341308.59375,
      "freq_upper_hz": 37597.65625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 235351.5625,
-     "snr_db": 17.593097693961802,
+     "bandwidth_99pct_hz": 231445.3125,
+     "snr_db": 17.596432783367867,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6186,11 +6212,11 @@
     },
     {
      "id": 9,
-     "freq_lower_hz": 157714.84375,
-     "freq_upper_hz": 265136.71875,
+     "freq_lower_hz": 175390.625,
+     "freq_upper_hz": 258203.125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 73242.1875,
-     "snr_db": 16.954425552680057,
+     "bandwidth_99pct_hz": 71289.0625,
+     "snr_db": 17.004072656585695,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6243,8 +6269,8 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -56030.2734375,
-     "freq_upper_hz": -3784.1796875,
+     "freq_lower_hz": -51586.9140625,
+     "freq_upper_hz": -45336.9140625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -6360,11 +6386,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -186035.15625,
-     "freq_upper_hz": 146972.65625,
+     "freq_lower_hz": -23535.15625,
+     "freq_upper_hz": -4785.15625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 75195.3125,
-     "snr_db": 28.107170444228547,
+     "bandwidth_99pct_hz": 13671.875,
+     "snr_db": 28.11466062285399,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6405,11 +6431,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -21362.3046875,
-     "freq_upper_hz": -11840.8203125,
+     "freq_lower_hz": -19873.046875,
+     "freq_upper_hz": -14794.921875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 7324.21875,
-     "snr_db": 5.469163592453685,
+     "bandwidth_99pct_hz": null,
+     "snr_db": null,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6425,7 +6451,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     }
    ]
   },
@@ -6450,7 +6476,7 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -879000.0,
+     "freq_lower_hz": -878800.0,
      "freq_upper_hz": -871000.0,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 6000.0,
@@ -6462,11 +6488,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -861000.0,
-     "freq_upper_hz": -853000.0,
+     "freq_lower_hz": -860200.0,
+     "freq_upper_hz": -853800.0,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 8000.0,
-     "snr_db": -3.6571421061855296,
+     "snr_db": -3.6567617889028394,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6487,10 +6513,10 @@
     {
      "id": 3,
      "freq_lower_hz": -753000.0,
-     "freq_upper_hz": -743000.0,
+     "freq_upper_hz": -745200.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 8000.0,
-     "snr_db": -3.6306279516605318,
+     "bandwidth_99pct_hz": 6000.0,
+     "snr_db": -3.630312177430839,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6498,11 +6524,11 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -737000.0,
+     "freq_lower_hz": -736800.0,
      "freq_upper_hz": -729000.0,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 6000.0,
-     "snr_db": -3.6260544984523073,
+     "snr_db": -3.626926364626501,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6534,11 +6560,11 @@
     },
     {
      "id": 7,
-     "freq_lower_hz": -609000.0,
+     "freq_lower_hz": -608800.0,
      "freq_upper_hz": -601000.0,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 8000.0,
-     "snr_db": 30.053475770198737,
+     "snr_db": 30.05335079717487,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6554,15 +6580,15 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 9,
-     "freq_lower_hz": -447000.0,
-     "freq_upper_hz": 423000.0,
+     "freq_lower_hz": -229600.0,
+     "freq_upper_hz": 221600.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 414000.0,
-     "snr_db": 30.04158091463296,
+     "bandwidth_99pct_hz": 350000.0,
+     "snr_db": 30.04139759727984,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6675,11 +6701,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -9643.5546875,
-     "freq_upper_hz": 22338.8671875,
+     "freq_lower_hz": -2856.4453125,
+     "freq_upper_hz": 10424.8046875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 732.421875,
-     "snr_db": 19.129481843800548,
+     "snr_db": 19.12986981813901,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6720,11 +6746,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -153808.59375,
-     "freq_upper_hz": 321777.34375,
+     "freq_lower_hz": -76367.1875,
+     "freq_upper_hz": 62695.3125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 142578.125,
-     "snr_db": 26.143414389318593,
+     "bandwidth_99pct_hz": 93750.0,
+     "snr_db": 26.14400623472791,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6753,15 +6779,15 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -119262.6953125,
-     "freq_upper_hz": -19897.4609375,
+     "freq_lower_hz": -62573.2421875,
+     "freq_upper_hz": -36791.9921875,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 80810.546875,
+     "bandwidth_99pct_hz": 14892.578125,
      "snr_db": 15.525030330759552,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 1,
@@ -6858,11 +6884,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -123413.0859375,
-     "freq_upper_hz": 124877.9296875,
+     "freq_lower_hz": -26757.8125,
+     "freq_upper_hz": 30664.0625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 126220.703125,
-     "snr_db": 21.27649504766771,
+     "bandwidth_99pct_hz": 41992.1875,
+     "snr_db": 21.276021012847764,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -6930,11 +6956,11 @@
     },
     {
      "id": 7,
-     "freq_lower_hz": -74584.9609375,
-     "freq_upper_hz": 98266.6015625,
+     "freq_lower_hz": -20751.953125,
+     "freq_upper_hz": 28076.171875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 94238.28125,
-     "snr_db": 20.07596256282924,
+     "bandwidth_99pct_hz": 39062.5,
+     "snr_db": 20.07616220284795,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -7024,7 +7050,7 @@
     {
      "id": 0,
      "freq_lower_hz": -20629.8828125,
-     "freq_upper_hz": 54565.4296875,
+     "freq_upper_hz": 29516.6015625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -7092,8 +7118,8 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -31616.2109375,
-     "freq_upper_hz": -30395.5078125,
+     "freq_lower_hz": -31591.796875,
+     "freq_upper_hz": -30419.921875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -7104,8 +7130,8 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -24047.8515625,
-     "freq_upper_hz": 5004.8828125,
+     "freq_lower_hz": -18701.171875,
+     "freq_upper_hz": -341.796875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -7195,7 +7221,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 1,
@@ -7207,7 +7233,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 2,
@@ -7247,11 +7273,11 @@
     },
     {
      "id": 5,
-     "freq_lower_hz": -74340.8203125,
-     "freq_upper_hz": 54809.5703125,
+     "freq_lower_hz": -49877.9296875,
+     "freq_upper_hz": 38403.3203125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 77636.71875,
-     "snr_db": 29.47810739296195,
+     "bandwidth_99pct_hz": 66650.390625,
+     "snr_db": 29.47903851676951,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -7319,10 +7345,10 @@
     {
      "id": 1,
      "freq_lower_hz": -114624.0234375,
-     "freq_upper_hz": -90942.3828125,
+     "freq_upper_hz": -91308.59375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 21728.515625,
-     "snr_db": 21.818266664717175,
+     "bandwidth_99pct_hz": 21484.375,
+     "snr_db": 21.81844308974478,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -7450,11 +7476,11 @@
     },
     {
      "id": 12,
-     "freq_lower_hz": -10131.8359375,
-     "freq_upper_hz": 77270.5078125,
+     "freq_lower_hz": 15283.203125,
+     "freq_upper_hz": 51611.328125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 53955.078125,
-     "snr_db": 21.849230926174616,
+     "bandwidth_99pct_hz": 24169.921875,
+     "snr_db": 21.84495604271889,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -7569,7 +7595,7 @@
     },
     {
      "id": 5,
-     "freq_lower_hz": -78247.0703125,
+     "freq_lower_hz": -78222.65625,
      "freq_upper_hz": -77270.5078125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -7617,8 +7643,8 @@
     },
     {
      "id": 9,
-     "freq_lower_hz": -58227.5390625,
-     "freq_upper_hz": -57250.9765625,
+     "freq_lower_hz": -58129.8828125,
+     "freq_upper_hz": -57348.6328125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -7653,8 +7679,8 @@
     },
     {
      "id": 12,
-     "freq_lower_hz": -48950.1953125,
-     "freq_upper_hz": -47241.2109375,
+     "freq_lower_hz": -48437.5,
+     "freq_upper_hz": -47265.625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -7665,10 +7691,10 @@
     },
     {
      "id": 13,
-     "freq_lower_hz": -40649.4140625,
-     "freq_upper_hz": 28442.3828125,
+     "freq_lower_hz": -37109.375,
+     "freq_upper_hz": 11718.75,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 46142.578125,
+     "bandwidth_99pct_hz": 30517.578125,
      "snr_db": 21.056965739919026,
      "modulation_label": "FM",
      "estimate_tier": "labelled",
@@ -7701,7 +7727,7 @@
     },
     {
      "id": 16,
-     "freq_lower_hz": 41625.9765625,
+     "freq_lower_hz": 41650.390625,
      "freq_upper_hz": 42602.5390625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -7902,8 +7928,8 @@
     },
     {
      "id": 5,
-     "freq_lower_hz": -5981.4453125,
-     "freq_upper_hz": 31616.2109375,
+     "freq_lower_hz": 317.3828125,
+     "freq_upper_hz": 17504.8828125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -8043,11 +8069,11 @@
     },
     {
      "id": 3,
-     "freq_lower_hz": -306152.34375,
-     "freq_upper_hz": 367675.78125,
+     "freq_lower_hz": -82226.5625,
+     "freq_upper_hz": 72460.9375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 240234.375,
-     "snr_db": 27.15238853026247,
+     "bandwidth_99pct_hz": 99609.375,
+     "snr_db": 27.15797135637814,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8100,11 +8126,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -191894.53125,
-     "freq_upper_hz": 244628.90625,
+     "freq_lower_hz": -15527.34375,
+     "freq_upper_hz": 106347.65625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 132812.5,
-     "snr_db": 23.993665947503196,
+     "bandwidth_99pct_hz": 87890.625,
+     "snr_db": 23.993822352254185,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8133,11 +8159,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -36743.1640625,
-     "freq_upper_hz": -23559.5703125,
+     "freq_lower_hz": -33740.234375,
+     "freq_upper_hz": -26318.359375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 10253.90625,
-     "snr_db": 7.524555508498869,
+     "bandwidth_99pct_hz": 6347.65625,
+     "snr_db": 7.6185196293246715,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8198,7 +8224,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 2,
@@ -8214,8 +8240,8 @@
     },
     {
      "id": 3,
-     "freq_lower_hz": -97045.8984375,
-     "freq_upper_hz": 17700.1953125,
+     "freq_lower_hz": -34887.6953125,
+     "freq_upper_hz": -16137.6953125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -8226,7 +8252,7 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": 35278.3203125,
+     "freq_lower_hz": 44824.21875,
      "freq_upper_hz": 124389.6484375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -8238,8 +8264,8 @@
     },
     {
      "id": 5,
-     "freq_lower_hz": -68237.3046875,
-     "freq_upper_hz": 3295.8984375,
+     "freq_lower_hz": -73120.1171875,
+     "freq_upper_hz": -72387.6953125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -8271,8 +8297,8 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -43579.1015625,
-     "freq_upper_hz": -20874.0234375,
+     "freq_lower_hz": -40502.9296875,
+     "freq_upper_hz": -29565.4296875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -8316,8 +8342,8 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -109497.0703125,
-     "freq_upper_hz": -102416.9921875,
+     "freq_lower_hz": -108569.3359375,
+     "freq_upper_hz": -103100.5859375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -8412,8 +8438,8 @@
     },
     {
      "id": 8,
-     "freq_lower_hz": 13305.6640625,
-     "freq_upper_hz": 55541.9921875,
+     "freq_lower_hz": 29809.5703125,
+     "freq_upper_hz": 40747.0703125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -8472,15 +8498,15 @@
     },
     {
      "id": 13,
-     "freq_lower_hz": 87768.5546875,
-     "freq_upper_hz": 109497.0703125,
+     "freq_lower_hz": 92089.84375,
+     "freq_upper_hz": 108105.46875,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 17578.125,
+     "bandwidth_99pct_hz": 12451.171875,
      "snr_db": 12.860704468096527,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     }
    ]
   },
@@ -8539,14 +8565,14 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 3,
      "freq_lower_hz": -429000.0,
-     "freq_upper_hz": -383000.0,
+     "freq_upper_hz": -391200.0,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 46000.0,
+     "bandwidth_99pct_hz": 38000.0,
      "snr_db": 32.63476213096435,
      "modulation_label": null,
      "estimate_tier": "abstain",
@@ -8555,11 +8581,11 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -367000.0,
-     "freq_upper_hz": 577000.0,
+     "freq_lower_hz": -60600.0,
+     "freq_upper_hz": 54600.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 190000.0,
-     "snr_db": 34.02438865606221,
+     "bandwidth_99pct_hz": 76000.0,
+     "snr_db": 34.024915429587935,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8649,10 +8675,10 @@
     {
      "id": 1,
      "freq_lower_hz": -44799.8046875,
-     "freq_upper_hz": -25268.5546875,
+     "freq_upper_hz": -30078.125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 17333.984375,
-     "snr_db": 21.082247492857643,
+     "bandwidth_99pct_hz": 13183.59375,
+     "snr_db": 21.101026099792385,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8672,11 +8698,11 @@
     },
     {
      "id": 3,
-     "freq_lower_hz": -16479.4921875,
-     "freq_upper_hz": 53100.5859375,
+     "freq_lower_hz": 6030.2734375,
+     "freq_upper_hz": 20092.7734375,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 30761.71875,
-     "snr_db": 21.072410782341766,
+     "bandwidth_99pct_hz": 11230.46875,
+     "snr_db": 21.072411066138592,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8777,11 +8803,11 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -5981.4453125,
-     "freq_upper_hz": 8666.9921875,
+     "freq_lower_hz": -585.9375,
+     "freq_upper_hz": 585.9375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 732.421875,
-     "snr_db": 20.878080656651882,
+     "snr_db": 20.884673523390337,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8897,11 +8923,11 @@
     },
     {
      "id": 11,
-     "freq_lower_hz": 56030.2734375,
-     "freq_upper_hz": 100708.0078125,
+     "freq_lower_hz": 72607.421875,
+     "freq_upper_hz": 83154.296875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 22705.078125,
-     "snr_db": 16.20664203203409,
+     "bandwidth_99pct_hz": 8544.921875,
+     "snr_db": 16.206045118703514,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8930,11 +8956,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -70922.8515625,
-     "freq_upper_hz": 113159.1796875,
+     "freq_lower_hz": 12817.3828125,
+     "freq_upper_hz": 28442.3828125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 102783.203125,
-     "snr_db": 21.59547508483001,
+     "bandwidth_99pct_hz": 10742.1875,
+     "snr_db": 21.595262676647668,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -8963,27 +8989,27 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -125000.0,
-     "freq_upper_hz": -115356.4453125,
+     "freq_lower_hz": -124877.9296875,
+     "freq_upper_hz": -117065.4296875,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 8544.921875,
+     "bandwidth_99pct_hz": 6835.9375,
      "snr_db": 24.246019676831647,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 1,
-     "freq_lower_hz": -112915.0390625,
-     "freq_upper_hz": -100219.7265625,
+     "freq_lower_hz": -111279.296875,
+     "freq_upper_hz": -103076.171875,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 10986.328125,
+     "bandwidth_99pct_hz": 6835.9375,
      "snr_db": 24.392585367501066,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 2,
@@ -9047,15 +9073,15 @@
     },
     {
      "id": 7,
-     "freq_lower_hz": -88989.2578125,
-     "freq_upper_hz": 14282.2265625,
+     "freq_lower_hz": -55517.578125,
+     "freq_upper_hz": -38720.703125,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 34912.109375,
+     "bandwidth_99pct_hz": 12451.171875,
      "snr_db": 23.8847279473137,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 8,
@@ -9091,7 +9117,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     }
    ]
   },
@@ -9116,7 +9142,7 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -47241.2109375,
+     "freq_lower_hz": -47216.796875,
      "freq_upper_hz": -46264.6484375,
      "is_pulsed": false,
      "bandwidth_99pct_hz": 976.5625,
@@ -9164,15 +9190,15 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": -20629.8828125,
-     "freq_upper_hz": 17944.3359375,
+     "freq_lower_hz": -11669.921875,
+     "freq_upper_hz": 439.453125,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 27099.609375,
+     "bandwidth_99pct_hz": 9765.625,
      "snr_db": 11.723635987238744,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 5,
@@ -9222,14 +9248,14 @@
     {
      "id": 0,
      "freq_lower_hz": -16723.6328125,
-     "freq_upper_hz": 26489.2578125,
+     "freq_upper_hz": 22778.3203125,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 39306.640625,
+     "bandwidth_99pct_hz": 30273.4375,
      "snr_db": 7.31048739218807,
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     }
    ]
   },
@@ -9290,8 +9316,8 @@
     },
     {
      "id": 3,
-     "freq_lower_hz": -54077.1484375,
-     "freq_upper_hz": 8911.1328125,
+     "freq_lower_hz": -5322.265625,
+     "freq_upper_hz": 6787.109375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -9326,7 +9352,7 @@
     },
     {
      "id": 6,
-     "freq_lower_hz": 79467.7734375,
+     "freq_lower_hz": 79492.1875,
      "freq_upper_hz": 80444.3359375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -9385,8 +9411,8 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -28686.5234375,
-     "freq_upper_hz": 16723.6328125,
+     "freq_lower_hz": -415.0390625,
+     "freq_upper_hz": 8959.9609375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -9455,10 +9481,10 @@
     {
      "id": 0,
      "freq_lower_hz": -1033345.751953125,
-     "freq_upper_hz": -966529.638671875,
+     "freq_upper_hz": -974132.8515625,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 62208.10546875,
-     "snr_db": 27.82042232863318,
+     "bandwidth_99pct_hz": 55296.09375,
+     "snr_db": 27.80620720683427,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -9526,11 +9552,11 @@
     },
     {
      "id": 6,
-     "freq_lower_hz": -28800.048828125,
-     "freq_upper_hz": 749953.271484375,
+     "freq_lower_hz": 343987.783203125,
+     "freq_upper_hz": 506189.658203125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 288000.48828125,
-     "snr_db": 27.670636060108244,
+     "bandwidth_99pct_hz": 133632.2265625,
+     "snr_db": 27.66950215728894,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -9558,7 +9584,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     }
    ]
   },
@@ -9595,8 +9621,8 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -30639.6484375,
-     "freq_upper_hz": 22583.0078125,
+     "freq_lower_hz": -9033.203125,
+     "freq_upper_hz": 8544.921875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -9607,15 +9633,15 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -11352.5390625,
-     "freq_upper_hz": 11352.5390625,
-     "is_pulsed": true,
-     "bandwidth_99pct_hz": 17578.125,
-     "snr_db": 14.606805453876774,
+     "freq_lower_hz": -18432.6171875,
+     "freq_upper_hz": -12573.2421875,
+     "is_pulsed": false,
+     "bandwidth_99pct_hz": 5859.375,
+     "snr_db": 14.510097827265472,
      "modulation_label": null,
-     "estimate_tier": "abstain",
+     "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "not reliably estimated (pulsed bursts not validated)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 3,
@@ -9627,7 +9653,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 4,
@@ -9678,10 +9704,10 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -41137.6953125,
-     "freq_upper_hz": 20629.8828125,
+     "freq_lower_hz": -40136.71875,
+     "freq_upper_hz": 15722.65625,
      "is_pulsed": false,
-     "bandwidth_99pct_hz": 42480.46875,
+     "bandwidth_99pct_hz": 40771.484375,
      "snr_db": 19.639856983757028,
      "modulation_label": "FM",
      "estimate_tier": "labelled",
@@ -9759,8 +9785,8 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -119750.9765625,
-     "freq_upper_hz": -94360.3515625,
+     "freq_lower_hz": -118969.7265625,
+     "freq_upper_hz": -97094.7265625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -9795,7 +9821,7 @@
     },
     {
      "id": 3,
-     "freq_lower_hz": -81909.1796875,
+     "freq_lower_hz": -81884.765625,
      "freq_upper_hz": -80932.6171875,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -9937,7 +9963,7 @@
     {
      "id": 4,
      "freq_lower_hz": -63598.6328125,
-     "freq_upper_hz": -62622.0703125,
+     "freq_upper_hz": -62646.484375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -10008,11 +10034,11 @@
     },
     {
      "id": 10,
-     "freq_lower_hz": 27954.1015625,
-     "freq_upper_hz": 57250.9765625,
+     "freq_lower_hz": 37597.65625,
+     "freq_upper_hz": 47363.28125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 16601.5625,
-     "snr_db": 14.91792052918542,
+     "bandwidth_99pct_hz": 6103.515625,
+     "snr_db": 14.91145079760678,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10057,7 +10083,7 @@
     {
      "id": 14,
      "freq_lower_hz": 82885.7421875,
-     "freq_upper_hz": 83862.3046875,
+     "freq_upper_hz": 83837.890625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -10113,8 +10139,8 @@
     },
     {
      "id": 1,
-     "freq_lower_hz": -78979.4921875,
-     "freq_upper_hz": 77758.7890625,
+     "freq_lower_hz": -62866.2109375,
+     "freq_upper_hz": 46508.7890625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -10125,8 +10151,8 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": 92163.0859375,
-     "freq_upper_hz": 96069.3359375,
+     "freq_lower_hz": 92236.328125,
+     "freq_upper_hz": 95751.953125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -10287,7 +10313,7 @@
     },
     {
      "id": 4,
-     "freq_lower_hz": 75073.2421875,
+     "freq_lower_hz": 75122.0703125,
      "freq_upper_hz": 84106.4453125,
      "is_pulsed": false,
      "bandwidth_99pct_hz": 8789.0625,
@@ -10299,7 +10325,7 @@
     },
     {
      "id": 5,
-     "freq_lower_hz": 89233.3984375,
+     "freq_lower_hz": 89355.46875,
      "freq_upper_hz": 91186.5234375,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
@@ -10380,11 +10406,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -359863.28125,
-     "freq_upper_hz": 106933.59375,
+     "freq_lower_hz": -151562.5,
+     "freq_upper_hz": -28125.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 219726.5625,
-     "snr_db": 23.287889634341226,
+     "bandwidth_99pct_hz": 90820.3125,
+     "snr_db": 23.287860538578563,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10438,10 +10464,10 @@
     {
      "id": 0,
      "freq_lower_hz": -500000.0,
-     "freq_upper_hz": -416503.90625,
+     "freq_upper_hz": -432226.5625,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 54687.5,
-     "snr_db": 26.31045622176098,
+     "snr_db": 26.30728884556795,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10461,11 +10487,11 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -224121.09375,
-     "freq_upper_hz": 249511.71875,
+     "freq_lower_hz": -71093.75,
+     "freq_upper_hz": 55468.75,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 131835.9375,
-     "snr_db": 32.71580162682981,
+     "bandwidth_99pct_hz": 95703.125,
+     "snr_db": 32.71711949232615,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10473,11 +10499,11 @@
     },
     {
      "id": 3,
-     "freq_lower_hz": 344238.28125,
+     "freq_lower_hz": 395996.09375,
      "freq_upper_hz": 499511.71875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 93750.0,
-     "snr_db": 26.35488506283381,
+     "bandwidth_99pct_hz": 90820.3125,
+     "snr_db": 26.35342814341804,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10508,11 +10534,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -335449.21875,
-     "freq_upper_hz": 455566.40625,
+     "freq_lower_hz": -140332.03125,
+     "freq_upper_hz": 428417.96875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 470703.125,
-     "snr_db": 25.737668354823228,
+     "bandwidth_99pct_hz": 431640.625,
+     "snr_db": 25.73895379320806,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10540,7 +10566,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     },
     {
      "id": 3,
@@ -10589,10 +10615,10 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -89965.8203125,
+     "freq_lower_hz": -74731.4453125,
      "freq_upper_hz": 78247.0703125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 120605.46875,
+     "bandwidth_99pct_hz": 118652.34375,
      "snr_db": 25.98267608937509,
      "modulation_label": null,
      "estimate_tier": "abstain",
@@ -10658,11 +10684,11 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -167500.0,
+     "freq_lower_hz": -167400.0,
      "freq_upper_hz": -163500.0,
      "is_pulsed": true,
      "bandwidth_99pct_hz": 4000.0,
-     "snr_db": 28.957898219367955,
+     "snr_db": 28.957859449806204,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10694,10 +10720,10 @@
     },
     {
      "id": 5,
-     "freq_lower_hz": -137500.0,
-     "freq_upper_hz": 113500.0,
+     "freq_lower_hz": -72200.0,
+     "freq_upper_hz": 54200.0,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 99000.0,
+     "bandwidth_99pct_hz": 86000.0,
      "snr_db": 28.934048847112454,
      "modulation_label": null,
      "estimate_tier": "abstain",
@@ -10799,11 +10825,11 @@
     },
     {
      "id": 2,
-     "freq_lower_hz": -78735.3515625,
-     "freq_upper_hz": 73364.2578125,
+     "freq_lower_hz": -31298.828125,
+     "freq_upper_hz": -8251.953125,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 106933.59375,
-     "snr_db": 26.938189103627455,
+     "bandwidth_99pct_hz": 12939.453125,
+     "snr_db": 26.937669148562406,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10832,11 +10858,11 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -115722.65625,
-     "freq_upper_hz": 334472.65625,
+     "freq_lower_hz": 47949.21875,
+     "freq_upper_hz": 122949.21875,
      "is_pulsed": true,
-     "bandwidth_99pct_hz": 64453.125,
-     "snr_db": 34.59029834816195,
+     "bandwidth_99pct_hz": 60546.875,
+     "snr_db": 34.59690790514328,
      "modulation_label": null,
      "estimate_tier": "abstain",
      "symbol_rate_hz": null,
@@ -10865,8 +10891,8 @@
    "detections": [
     {
      "id": 0,
-     "freq_lower_hz": -66528.3203125,
-     "freq_upper_hz": -35278.3203125,
+     "freq_lower_hz": -59814.453125,
+     "freq_upper_hz": -38330.078125,
      "is_pulsed": true,
      "bandwidth_99pct_hz": null,
      "snr_db": null,
@@ -10921,7 +10947,7 @@
      "modulation_label": null,
      "estimate_tier": "unknown_family",
      "symbol_rate_hz": null,
-     "verify_status": "unknown family (structure outside the library)"
+     "verify_status": "does not fit the clean models (impairment or unknown family)"
     }
    ]
   }

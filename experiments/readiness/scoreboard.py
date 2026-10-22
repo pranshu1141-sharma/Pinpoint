@@ -14,7 +14,7 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
-from . import config, generators, metrics, systems
+from . import fsk_split_probe, config, generators, metrics, systems
 from .config import THRESHOLDS as TH
 from .render import render_bar
 
@@ -134,6 +134,7 @@ def evaluate(rows_by, product, extra, speed_by=None):
             if rows[0]["detect"] is not None:
                 s["detect"] = metrics.detect_stats(rows)
                 s["params"] = metrics.param_stats(rows)
+                s["bounds"] = metrics.bounds_stats(rows)
             stats.setdefault(sysname, {})[gen] = s
 
     def per(sysname, key, field, test, gens=("G1", "G2")):
@@ -200,6 +201,12 @@ def evaluate(rows_by, product, extra, speed_by=None):
                   per(product, "confidence", "ool_wrong", lambda v: _le(v, TH.g4_ool_wrong_max), gens=("G4",))),
             _crit("W4", f"published-wrong rates <= {TH.g4_rate_wrong_max:.0%} of G4 captures",
                   per(product, "rate", "published_wrong", lambda v: _le(v, TH.g4_rate_wrong_max), gens=("G4",)))]),
+        ("Detect bounds", [
+            _crit("B1", f"band {TH.bounds_ratio_lo:g}-{TH.bounds_ratio_hi:g}x the true occupied width on >= {TH.bounds_ok_min_g4:.0%} of G4 emitter captures",
+                  per(product, "bounds", "ok_bounds", lambda v: _ge(v, TH.bounds_ok_min_g4), gens=("G4",))),
+            _crit("B2", f"<= {TH.g4_fragmentation_max:.0%} of G4 emitter captures split into several detections",
+                  per(product, "bounds", "fragmented", lambda v: _le(v, TH.g4_fragmentation_max), gens=("G4",))),
+            extra["bounds_g5"]]),
         ("Real benchmark (G5)", [c for c in extra["g5"] if c["id"] != "T1"]),
         ("Throughput", [c for c in extra["g5"] if c["id"] == "T1"]),
         ("Real data (G3)", [extra["real"]]),
@@ -224,6 +231,16 @@ def gen_marks(criteria):
 def real_criterion():
     from . import real
     return real.criterion()
+
+
+def b3_criterion(result=None):
+    """B3 on the rated G5 FSK2 test files; with --skip-g5, from the probe's last saved test run."""
+    if result is None:
+        rows = json.loads(fsk_split_probe.OUT.read_text()) if fsk_split_probe.OUT.exists() else None
+        result = None if rows is None or not any("b3_ratio" in r for r in rows) else fsk_split_probe.b3_count(rows)
+    value, n = (None, None) if result is None else (result[0] / result[1] if result[1] else None, result[1])
+    return _crit("B3", f"band {TH.bounds_ratio_lo:g}-{TH.bounds_ratio_hi:g}x (tone split + 2 x rate) on >= {TH.bounds_ok_min_g5:.0%} "
+                       "of rated G5 FSK2 test files", {"G5": (value, _ge(value, TH.bounds_ok_min_g5), n)})
 
 
 def cli_criterion():
@@ -379,7 +396,8 @@ def main(argv=None):
     g5_blob = None if args.skip_g5 else g5.run()
     g5_crits, g5_stats = g5.criteria(g5_blob)
     meta["g5"] = g5_stats
-    extra = dict(real=real_criterion(), cli=cli_criterion(), docs=_crit("X1", "docs agree", {}), g5=g5_crits)
+    extra = dict(real=real_criterion(), cli=cli_criterion(), docs=_crit("X1", "docs agree", {}), g5=g5_crits,
+                 bounds_g5=b3_criterion(None if args.skip_g5 else fsk_split_probe.b3_count(fsk_split_probe.run("test", quiet=True))))
     phases, candidate, stats = evaluate(rows_by, product, extra, speed_by)
     # docs are checked against the readiness numbers computed in this run
     draft = dict(meta=meta, product=product, phases=[dict(name=n, criteria=c) for n, c in phases], stats=stats)

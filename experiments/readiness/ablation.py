@@ -14,7 +14,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 from . import generators, impaired, systems
-from .metrics import label_matches
+from .metrics import label_matches, width_ratio
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_JSON = ROOT / "artifacts" / "readiness" / "ablation.json"
@@ -26,19 +26,6 @@ def conditions():
     out += [(f"only:{k}", (k,)) for k in impaired.IMPAIRMENTS]
     out += [(f"without:{k}", tuple(x for x in impaired.IMPAIRMENTS if x != k)) for k in impaired.IMPAIRMENTS]
     return out
-
-
-def width_ratio(row):
-    """Width of the Detect band that best overlaps the true band, over the true occupied width (None if unavailable)."""
-    band = row["truth"].get("band")
-    bands = (row.get("detect") or {}).get("bands")
-    if not band or not bands:
-        return None
-    lo, hi = band
-    best = max(bands, key=lambda b: max(0.0, min(b[1], hi) - max(b[0], lo)))
-    if max(0.0, min(best[1], hi) - max(best[0], lo)) == 0:
-        return None
-    return (best[1] - best[0]) / (hi - lo)
 
 
 def compact(row):

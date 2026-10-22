@@ -124,7 +124,12 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
     { key: 'Midpoint (Detect)', value: formatFreq(centerFreq),
       explain: 'Midpoint of the Detect-stage frequency band, before any downstream refinement.' },
     { key: 'Width (Detect)', value: formatFreq(bandwidth) },
-    { key: 'Edges (Detect)', value: `${formatFreq(detection.freq_lower_hz)} to ${formatFreq(detection.freq_upper_hz)} (baseband)` },
+    { key: 'Edges (Detect)', value: `${formatFreq(detection.freq_lower_hz)} to ${formatFreq(detection.freq_upper_hz)} (baseband)` ,
+      explain: detection.bounds_method ? `Edges: ${detection.bounds_method}.` : undefined },
+    ...(detection.freq_extent_lower_hz != null && detection.freq_extent_upper_hz != null
+      && (detection.freq_extent_lower_hz !== detection.freq_lower_hz || detection.freq_extent_upper_hz !== detection.freq_upper_hz) ? [
+      { key: 'Extent (threshold)', value: `${formatFreq(detection.freq_extent_lower_hz)} to ${formatFreq(detection.freq_extent_upper_hz)}`,
+        explain: 'Where the time-frequency mask crossed the adaptive threshold. At high SNR this includes spectral skirts, so the published edges hold 95% of the candidate\'s power above the noise floor (widened 1.6x about its centre, never past this extent).' }] : []),
     { key: 'Center (Estimate)', value: measurement(detection.center_frequency_hz, 'Hz'),
       explain: 'Power-weighted spectral centroid of the isolated segment’s Welch PSD.' },
     { key: 'Center (Refined)', value: measurement(detection.center_frequency_refined_hz, 'Hz'),

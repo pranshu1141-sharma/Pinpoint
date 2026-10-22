@@ -90,6 +90,30 @@ def detect_stats(rows):
                 n_found=len(found), fragmentation=_frac(sum(r["detect"]["n_det"] >= 2 for r in found), len(found)))
 
 
+def width_ratio(row):
+    """Width of the Detect band that best overlaps the true band, over the true occupied width (None if unavailable)."""
+    band = row["truth"].get("band")
+    bands = (row.get("detect") or {}).get("bands")
+    if not band or not bands:
+        return None
+    lo, hi = band
+    best = max(bands, key=lambda b: max(0.0, min(b[1], hi) - max(b[0], lo)))
+    if max(0.0, min(best[1], hi) - max(best[0], lo)) == 0:
+        return None
+    return (best[1] - best[0]) / (hi - lo)
+
+
+def bounds_stats(rows):
+    """WP4a B1/B2 on emitter captures: band within [bounds_ratio_lo, bounds_ratio_hi] x the true width, and splits."""
+    sig = [r for r in rows if r["truth"]["label"] != "noise" and r["truth"].get("band")]
+    ratios = [width_ratio(r) for r in sig]
+    return dict(n=len(sig),
+                ok_bounds=_frac(sum(w is not None and TH.bounds_ratio_lo <= w <= TH.bounds_ratio_hi for w in ratios), len(sig)),
+                too_wide=_frac(sum(w is not None and w > TH.bounds_ratio_hi for w in ratios), len(sig)),
+                too_narrow=_frac(sum(w is not None and w < TH.bounds_ratio_lo for w in ratios), len(sig)),
+                fragmented=_frac(sum(bool(r["detect"]) and r["detect"]["n_overlap"] > 1 for r in sig), len(sig)))
+
+
 def param_stats(rows):
     lin = [r for r in rows if r["truth"]["bw3"] and _strong(r)]
     sig = [r for r in rows if r["truth"]["label"] != "noise" and _strong(r)]
