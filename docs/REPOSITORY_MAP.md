@@ -92,15 +92,9 @@ The generated RF directory is ignored because it can be reproduced. The smaller 
 | `frontend/src/main.tsx` | Creates the React root, React Query client, font/style imports, and strict-mode wrapper. |
 | `frontend/src/api.ts` | TypeScript wire types, error-normalizing `request`, display helpers, XHR upload progress, asynchronous polling, and same-tab resume key. |
 | `frontend/src/App.tsx` | Full page composition and state: boot, connectivity, files/settings, analyze/demo mutation, progress, results, selection, exports, all major panels, roadmap, and responsive dashboard content. This is the largest frontend file and the main future refactoring candidate. |
-| `frontend/src/components/Waterfall.tsx` | Inferno canvas renderer, measured axes/color scale, grid, candidate/pulse overlays, resize handling, click hit-testing, and scan line. |
 | `frontend/src/components/Plots.tsx` | Recharts PSD, generic waveform, and pulse plot components. |
 | `frontend/src/components/Breakdown.tsx` | Layer queries, stepper/autostep, layer animation, WaveSurfer lifecycle, Regions/Timeline/Spectrogram plugins, audio playback, and pulse detail. |
-| `frontend/src/components/ui/panel/panel.tsx` | SCIFICN panel composition primitives. |
-| `frontend/src/components/ui/badge/badge.tsx` | SCIFICN status badge variants used for review state. |
-| `frontend/src/components/ui/alert/alert.tsx` | Installed SCIFICN alert primitive; currently available but not used by `App.tsx`. |
 | `frontend/src/lib/utils.ts` | Re-exports the installed `cn` helper package for component class merging. |
-| `frontend/src/styles/scificn.css` | Installed SCIFICN base tokens, resets, clip paths, and utility animations with remote font import removed. |
-| `frontend/src/styles.css` | Project-specific cyan control-room theme, layout, typography, plots, panels, progress, breakdown, responsive breakpoints, and reduced-motion overrides. |
 
 ## Frontend build products
 

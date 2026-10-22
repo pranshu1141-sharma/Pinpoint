@@ -228,6 +228,6 @@ The required detection fields are retained with additional `id`, `pulse_windows`
 
 ## Structure and reference acknowledgments
 
-`backend/pipeline/`: generator, ingest, SigMF, detection, isolation layers. `backend/api/`: FastAPI and bounded session cache. `backend/tests/`: synthetic and real API tests. `frontend/src/`: React/TypeScript interface with React Query, Motion, canvas, Recharts and WaveSurfer. SCIFICN panel/badge/alert source was installed through the shadcn registry; the shared theme was adapted to cyan-on-black and locally bundled fonts.
+`backend/pipeline/`: generator, ingest, SigMF, detection, isolation layers. `backend/api/`: FastAPI and bounded session cache. `backend/tests/`: synthetic and real API tests. `frontend/src/`: React/TypeScript interface with React Query, Motion, canvas, Recharts and WaveSurfer. The theme (`frontend/src/bolt/bolt.css`, Tailwind 4) is near-black with a single cyan accent and locally bundled fonts.
 
 Studied references: [IQEngine](https://github.com/IQEngine/IQEngine) for the frequency/time workspace and linked annotations; [NASA Eyes](https://science.nasa.gov/eyes/) for data-led motion; [SCIFICN/UI](https://github.com/baxy5/scificn-ui) for panel composition and terminal typography. Method/API references: [SciPy spectrogram](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.spectrogram.html), [SigMF](https://sigmf.readthedocs.io/en/latest/), [WaveSurfer v7](https://wavesurfer.xyz/docs/). No reference screenshots or fabricated RF data are embedded in the frontend.

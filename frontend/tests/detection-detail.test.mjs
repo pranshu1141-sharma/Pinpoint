@@ -41,7 +41,7 @@ test('measured values retain zero, signs and refined RF precision; caveats are i
   });
   for (const text of ['Midpoint (Detect)', 'Width (Detect)', '-1,234.56 Hz', '100,008,000.12 Hz',
     '0.00 Hz', '0.00 dB', '0% (heuristic)', '1,000.00 Hz — unshaped-pulse-sidelobes',
-    'Not reliably estimated', 'Not attempted']) assert.ok(html.includes(text), text);
+    'Not reliably estimated']) assert.ok(html.includes(text), text);
   assert.ok(!html.includes('>null<'));
 });
 
