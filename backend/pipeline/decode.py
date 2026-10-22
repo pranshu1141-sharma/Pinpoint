@@ -390,3 +390,34 @@ def decode_candidate(capture, candidate):
     if method == "psk":
         return _decode_psk(capture, candidate, out, label)
     return _decode_fsk_or_ask(capture, candidate, out, label, method)
+
+
+# The verify estimator (the product default) publishes uppercase labels in
+# modulation_label and clears fine_modulation_label; decode_candidate keys off
+# the latter. Only labels that passed verify's calibrated margins reach a decoder.
+VERIFY_DECODE_LABELS = {"BPSK": "bpsk", "QPSK": "qpsk", "8PSK": "8psk", "FSK2": "fsk2", "ASK2": "ask2"}
+DECODE_FIELDS = ("decoded_symbol_indices", "decoded_symbol_count", "decode_phase_offset_rad",
+                 "decode_confidence", "decode_rotation_ambiguity_modulus", "decode_status")
+
+
+def decode_published(capture, candidate):
+    """Decode a candidate from the verify estimator's published label.
+
+    Returns only the decode fields plus decode_label (the decoder's label, or
+    None when declined). A candidate with no published label, or a published
+    label with no validated decoder, is declined with an explicit status.
+    """
+    out = {k: None for k in DECODE_FIELDS}
+    out["decode_label"] = None
+    published = candidate.get("modulation_label")
+    if published is None:
+        reason = candidate.get("verify_status") or "not reliably estimated"
+        out["decode_status"] = f"not attempted (no published modulation label: {reason})"
+        return out
+    label = VERIFY_DECODE_LABELS.get(published)
+    if label is None:
+        out["decode_status"] = f"not attempted (no validated decoder for {published})"
+        return out
+    result = decode_candidate(capture, {**candidate, "fine_modulation_label": label})
+    out.update({k: result.get(k) for k in DECODE_FIELDS}, decode_label=label)
+    return out

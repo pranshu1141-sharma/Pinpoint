@@ -16,6 +16,7 @@ from backend.pipeline.detect import analyze_capture, db
 from backend.pipeline.classify import analyze_candidate, symbol_rate_diagnostic
 from backend.pipeline.layers import build_layers, waveform
 from backend.pipeline.sigmf_io import export_metadata
+from backend.pipeline.decode import decode_published
 from backend.pipeline.large_capture import (open_disk_capture, analyze_disk_capture, build_disk_layers,
                                             DiskSamples, AnalysisCancelled)
 
@@ -33,6 +34,7 @@ JOBS = OrderedDict()
 LOCK = RLock()
 COMPUTE = BoundedSemaphore(1)
 TTL_SECONDS = 1800
+DECODE_MAX_SYMBOLS = 20000
 
 
 def discard_job(job_id):
@@ -368,6 +370,32 @@ def symbol_rate_diagnostic_endpoint(job_id: str, detection_id: int):
     if detection_id < 0 or detection_id >= len(ds):
         raise HTTPException(404, "Candidate not found.")
     return symbol_rate_diagnostic(job["capture"], ds[detection_id])
+
+
+@app.post("/api/detections/{job_id}/{detection_id}/decode")
+def decode_endpoint(job_id: str, detection_id: int):
+    """On-demand symbol/bit recovery from the candidate's published verify label.
+    Never runs during analysis; the stream is relative (see DECODING.md)."""
+    job = get_job(job_id)
+    ds = job["result"].response["detections"]
+    if detection_id < 0 or detection_id >= len(ds):
+        raise HTTPException(404, "Candidate not found.")
+    with LOCK:
+        cached = job.setdefault("decodes", {}).get(detection_id)
+    if cached is not None:
+        return cached
+    if isinstance(job["capture"].iq, DiskSamples):
+        out = {**decode_published(job["capture"], {"modulation_label": None}),
+               "decode_status": "not attempted (decoding is not available for large disk-backed captures)"}
+    else:
+        out = decode_published(job["capture"], ds[detection_id])
+    indices = out["decoded_symbol_indices"]
+    out["decoded_symbols_truncated"] = indices is not None and len(indices) > DECODE_MAX_SYMBOLS
+    if out["decoded_symbols_truncated"]:
+        out["decoded_symbol_indices"] = indices[:DECODE_MAX_SYMBOLS]
+    with LOCK:
+        job["decodes"][detection_id] = out
+    return out
 
 
 @app.get("/api/export/{job_id}")

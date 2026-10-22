@@ -347,3 +347,47 @@ def test_demo_defaults_to_the_verify_estimator_and_keeps_legacy_under_the_flag()
     assert legacy["estimator"] == "legacy"
     assert all(d["label_provenance"] == "legacy (fixture-validated only)" for d in legacy["detections"])
     assert client.post("/api/demo?kind=iq&estimator=bogus").status_code == 422
+
+
+def _upload(kind, snr_db=20, duration=2.0):
+    x, _ = make_signal(kind, snr_db=snr_db, duration=duration, seed=3)
+    r = client.post("/api/analyze", files={"file": (f"{kind}.iq", x.astype("<c8").tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le"})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_decode_endpoint_decodes_a_published_ask2_candidate():
+    body = _upload("ask")
+    idx = next(i for i, d in enumerate(body["detections"]) if d["modulation_label"] == "ASK2")
+    out = client.post(f"/api/detections/{body['job_id']}/{idx}/decode").json()
+    assert out["decode_label"] == "ask2"
+    assert out["decode_status"].startswith("decoded")
+    assert "unknown polarity" in out["decode_status"]
+    assert out["decoded_symbol_count"] == len(out["decoded_symbol_indices"]) > 400
+    assert set(out["decoded_symbol_indices"]) <= {0, 1}
+    assert out["decode_rotation_ambiguity_modulus"] == 2
+    assert out["decoded_symbols_truncated"] is False
+    # deterministic, and served from the job's cache the second time
+    assert client.post(f"/api/detections/{body['job_id']}/{idx}/decode").json() == out
+
+
+def test_decode_endpoint_declines_an_unpublished_label_and_404s_a_missing_candidate():
+    body = _upload("fsk")  # verify publishes no label for this generator
+    d = body["detections"][0]
+    assert d["modulation_label"] is None
+    out = client.post(f"/api/detections/{body['job_id']}/0/decode").json()
+    assert out["decoded_symbol_indices"] is None
+    assert out["decode_status"] == f"not attempted (no published modulation label: {d['verify_status']})"
+    assert client.post(f"/api/detections/{body['job_id']}/99/decode").status_code == 404
+    assert client.post("/api/detections/nope/0/decode").status_code == 404
+
+
+def test_decode_endpoint_truncates_long_streams(monkeypatch):
+    body = _upload("ask")
+    monkeypatch.setattr(main, "DECODE_MAX_SYMBOLS", 100)
+    idx = next(i for i, d in enumerate(body["detections"]) if d["modulation_label"] == "ASK2")
+    out = client.post(f"/api/detections/{body['job_id']}/{idx}/decode").json()
+    assert len(out["decoded_symbol_indices"]) == 100
+    assert out["decoded_symbol_count"] > 100
+    assert out["decoded_symbols_truncated"] is True
