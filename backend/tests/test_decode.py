@@ -197,3 +197,33 @@ def test_decode_candidate_end_to_end_gates_and_status():
     assert out["decode_rotation_ambiguity_modulus"] == order
     assert 0.0 <= out["decode_confidence"] <= 1.0
     assert "correct only up to an unknown constant rotation" in out["decode_status"]
+
+
+@pytest.mark.parametrize("order,label", [(2, "bpsk"), (4, "qpsk"), (8, "8psk")])
+@pytest.mark.parametrize("rate_error", [-3e-4, -5e-5, 5e-5, 3e-4])
+def test_symbol_rate_error_from_the_estimator_is_tracked_not_declined(order, label, rate_error):
+    """The verify estimator's symbol rate is accurate to ~1e-4, not exact.
+    The Gardner loop tracks such an offset (the timing offset drifts
+    linearly), which the constant-offset lock_indicator rejects; decode
+    accepts a steady drift and still meets the 2% SER criterion."""
+    snr_db = decode.DECODE_MIN_SNR_DB[label]
+    for seed in range(3):
+        x, truth = make_psk_fixture(order, snr_db, seed=seed, n_symbols=6000, sps=SPS)
+        recovery = gardner_timing_recovery(x, SPS * (1 + rate_error))
+        assert decode.tracking_locked(recovery["timing_offset_trace"])
+        idx, _, _ = decode.demap_psk_symbols(recovery["symbols"][-decode.DECODE_MIN_TAIL_SYMBOLS:], order)
+        n = len(recovery["symbols"])
+        tail = np.asarray(truth)[n - decode.DECODE_MIN_TAIL_SYMBOLS - 40:n + 40]
+        assert best_alignment_ser(idx, tail, order, max_shift=60) <= 0.02
+
+
+@pytest.mark.parametrize("order,label", [(2, "bpsk"), (4, "qpsk"), (8, "8psk")])
+@pytest.mark.parametrize("rate_error", [-1e-3, 1e-3])
+def test_symbol_rate_error_too_large_to_track_is_still_declined(order, label, rate_error):
+    """At 1e-3 the loop slips cycles (measured SER 25-50%); decode must decline."""
+    snr_db = decode.DECODE_MIN_SNR_DB[label]
+    for seed in range(3):
+        x, _ = make_psk_fixture(order, snr_db, seed=seed, n_symbols=6000, sps=SPS)
+        recovery = gardner_timing_recovery(x, SPS * (1 + rate_error))
+        assert not recovery["lock_indicator"]
+        assert not decode.tracking_locked(recovery["timing_offset_trace"])

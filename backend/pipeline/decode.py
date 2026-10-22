@@ -105,6 +105,31 @@ ASK_MIN_CONFIDENCE = 0.55
 FSK_ASK_MIN_SPS = 4
 
 
+# gardner_timing_recovery's lock_indicator demands a constant timing offset,
+# i.e. an exact symbol rate. The verify estimator's rate is only ~1e-4
+# accurate, and the loop tracks that error with the offset drifting linearly
+# and SER unchanged; at ~1e-3 it slips cycles (SER 25-50%). Measured on the
+# RRC fixtures at the gated SNRs, the residual about a linear fit of the
+# trailing offsets is <= 0.0101 symbol for |rate error| <= 3e-4 and >= 0.0167
+# at 1e-3 (backend/tests/test_decode.py, rate_error tests).
+TRACKING_LOCK_WINDOW = 2000
+TRACKING_MAX_RESIDUAL = 0.013
+TRACKING_MAX_DRIFT = 5e-4  # symbol periods of timing drift per symbol
+
+
+def tracking_locked(timing_offset_trace, window=TRACKING_LOCK_WINDOW,
+                    max_residual=TRACKING_MAX_RESIDUAL, max_drift=TRACKING_MAX_DRIFT):
+    """True if the trailing timing offsets follow a steady, bounded linear drift."""
+    trace = np.asarray(timing_offset_trace, dtype=float)
+    if len(trace) < window:
+        return False
+    offsets = np.unwrap(2 * np.pi * trace[-window:]) / (2 * np.pi)
+    n = np.arange(window)
+    fit = np.polyfit(n, offsets, 1)
+    residual = np.std(offsets - np.polyval(fit, n))
+    return bool(abs(fit[0]) <= max_drift and residual < max_residual)
+
+
 def estimate_phase_offset(symbols, order):
     """Blind Mth-power residual carrier-phase estimate, ambiguous mod
     2*pi/order -- see module docstring. None if the symbols carry no
@@ -306,7 +331,7 @@ def _decode_psk(capture, candidate, out, label):
         out["decode_status"] = "not attempted (segment too short for validated timing-recovery config)"
         return out
     recovery = gardner_timing_recovery(segment, sps)
-    if not recovery["lock_indicator"]:
+    if not (recovery["lock_indicator"] or tracking_locked(recovery["timing_offset_trace"])):
         out["decode_status"] = "not attempted (symbol-timing recovery did not lock)"
         return out
     symbols = recovery["symbols"][-DECODE_MIN_TAIL_SYMBOLS:]
