@@ -177,8 +177,10 @@ else, or no published label, is declined with the reason), and
 `POST /api/detections/{job_id}/{detection_id}/decode` runs it when the user
 opens the dashboard's Decode screen. The response returns at most 20,000
 symbols (`decoded_symbols_truncated` says when more were recovered). Large
-disk-backed captures are declined (`not attempted (decoding is not available
-for large disk-backed captures)`). The JSON/SigMF export does not carry
+disk-backed captures are decoded from one bounded re-read
+(`large_capture.decode_disk_track`): the whole track when it fits the read
+budget, otherwise a full-budget window starting at the first sampled span
+that itself published the label (`decode_span` reports the samples read). The JSON/SigMF export does not carry
 decoded symbols.
 
 Wiring it in exposed a gap the Phase 1 tests could not: they passed the exact

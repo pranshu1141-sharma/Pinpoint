@@ -9,6 +9,7 @@ from .ingest import Capture, load_capture
 from .sigmf_io import DTYPES, normalize
 from .detect import analyze_capture, estimate_noise_floor, DetectionResult, db
 from .classify import analyze_candidate
+from .decode import DECODE_FIELDS, decode_published
 from .layers import waveform, build_layers
 
 BLOCK_SAMPLES = 524288
@@ -178,11 +179,10 @@ def sampled_spans(track, budget, count=SAMPLED_SPANS):
     return [(a, a+length) for a in sorted(set(anchors))]
 
 
-def _enrich_span(capture, track, a, b, estimator):
-    """Downstream fields for the re-read samples [a, b) of `track` (raises ValueError when
-    the span cannot be analysed)."""
-    local_iq = capture.iq[a:b]
-    local_capture = Capture(local_iq, capture.sample_rate, capture.metadata)
+def _local_span(capture, track, a, b):
+    """One bounded re-read of [a, b) as an in-memory Capture, plus `track` translated
+    to its 0-based coordinates (raises ValueError when the read or span is invalid)."""
+    local_capture = Capture(capture.iq[a:b], capture.sample_rate, capture.metadata)
     span = b-a
     whole = (a, b) == (track["start_sample"], track["end_sample"])
     # Clamped at both ends of both fields, not just the expected side: current
@@ -197,7 +197,14 @@ def _enrich_span(capture, track, a, b, estimator):
         windows = [w for w in windows if w["end_sample"] > w["start_sample"]]
         if track.get("is_pulsed") and not windows:
             raise ValueError("no pulse window inside the sampled span")
-    local_track = {**track, "start_sample": 0, "end_sample": span, "pulse_windows": windows}
+    return local_capture, {**track, "start_sample": 0, "end_sample": span, "pulse_windows": windows}
+
+
+def _enrich_span(capture, track, a, b, estimator):
+    """Downstream fields for the re-read samples [a, b) of `track` (raises ValueError when
+    the span cannot be analysed)."""
+    local_capture, local_track = _local_span(capture, track, a, b)
+    local_iq = local_capture.iq
     _, _, floor = estimate_noise_floor(local_iq, capture.sample_rate)
     enriched = analyze_candidate(local_capture, local_track, noise_floor=floor, estimator=estimator)
     # Only genuinely new (downstream) fields are merged back; track's own
@@ -297,6 +304,40 @@ def enrich_track(capture, track, estimator="verify"):
     if combined is None:
         return {**track, **_NULL_DOWNSTREAM_FIELDS, "analysis_spans": spans, "analysis_span_method": method}
     return {**track, **combined, "analysis_spans": spans, "analysis_span_method": method}
+
+
+def decode_disk_track(capture, track):
+    """On-demand decode (decode.decode_published) of a disk-backed track from one bounded re-read.
+
+    A track within the read budget is decoded whole. A longer track was labelled from
+    sampled spans, so the decoder reads a full-budget window starting at the first span
+    that itself published the track's label (clamped to the track's end): the samples
+    decoded are ones the label was measured on. `decode_span` gives the global samples read.
+    """
+    label = track.get("modulation_label")
+    if label is None:                     # declined by decode_published before any sample is read
+        return {**decode_published(capture, track), "decode_span": None}
+    declined = {**{k: None for k in DECODE_FIELDS}, "decode_label": None, "decode_span": None}
+    start, end = track["start_sample"], track["end_sample"]
+    budget = capture.iq.max_read_samples
+    if not 0 <= start < end <= len(capture.iq):     # never read past the file's own length
+        return {**declined, "decode_status": "not attempted (the bounded re-read failed: "
+                                             "track lies outside the capture)"}
+    if end-start <= budget:
+        a, b = start, end
+    else:
+        match = next((s for s in track.get("analysis_spans") or [] if s["modulation_label"] == label), None)
+        if match is None:
+            return {**declined,
+                    "decode_status": f"not attempted (no sampled span of this long track published {label})"}
+        a = min(match["start_sample"], end-budget)
+        b = a+budget
+    try:
+        local_capture, local_track = _local_span(capture, track, a, b)
+        out = decode_published(local_capture, local_track)
+    except ValueError as exc:
+        return {**declined, "decode_status": f"not attempted (the bounded re-read failed: {exc})"}
+    return {**out, "decode_span": {"start_sample": a, "end_sample": b}}
 
 
 class AnalysisCancelled(Exception):

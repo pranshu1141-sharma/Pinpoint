@@ -129,6 +129,7 @@ export type DecodeResult = {
   decode_confidence: number | null;
   decode_phase_offset_rad: number | null;
   decode_rotation_ambiguity_modulus: number | null;
+  decode_span: { start_sample: number; end_sample: number } | null;
 };
 export type AccuracyCurvePoint = {
   kind: string;

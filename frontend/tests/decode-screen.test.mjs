@@ -20,7 +20,7 @@ const detection = {
 };
 const declined = {
   decode_label: null, decoded_symbol_indices: null, decoded_symbol_count: null, decoded_symbols_truncated: false,
-  decode_confidence: null, decode_phase_offset_rad: null, decode_rotation_ambiguity_modulus: null,
+  decode_confidence: null, decode_phase_offset_rad: null, decode_rotation_ambiguity_modulus: null, decode_span: null,
   decode_status: 'not attempted (no published modulation label: unknown family (structure outside the library))',
 };
 const render = (result, det = detection) => renderToStaticMarkup(createElement(DecodeResultView, { detection: det, result }));
@@ -62,4 +62,10 @@ test('the exported summary carries every returned symbol', () => {
   assert.deepEqual(s.decoded_symbol_indices, [0, 1, 1]);
   assert.equal(s.candidate, 'C3');
   assert.equal(s.modulation_label, 'BPSK');
+});
+
+test('a decode window narrower than the candidate is shown; the same window is not repeated', () => {
+  const base = { ...declined, decode_label: 'bpsk', decoded_symbol_indices: [0], decoded_symbol_count: 1, decode_status: 'decoded' };
+  assert.ok(render({ ...base, decode_span: { start_sample: 1000, end_sample: 51000 } }).includes('Decoded window'));
+  assert.ok(!render({ ...base, decode_span: { start_sample: 0, end_sample: 96000 } }).includes('Decoded window'));
 });

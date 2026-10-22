@@ -368,6 +368,8 @@ def test_decode_endpoint_decodes_a_published_ask2_candidate():
     assert set(out["decoded_symbol_indices"]) <= {0, 1}
     assert out["decode_rotation_ambiguity_modulus"] == 2
     assert out["decoded_symbols_truncated"] is False
+    assert out["decode_span"] == {"start_sample": body["detections"][idx]["start_sample"],
+                                  "end_sample": body["detections"][idx]["end_sample"]}
     # deterministic, and served from the job's cache the second time
     assert client.post(f"/api/detections/{body['job_id']}/{idx}/decode").json() == out
 
@@ -391,3 +393,30 @@ def test_decode_endpoint_truncates_long_streams(monkeypatch):
     assert len(out["decoded_symbol_indices"]) == 100
     assert out["decoded_symbol_count"] > 100
     assert out["decoded_symbols_truncated"] is True
+
+
+def test_decode_endpoint_decodes_a_track_of_a_large_disk_backed_upload(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "UPLOADS", tmp_path)
+    x, _ = make_signal("bpsk", 20, duration=10, seed=3)
+    assert x.nbytes > main.LARGE_FILE_BYTES
+    r = client.post("/api/analyze", files={"file": ("big.iq", x.astype("<c8").tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le"})
+    assert r.status_code == 202, r.text
+    job = r.json()["job_id"]
+    deadline = time.monotonic()+60
+    while time.monotonic() < deadline:
+        state = client.get(f"/api/jobs/{job}").json()
+        if state["status"] in ("complete", "failed"):
+            break
+        time.sleep(.05)
+    assert state["status"] == "complete", state
+    try:
+        idx, d = next((i, d) for i, d in enumerate(state["result"]["detections"]) if d["modulation_label"] == "BPSK")
+        out = client.post(f"/api/detections/{job}/{idx}/decode").json()
+        assert out["decode_status"].startswith("decoded"), out["decode_status"]
+        assert out["decode_label"] == "bpsk"
+        assert out["decoded_symbol_count"] == 2000
+        assert out["decode_span"] == {"start_sample": d["start_sample"], "end_sample": d["end_sample"]}
+    finally:
+        main.discard_job(job)
+

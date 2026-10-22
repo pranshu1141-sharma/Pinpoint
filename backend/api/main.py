@@ -18,7 +18,7 @@ from backend.pipeline.layers import build_layers, waveform
 from backend.pipeline.sigmf_io import export_metadata
 from backend.pipeline.decode import decode_published
 from backend.pipeline.large_capture import (open_disk_capture, analyze_disk_capture, build_disk_layers,
-                                            DiskSamples, AnalysisCancelled)
+                                            DiskSamples, AnalysisCancelled, decode_disk_track)
 
 app = FastAPI(title="SIH26147 · Detect", version="1.0.0", description="Offline detection; per-candidate parameter estimates; modulation label and symbol rate from the verify (MDL) estimator by default, legacy heuristics with estimator=legacy.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -384,11 +384,12 @@ def decode_endpoint(job_id: str, detection_id: int):
         cached = job.setdefault("decodes", {}).get(detection_id)
     if cached is not None:
         return cached
+    d = ds[detection_id]
     if isinstance(job["capture"].iq, DiskSamples):
-        out = {**decode_published(job["capture"], {"modulation_label": None}),
-               "decode_status": "not attempted (decoding is not available for large disk-backed captures)"}
+        out = decode_disk_track(job["capture"], d)
     else:
-        out = decode_published(job["capture"], ds[detection_id])
+        out = {**decode_published(job["capture"], d),
+               "decode_span": {"start_sample": d["start_sample"], "end_sample": d["end_sample"]}}
     indices = out["decoded_symbol_indices"]
     out["decoded_symbols_truncated"] = indices is not None and len(indices) > DECODE_MAX_SYMBOLS
     if out["decoded_symbols_truncated"]:
@@ -426,3 +427,4 @@ def fine_classification_accuracy():
              for (kind, snr), b in sorted(buckets.items())]
     return {"source": "docs/estimate-classify-validation.json", "measure": "fine-classification phase-cluster rule pass rate",
             "curve": curve}
+

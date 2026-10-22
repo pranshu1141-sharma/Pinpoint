@@ -58,6 +58,9 @@ export function DecodeResultView({ detection, result }: { detection: Detection; 
         <div className="decode-card"><span>Ambiguity</span><strong>{modulus != null ? `rotation mod ${modulus} + start offset` : '—'}</strong></div>
         <div className="decode-card"><span>Frequency bounds</span><strong>{formatFreq(detection.freq_lower_hz)} – {formatFreq(detection.freq_upper_hz)}</strong></div>
         <div className="decode-card"><span>Samples</span><strong>{formatSamples(detection.start_sample)} – {formatSamples(detection.end_sample)}</strong></div>
+        {result.decode_span && (result.decode_span.start_sample !== detection.start_sample || result.decode_span.end_sample !== detection.end_sample) && (
+          <div className="decode-card"><span>Decoded window</span><strong>{formatSamples(result.decode_span.start_sample)} – {formatSamples(result.decode_span.end_sample)}</strong></div>
+        )}
       </div>
       {decoded && (
         <div className="wave-panel decode-stream">
