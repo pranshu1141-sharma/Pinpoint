@@ -5,6 +5,7 @@ import { request, type Analysis, type DecodeResult, type Envelope } from '../api
 import type { Detection } from './types';
 import { PulsePlot } from '../components/Plots';
 import { formatFreq, formatSamples } from './format';
+import { EvidenceLine } from './Evidence';
 
 // Rendering 20,000 spans is slow and unreadable; the download carries every returned symbol.
 const DISPLAY_LIMIT = 4096;
@@ -128,6 +129,8 @@ export function DecodeScreen({ analysis, detection, sampleRate, onBack }: {
       ) : (
         <div className="decode-output">
           <DecodeResultView detection={detection} result={decode.data} />
+          {decode.data.decoded_symbol_indices !== null && <EvidenceLine kind="decode" />}
+          {detection.modulation_label && <EvidenceLine kind="label" />}
           {detection.is_pulsed && envelope.data && (
             <div className="wave-panel decode-envelope">
               <div className="plot-title">Envelope<span>PW {formatSamples(detection.pulse_width_samples ?? 0)} · PRI {formatSamples(detection.pri_samples ?? 0)}</span></div>

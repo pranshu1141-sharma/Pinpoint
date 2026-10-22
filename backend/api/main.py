@@ -428,3 +428,26 @@ def fine_classification_accuracy():
     return {"source": "docs/estimate-classify-validation.json", "measure": "fine-classification phase-cluster rule pass rate",
             "curve": curve}
 
+
+@app.get("/api/readiness")
+def readiness_evidence():
+    """Measured label and symbol-rate evidence for the product estimator, projected from
+    docs/readiness.json (held-out synthetic G1/G2, impaired synthetic G4, real benchmark G5).
+    `correct` is a fraction of `n_correct` eligible captures, `wrong` of all `n` captures."""
+    path = DOCS / "readiness.json"
+    if not path.exists():
+        raise HTTPException(503, "Readiness evidence file (docs/readiness.json) is missing.")
+    raw = json.loads(path.read_text())
+    stats, g5 = raw["stats"][raw["product"]], raw["meta"]["g5"]
+    out = {"estimator": raw["product"], "source": "docs/readiness.json",
+           "measured": {"commit": raw["meta"]["commit"], "date": raw["meta"]["date"]}, "label": {}, "rate": {}}
+    for g in ("G1", "G2", "G4"):
+        label, rate = stats[g]["label"], stats[g]["rate"]
+        out["label"][g] = {"correct": label["published_correct_in_library"], "wrong": label["published_wrong"],
+                           "n": label["n"], "n_correct": label["n_in_library"]}
+        out["rate"][g] = {"correct": rate["published_correct_digital"], "wrong": rate["published_wrong"],
+                          "n": rate["n"], "n_correct": rate["n_digital"]}
+    out["label"]["G5"] = {"correct": g5["correct"], "wrong": g5["wrong"], "n": g5["n_test"], "n_correct": g5["n_with_label"]}
+    out["rate"]["G5"] = {"correct": g5["rate_correct"], "wrong": g5["rate_wrong"],
+                         "n": g5["n_rate_scored"], "n_correct": g5["n_rate_scored"]}
+    return out

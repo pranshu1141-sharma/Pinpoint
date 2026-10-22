@@ -121,6 +121,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 
 .detail-unreliable { color:var(--text-faint) !important; font-style:italic; }
 .detail-unreliable span { border-bottom:1px dashed var(--border-strong); }
+.evidence-table { margin-top:6px; padding:6px 8px; border:1px solid var(--border); border-left:2px solid var(--warning); border-radius:3px; background:var(--surface); font:10px/1.6 var(--font-mono); color:var(--text-dim); }
+.evidence-title { color:var(--text); margin-bottom:2px; }
+.evidence-row { display:flex; flex-wrap:wrap; gap:0 10px; }
+.evidence-row>span:first-child { min-width:150px; color:var(--text-faint); }
+.evidence-source { margin-top:3px; color:var(--text-faint); }
+.evidence-missing { border-left-color:var(--danger); }
 .detail-explain-toggle { display:inline-flex; align-items:center; justify-content:center; margin-left:5px; padding:0; background:none; border:none; color:var(--text-faint); vertical-align:middle; }
 .detail-explain-toggle:hover { color:var(--accent); border:none; }
 .detail-notes { margin-top:10px; border-top:1px solid var(--border); padding-top:8px; display:flex; flex-direction:column; gap:4px; }

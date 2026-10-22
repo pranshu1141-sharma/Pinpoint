@@ -420,3 +420,27 @@ def test_decode_endpoint_decodes_a_track_of_a_large_disk_backed_upload(tmp_path,
     finally:
         main.discard_job(job)
 
+
+def test_readiness_evidence_projects_the_measured_scoreboard():
+    raw = json.loads((main.DOCS / "readiness.json").read_text())
+    ev = client.get("/api/readiness").json()
+    assert ev["estimator"] == raw["product"] == "verify"
+    assert ev["measured"] == {"commit": raw["meta"]["commit"], "date": raw["meta"]["date"]}
+    s = raw["stats"]["verify"]
+    assert ev["label"]["G2"] == {"correct": s["G2"]["label"]["published_correct_in_library"],
+                                 "wrong": s["G2"]["label"]["published_wrong"],
+                                 "n": s["G2"]["label"]["n"], "n_correct": s["G2"]["label"]["n_in_library"]}
+    assert ev["rate"]["G4"]["wrong"] == s["G4"]["rate"]["published_wrong"]
+    g5 = raw["meta"]["g5"]
+    assert ev["label"]["G5"] == {"correct": g5["correct"], "wrong": g5["wrong"],
+                                 "n": g5["n_test"], "n_correct": g5["n_with_label"]}
+    assert ev["rate"]["G5"] == {"correct": g5["rate_correct"], "wrong": g5["rate_wrong"],
+                                "n": g5["n_rate_scored"], "n_correct": g5["n_rate_scored"]}
+    assert set(ev["label"]) == set(ev["rate"]) == {"G1", "G2", "G4", "G5"}
+
+
+def test_readiness_evidence_is_503_when_the_scoreboard_is_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "DOCS", tmp_path)
+    r = client.get("/api/readiness")
+    assert r.status_code == 503
+    assert "readiness" in r.json()["detail"]
