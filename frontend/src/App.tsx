@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, FolderOpen, Loader2, Radio, Upload, Settings2, ChevronDown, ChevronRight, Download, Copy, Check, HelpCircle, X, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
 import { request, rerunJob, uploadCapture, waitForAnalysis, type Analysis, type AnalysisProgress, type Spectrogram, type AccuracyCurve as AccuracyCurveData } from './api';
 import { AccuracyCurve } from './bolt/AccuracyCurve';
 import { adaptDetections, adaptSpectrogram, describeFile } from './bolt/adapter';
@@ -15,74 +15,73 @@ import { StatusBar } from './bolt/StatusBar';
 import { ColormapLegend } from './bolt/ColormapLegend';
 import { SignalBreakdown } from './bolt/SignalBreakdown';
 import { AnalysisPage } from './bolt/AnalysisPage';
+import { buildUploadForm, hasWav, needsRawSettings, type CaptureSettings } from './app/upload';
+import { useSessionHistory } from './app/history';
+import { useKeyboardShortcuts } from './app/useKeyboardShortcuts';
+import { Toolbar } from './app/Toolbar';
+import { CaptureSettingsBar } from './app/CaptureSettingsBar';
+import { WelcomeScreen } from './app/WelcomeScreen';
+import { ExportPanel } from './app/ExportPanel';
+import { Roadmap, SessionHistoryList } from './app/SidebarPanels';
+import { ShortcutsOverlay } from './app/ShortcutsOverlay';
 
 type Run = { demo?: 'iq' | 'audio'; resume?: string };
-type HistoryEntry = { job_id: string; filename: string; timestamp: number; detectionCount: number; sourceKind: string };
-const HISTORY_KEY = 'detect-session-history';
-function loadHistory(): HistoryEntry[] {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]'); } catch { return []; }
-}
-function saveHistory(list: HistoryEntry[]) {
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 10))); } catch { /* storage unavailable */ }
-}
+type Cursor = { frequency: number | null; power: number | null; time: number | null };
+const NO_CURSOR: Cursor = { frequency: null, power: null, time: null };
+
 export default function App() {
   const input = useRef<HTMLInputElement>(null), resumed = useRef(false);
   const queryClient = useQueryClient();
   const [files, setFiles] = useState<File[]>([]);
   const [result, setResult] = useState<Analysis | null>(null);
+  const [revision, setRevision] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
-  const [margin, setMargin] = useState('8'), [rate, setRate] = useState(''), [datatype, setDatatype] = useState('');
-  const [wavMode, setWavMode] = useState('auto'), [mode, setMode] = useState('adaptive'), [fixed, setFixed] = useState('');
-  const [settings, setSettings] = useState(false), [breakdownOpen, setBreakdownOpen] = useState(true), [dragging, setDragging] = useState(false);
+  const [settings, setSettingsState] = useState<CaptureSettings>({ margin: '8', rate: '', datatype: '', wavMode: 'auto', mode: 'adaptive', fixed: '' });
+  const updateSettings = (patch: Partial<CaptureSettings>) => setSettingsState(s => ({ ...s, ...patch }));
+  const [settingsOpen, setSettingsOpen] = useState(false), [breakdownOpen, setBreakdownOpen] = useState(true);
   const [progress, setProgress] = useState<AnalysisProgress | null>(null);
-  const [error, setError] = useState(''), [copied, setCopied] = useState(false);
-  const [exportView, setExportView] = useState<'json' | 'sigmf'>('json');
-  const [sigmfPreview, setSigmfPreview] = useState<unknown>(null);
-  const [sigmfLoading, setSigmfLoading] = useState(false);
-  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
-  const recordHistory = (data: Analysis) => setHistory((prev) => {
-    const entry: HistoryEntry = { job_id: data.job_id, filename: data.metadata.filename, timestamp: Date.now(), detectionCount: data.detections.length, sourceKind: data.metadata.source_kind };
-    const next = [entry, ...prev.filter((h) => h.job_id !== data.job_id)];
-    saveHistory(next);
-    return next;
-  });
-  const [cursor, setCursor] = useState<{ frequency: number | null; power: number | null; time: number | null }>({ frequency: null, power: null, time: null });
+  const [error, setError] = useState('');
+  const { history, record: recordHistory } = useSessionHistory();
+  const [cursor, setCursor] = useState<Cursor>(NO_CURSOR);
   const [playheadTime, setPlayheadTime] = useState<number | null>(null);
   const [lastSource, setLastSource] = useState<Run>({});
   const [confidenceFilter, setConfidenceFilter] = useState(0);
+  const [jumpTo, setJumpTo] = useState<{ id: string; token: number } | null>(null);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [analysisView, setAnalysisView] = useState(false);
+
   const health = useQuery({ queryKey: ['health'], queryFn: () => request<{status: string; max_upload_bytes: number}>('/api/health'), refetchInterval: 15000, retry: false });
   const connected = health.isSuccess && !health.isError;
   const accuracy = useQuery({ queryKey: ['fine-classification-accuracy'], queryFn: () => request<AccuracyCurveData>('/api/validation/fine-classification-accuracy'), enabled: connected, staleTime: Infinity, retry: false });
   const mutation = useMutation({
     mutationFn: async (run: Run) => {
       if (run.resume) return waitForAnalysis(run.resume, setProgress);
-      if (run.demo) return request<Analysis>(`/api/demo?kind=${run.demo}&margin_db=${Number(margin)}`, { method: 'POST' });
-      const captures = files.filter(f => !f.name.toLowerCase().endsWith('.sigmf-meta'));
-      const metas = files.filter(f => f.name.toLowerCase().endsWith('.sigmf-meta'));
-      if (captures.length !== 1 || metas.length > 1) throw new Error('Select one capture and, for SigMF, its paired metadata file.');
-      if (metas.length && captures[0].name.replace(/\.(iq|sigmf-data)$/i, '') !== metas[0].name.replace(/\.sigmf-meta$/i, '')) throw new Error('The capture and SigMF metadata filenames must have matching stems.');
-      if (captures[0].size > (health.data?.max_upload_bytes ?? 2147483648)) throw new Error('Maximum capture size is 2 GiB.');
-      const body = new FormData(); body.append('file', captures[0]);
-      if (metas[0]) body.append('metadata', metas[0]);
-      if (rate) body.append('sample_rate', rate);
-      if (datatype) body.append('datatype', datatype);
-      body.append('wav_mode', wavMode); body.append('margin_db', margin); body.append('mode', mode);
-      if (fixed) body.append('fixed_threshold_db', fixed);
-      return uploadCapture(body, setProgress);
+      if (run.demo) return request<Analysis>(`/api/demo?kind=${run.demo}&margin_db=${Number(settings.margin)}`, { method: 'POST' });
+      return uploadCapture(buildUploadForm(files, settings, health.data?.max_upload_bytes), setProgress);
     },
-    onMutate: () => { setError(''); setProgress(null); setResult(null); setSelected(null); setCursor({frequency:null,power:null,time:null}); setConfidenceFilter(0); setExportView('json'); setSigmfPreview(null); },
-    onSuccess: (data, run) => { setResult(data); setMargin(String(data.settings.margin_db)); setMode(data.settings.mode); setFixed(data.settings.mode === 'fixed_debug' ? String(data.threshold_db) : ''); setSelected(data.detections.length ? String(data.detections[0].id) : null); setLastSource(run.demo ? { demo: run.demo } : {}); setProgress(null); setBreakdownOpen(true); recordHistory(data); },
-    onError: (e) => { setError(e.message); setProgress(null); setSettings(true); },
+    onMutate: () => { setError(''); setProgress(null); setResult(null); setSelected(null); setCursor(NO_CURSOR); setConfidenceFilter(0); },
+    onSuccess: (data, run) => {
+      setResult(data);
+      updateSettings({ margin: String(data.settings.margin_db), mode: data.settings.mode, fixed: data.settings.mode === 'fixed_debug' ? String(data.threshold_db) : '' });
+      setSelected(data.detections.length ? String(data.detections[0].id) : null);
+      setLastSource(run.demo ? { demo: run.demo } : {}); setProgress(null); setBreakdownOpen(true); recordHistory(data);
+    },
+    onError: (e) => { setError(e.message); setProgress(null); setSettingsOpen(true); },
   });
   const rerun = useMutation({
-    mutationFn: (jobId: string) => rerunJob(jobId, { marginDb: Number(margin), mode, fixedThresholdDb: fixed }),
+    mutationFn: (jobId: string) => rerunJob(jobId, { marginDb: Number(settings.margin), mode: settings.mode, fixedThresholdDb: settings.fixed }),
     onMutate: () => setError(''),
-    onSuccess: (data) => { setResult(data); setSelected(data.detections.length ? String(data.detections[0].id) : null); setSigmfPreview(null); setExportView('json'); queryClient.invalidateQueries({ queryKey: ['spectrogram', data.job_id] }); recordHistory(data); },
+    onSuccess: (data) => {
+      setResult(data); setRevision(r => r + 1);
+      setSelected(data.detections.length ? String(data.detections[0].id) : null);
+      queryClient.invalidateQueries({ queryKey: ['spectrogram', data.job_id] }); recordHistory(data);
+    },
     onError: (e) => setError(e.message),
   });
   useEffect(() => {
     if (connected && !resumed.current) { resumed.current = true; const id = sessionStorage.getItem('detect-active-job'); if (id) mutation.mutate({ resume: id }); }
   }, [connected]);
+
   const shown = connected ? result : null, pending = mutation.isPending;
   const spec = useQuery({ queryKey: ['spectrogram', shown?.job_id], queryFn: () => request<Spectrogram>(`/api/spectrogram/${shown!.job_id}?width=640&height=380`), enabled: !!shown });
   const spectrum = useMemo(() => spec.data ? adaptSpectrogram(spec.data) : null, [spec.data]);
@@ -93,6 +92,8 @@ export default function App() {
   useEffect(() => {
     if (selected !== null && !visibleDetections.some(d => d.id === selected)) setSelected(null);
   }, [visibleDetections, selected]);
+  useEffect(() => { if (!viewDetection) setAnalysisView(false); }, [viewDetection]);
+
   const psd = useMemo(() => shown ? { freqs: shown.psd.map(p => p.frequency_hz), magnitudes: shown.psd.map(p => p.power_db) } : null, [shown]);
   const sampleRate = shown?.metadata.sample_rate ?? 1;
   const freqMin = shown?.metadata.source_kind === 'audio' ? 0 : -sampleRate / 2, freqMax = sampleRate / 2;
@@ -100,127 +101,97 @@ export default function App() {
   const fileInfo = describeFile(shown?.metadata ?? null, !lastSource.demo && captureFile?.name === shown?.metadata.filename ? captureFile?.size : undefined);
   const bounds = shown ? [shown.noise_floor_db, shown.threshold_db, ...shown.psd.map(p => p.power_db)] : [0];
   const dbMin = Math.floor((Math.min(...bounds) - 5) / 10) * 10, dbMax = Math.ceil((Math.max(...bounds) + 5) / 10) * 10;
-  const raw = files.some(f => /\.iq$/i.test(f.name)) && !files.some(f => /\.sigmf-meta$/i.test(f.name)), wav = files.some(f => /\.wav$/i.test(f.name));
+  const { margin, mode, fixed } = settings;
   const draftThreshold = shown ? mode === 'adaptive' ? shown.noise_floor_db + Number(margin) : Number(fixed || shown.threshold_db) : 0;
   const changed = !!shown && (shown.settings.mode !== mode || (mode === 'adaptive' ? Number(margin) !== shown.settings.margin_db : Number(fixed) !== shown.threshold_db));
+
   const select = (id: string) => { setSelected(id); setBreakdownOpen(true); };
-  const [jumpTo, setJumpTo] = useState<{ id: string; token: number } | null>(null);
   const selectAndJump = (id: string) => { select(id); setJumpTo({ id, token: Date.now() }); };
-  const [shortcutsOpen, setShortcutsOpen] = useState(false);
-  const [analysisView, setAnalysisView] = useState(false);
-  useEffect(() => { if (!viewDetection) setAnalysisView(false); }, [viewDetection]);
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target instanceof Element ? e.target : null;
-      const inField = target?.closest('input, select, textarea, [contenteditable="true"]');
-      if (e.key === 'Escape') { if (shortcutsOpen) { setShortcutsOpen(false); return; } if (!inField) setSelected(null); return; }
-      if (inField || target?.closest('button')) return;
-      if (e.key === '?') { e.preventDefault(); setShortcutsOpen(v => !v); return; }
-      if (!shown) return;
-      if (e.key === ' ') { e.preventDefault(); setBreakdownOpen(v => !v); }
-      if (['ArrowDown','ArrowRight','ArrowUp','ArrowLeft'].includes(e.key) && visibleDetections.length) {
-        e.preventDefault(); const index = visibleDetections.findIndex(d => d.id === selected), step = ['ArrowDown','ArrowRight'].includes(e.key) ? 1 : -1;
-        selectAndJump(visibleDetections[Math.max(0, Math.min(visibleDetections.length - 1, index + step))].id);
-      }
-    };
-    window.addEventListener('keydown', handler); return () => window.removeEventListener('keydown', handler);
-  }, [shown, selected, visibleDetections, shortcutsOpen]);
+  useKeyboardShortcuts({
+    hasResult: !!shown, candidateIds: visibleDetections.map(d => d.id), selected, shortcutsOpen, setShortcutsOpen,
+    deselect: () => setSelected(null), toggleBreakdown: () => setBreakdownOpen(v => !v), selectAndJump,
+  });
   function assign(incoming: File[]) {
     if (pending) return;
-    setFiles(incoming); setResult(null); setSelected(null); setError(''); setRate(''); setDatatype(''); setWavMode('auto'); setLastSource({});
-    setSettings(incoming.some(f => /\.(iq|wav)$/i.test(f.name)));
+    setFiles(incoming); setResult(null); setSelected(null); setError(''); updateSettings({ rate: '', datatype: '', wavMode: 'auto' }); setLastSource({});
+    setSettingsOpen(incoming.some(f => /\.(iq|wav)$/i.test(f.name)));
   }
-  function save(value: unknown, filename: string) {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], {type:'application/json'}));
-    const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
-  }
-  async function loadSigmfPreview() {
-    if (!shown) return;
-    setExportView('sigmf'); setSigmfPreview(null); setSigmfLoading(true);
-    try { setSigmfPreview(await request(`/api/export/${shown.job_id}?format=sigmf`)); }
-    catch (e) { setError((e as Error).message); setExportView('json'); }
-    finally { setSigmfLoading(false); }
-  }
-  const startDemo = (demo: 'iq' | 'audio') => { setFiles([]); setMode('adaptive'); setFixed(''); mutation.mutate({demo}); };
+  const startDemo = (demo: 'iq' | 'audio') => { setFiles([]); updateSettings({ mode: 'adaptive', fixed: '' }); mutation.mutate({ demo }); };
+  const openAnalysis = () => viewDetection && setAnalysisView(true);
+
   return <div className="bolt-app">
     <input ref={input} type="file" multiple accept=".iq,.wav,.sigmf-data,.sigmf-meta" hidden onChange={e => { assign(Array.from(e.target.files ?? [])); e.target.value = ''; }} />
-    <header className="bolt-toolbar">
-      <button disabled={pending} onClick={() => input.current?.click()}><FolderOpen size={14} />Open File</button><span className="toolbar-divider" />
-      <div className="toolbar-file"><span>File:</span> <strong>{files.length ? files.map(f => f.name).join(' + ') : shown?.metadata.filename ?? 'No capture loaded'}</strong>{shown && <><span>Rate:</span><strong>{sampleRate.toLocaleString()} samples/s</strong><span>Duration:</span><strong>{shown.metadata.duration_seconds.toFixed(3)} s</strong></>}</div>
-      <div className="toolbar-actions"><span className={`api-status ${connected ? 'connected' : ''}`}><i />{health.isPending ? 'Connecting' : connected ? 'API connected' : 'Not connected'}</span><button aria-expanded={shortcutsOpen} onClick={() => setShortcutsOpen(v => !v)} title="Keyboard shortcuts (?)"><HelpCircle size={14} /></button><button disabled={pending} aria-expanded={settings} onClick={() => setSettings(v => !v)} title="Capture and detector settings"><Settings2 size={14} /><span>Settings</span></button><button className="primary" disabled={pending || !connected || (!files.length && !lastSource.demo)} onClick={() => mutation.mutate(lastSource.demo ? lastSource : {})}>{pending ? <Loader2 size={14} className="animate-spin" /> : <Activity size={14} />}{pending ? 'Analyzing…' : shown ? 'Reanalyze' : 'Analyze'}</button></div>
-    </header>
-    {settings && <section className="capture-settings" aria-label="Capture settings">
-      <label>Adaptive margin <input type="number" min="3" max="30" step="0.1" value={margin} onChange={e => setMargin(e.target.value)} disabled={pending} /> dB</label>
-      {raw && <><label>Sample rate (Hz)<input type="number" min="1" value={rate} onChange={e => setRate(e.target.value)} disabled={pending} placeholder="Required" /></label><label>Raw datatype<select value={datatype} onChange={e => setDatatype(e.target.value)} disabled={pending}><option value="">Choose encoding</option>{['cf32_le','cf32_be','ci16_le','ci16_be'].map(v => <option key={v}>{v}</option>)}</select></label></>}
-      {wav && <label>WAV interpretation<select value={wavMode} onChange={e => setWavMode(e.target.value)} disabled={pending}><option value="auto">Automatic quadrature check</option><option value="iq">Confirm I=left / Q=right</option><option value="audio_left">Left real audio</option><option value="audio_right">Right real audio</option></select></label>}
-      <label>Detector<select value={mode} disabled={pending || !!lastSource.demo} onChange={e => setMode(e.target.value)}><option value="adaptive">Adaptive threshold</option><option value="fixed_debug">Fixed threshold — debug</option></select></label>
-      {mode === 'fixed_debug' && <label>Absolute threshold (dB/Hz)<input type="number" step="0.1" value={fixed} onChange={e => setFixed(e.target.value)} disabled={pending} /></label>}<span>Up to 2 GiB · select SigMF data + metadata together</span>
-    </section>}
+    <Toolbar
+      fileLabel={files.length ? files.map(f => f.name).join(' + ') : shown?.metadata.filename ?? 'No capture loaded'}
+      rate={shown ? sampleRate : null} duration={shown ? shown.metadata.duration_seconds : null}
+      health={health.isPending ? 'connecting' : connected ? 'connected' : 'disconnected'}
+      pending={pending} settingsOpen={settingsOpen} shortcutsOpen={shortcutsOpen}
+      canAnalyze={!pending && connected && (files.length > 0 || !!lastSource.demo)} hasResult={!!shown}
+      onOpenFile={() => input.current?.click()} onToggleShortcuts={() => setShortcutsOpen(v => !v)}
+      onToggleSettings={() => setSettingsOpen(v => !v)} onAnalyze={() => mutation.mutate(lastSource.demo ? lastSource : {})} />
+    {settingsOpen && <CaptureSettingsBar settings={settings} onChange={updateSettings} raw={needsRawSettings(files)} wav={hasWav(files)} pending={pending} detectorLocked={!!lastSource.demo} />}
     {!connected && !health.isPending && <div className="bolt-error" role="alert">Not connected. Start the FastAPI backend to analyze captures.<button onClick={() => health.refetch()}>Reconnect</button></div>}
-    {(error || spec.isError) && <div className="bolt-error" role="alert">{error || spec.error?.message}<button onClick={() => { setError(''); if(spec.isError) spec.refetch(); }}>Dismiss / retry</button></div>}
-    {pending && <div className="bolt-progress" role="status"><Loader2 size={13} className="animate-spin" /><span>{progress?.message ?? 'Analyzing the capture…'}</span><progress max="1" value={progress?.fraction ?? undefined} />{progress?.fraction != null && <span>{Math.round(progress.fraction * 100)}%</span>}</div>}
+    {(error || spec.isError) && <div className="bolt-error" role="alert">{error || spec.error?.message}<button onClick={() => { setError(''); if (spec.isError) spec.refetch(); }}>Dismiss / retry</button></div>}
+    {pending && <div className="bolt-progress" role="status">
+      <Loader2 size={13} className="animate-spin" /><span>{progress?.message ?? 'Analyzing the capture…'}</span>
+      <progress max="1" value={progress?.fraction ?? undefined} />{progress?.fraction != null && <span>{Math.round(progress.fraction * 100)}%</span>}
+    </div>}
     {shown && analysisView && viewDetection ? <AnalysisPage analysis={shown} detection={viewDetection} spectrum={spectrum} psd={psd} freqMin={freqMin} freqMax={freqMax} dbMin={dbMin} dbMax={dbMax} sampleRate={sampleRate} onBack={() => setAnalysisView(false)} /> :
-    !shown ? <main className="bolt-welcome"><div className={`welcome-drop ${dragging ? 'dragging' : ''}`} onDragOver={e => {e.preventDefault(); setDragging(true);}} onDragLeave={() => setDragging(false)} onDrop={e => { e.preventDefault(); setDragging(false); assign(Array.from(e.dataTransfer.files)); }}>
-      <Radio size={40} /><h1>SIH26147 Signal Analysis</h1><p>Detect-stage pipeline — candidate signal region identification</p><button disabled={pending} onClick={() => input.current?.click()}><Upload size={14} />Drop IQ file here or click to browse</button>
-      {files.length > 0 && <div className="selected-files">{files.map(f => <div key={f.name}>{f.name} · {(f.size / 1024 ** 2).toFixed(2)} MiB</div>)}<button className="primary" disabled={pending || !connected} onClick={() => mutation.mutate({})}>Analyze selected capture</button></div>}
-      <small><FolderOpen size={12} />Supports: .wav, .iq, .sigmf-data + .sigmf-meta</small><p className="welcome-help">After loading a file, click Analyze to run the detection pipeline.<br />Use Settings to specify raw IQ or stereo WAV interpretation.</p><div className="demo-buttons"><button disabled={pending || !connected} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending || !connected} onClick={() => startDemo('audio')}>Audio demo</button></div><small>Bundled captures processed by the real pipeline.</small>
-    </div></main> : <main className="bolt-workspace"><div className="bolt-center">
-      <section className="fft-section"><div className="plot-title">FFT / PSD<span>Welch · {shown.metadata.power_unit}</span></div><FftPlot psdData={psd} noiseFloorDb={shown.noise_floor_db} thresholdDb={draftThreshold} thresholdLabel={changed ? 'Pending threshold — reanalyze' : 'Applied threshold'} onThresholdChange={v => { if (mode === 'adaptive') setMargin(Math.max(3, Math.min(30, v - shown.noise_floor_db)).toFixed(1)); else setFixed(v.toFixed(1)); }} detections={visibleDetections} selectedDetectionId={selected} onSelectDetection={select} freqMin={freqMin} freqMax={freqMax} dbMin={dbMin} dbMax={dbMax} onCursorMove={(frequency, power) => setCursor({frequency, power, time:null})} height={170} />
-        <div className="plot-caption">Baseband offset · drag threshold to set the next scan {changed ? <button disabled={rerun.isPending} onClick={() => rerun.mutate(shown.job_id)}>{rerun.isPending ? <Loader2 size={12} className="animate-spin" /> : null}Apply &amp; re-run</button> : <span>{shown.settings.mode === 'fixed_debug' ? 'FIXED DEBUG' : `Adaptive margin ${shown.settings.margin_db} dB`} · {shown.elapsed_ms.toFixed(0)} ms</span>}</div>{shown.settings.processing && <p className="block-note">Noise and threshold lines summarize block estimates; each block uses its own threshold.</p>}
+    !shown ? <WelcomeScreen files={files} pending={pending} connected={connected} onBrowse={() => input.current?.click()} onDropFiles={assign} onAnalyze={() => mutation.mutate({})} onDemo={startDemo} /> :
+    <main className="bolt-workspace"><div className="bolt-center">
+      <section className="fft-section">
+        <div className="plot-title">FFT / PSD<span>Welch · {shown.metadata.power_unit}</span></div>
+        <FftPlot psdData={psd} noiseFloorDb={shown.noise_floor_db} thresholdDb={draftThreshold} thresholdLabel={changed ? 'Pending threshold — reanalyze' : 'Applied threshold'}
+          onThresholdChange={v => mode === 'adaptive' ? updateSettings({ margin: Math.max(3, Math.min(30, v - shown.noise_floor_db)).toFixed(1) }) : updateSettings({ fixed: v.toFixed(1) })}
+          detections={visibleDetections} selectedDetectionId={selected} onSelectDetection={select} freqMin={freqMin} freqMax={freqMax} dbMin={dbMin} dbMax={dbMax}
+          onCursorMove={(frequency, power) => setCursor({ frequency, power, time: null })} height={170} />
+        <div className="plot-caption">Baseband offset · drag threshold to set the next scan {changed
+          ? <button disabled={rerun.isPending} onClick={() => rerun.mutate(shown.job_id)}>{rerun.isPending ? <Loader2 size={12} className="animate-spin" /> : null}Apply &amp; re-run</button>
+          : <span>{shown.settings.mode === 'fixed_debug' ? 'FIXED DEBUG' : `Adaptive margin ${shown.settings.margin_db} dB`} · {shown.elapsed_ms.toFixed(0)} ms</span>}</div>
+        {shown.settings.processing && <p className="block-note">Noise and threshold lines summarize block estimates; each block uses its own threshold.</p>}
       </section>
-      <section className="waterfall-section"><div className="waterfall-main"><div className="plot-title">Waterfall<span>{spec.isFetching ? 'Loading measured spectrogram…' : `${shown.settings.nfft} FFT · ${(sampleRate / shown.settings.nfft).toFixed(3)} Hz/bin`}</span></div><div className="waterfall-canvas"><Waterfall spectrogram={spectrum} detections={visibleDetections} selectedDetectionId={selected} onSelectDetection={select} freqMin={freqMin} freqMax={freqMax} onCursorMove={(frequency, time, power) => setCursor({frequency,time,power})} sampleRate={sampleRate} totalSamples={shown.metadata.sample_count} jumpTo={jumpTo} playheadTime={playheadTime} /></div></div>{spectrum && <div className="waterfall-legend"><ColormapLegend minDb={spectrum.min_db} maxDb={spectrum.max_db} height={110} /></div>}</section>
-      <section className={`bolt-breakdown ${breakdownOpen ? 'open' : ''}`}><button className="dock-toggle" aria-expanded={breakdownOpen} onClick={() => setBreakdownOpen(v => !v)}>{breakdownOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}Signal Breakdown — Detect Stage<span>{selected !== null ? `C${Number(selected)+1}` : 'Select a candidate'}</span><small>Space to toggle</small></button>{breakdownOpen && <SignalBreakdown key={`${shown.job_id}:${selected}`} analysis={shown} detection={detection} onPlayheadChange={setPlayheadTime} />}</section>
+      <section className="waterfall-section">
+        <div className="waterfall-main">
+          <div className="plot-title">Waterfall<span>{spec.isFetching ? 'Loading measured spectrogram…' : `${shown.settings.nfft} FFT · ${(sampleRate / shown.settings.nfft).toFixed(3)} Hz/bin`}</span></div>
+          <div className="waterfall-canvas"><Waterfall spectrogram={spectrum} detections={visibleDetections} selectedDetectionId={selected} onSelectDetection={select} freqMin={freqMin} freqMax={freqMax}
+            onCursorMove={(frequency, time, power) => setCursor({ frequency, time, power })} sampleRate={sampleRate} totalSamples={shown.metadata.sample_count} jumpTo={jumpTo} playheadTime={playheadTime} /></div>
+        </div>
+        {spectrum && <div className="waterfall-legend"><ColormapLegend minDb={spectrum.min_db} maxDb={spectrum.max_db} height={110} /></div>}
+      </section>
+      <section className={`bolt-breakdown ${breakdownOpen ? 'open' : ''}`}>
+        <button className="dock-toggle" aria-expanded={breakdownOpen} onClick={() => setBreakdownOpen(v => !v)}>
+          {breakdownOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}Signal Breakdown — Detect Stage
+          <span>{selected !== null ? `C${Number(selected) + 1}` : 'Select a candidate'}</span><small>Space to toggle</small>
+        </button>
+        {breakdownOpen && <SignalBreakdown key={`${shown.job_id}:${selected}`} analysis={shown} detection={detection} onPlayheadChange={setPlayheadTime} />}
+      </section>
     </div><aside className="bolt-sidebar">
-      <DockPanel title="Detections" className="detections-dock" actions={<label className="confidence-filter" title="Hide candidates below this confidence from the list and spectrogram"><span>Min conf</span><input type="range" min="0" max="1" step="0.01" value={confidenceFilter} onChange={e => setConfidenceFilter(Number(e.target.value))} /><span className="confidence-filter-value">{Math.round(confidenceFilter * 100)}%</span></label>}><DetectionsPanel detections={visibleDetections} selectedDetectionId={selected} onSelectDetection={selectAndJump} sampleRate={sampleRate} /><p className="evidence-note">Confidence is a heuristic evidence score, not a probability.{detections.length !== visibleDetections.length && ` ${detections.length - visibleDetections.length} candidate(s) hidden below ${Math.round(confidenceFilter * 100)}% confidence.`}</p></DockPanel>
-      <DockPanel title="Detection Detail" className="detail-dock" actions={<span className={`analyze-action${viewDetection ? '' : ' disabled'}`} role="button" tabIndex={viewDetection ? 0 : -1} title="Open the focused Analysis page for this candidate" onClick={() => viewDetection && setAnalysisView(true)} onKeyDown={e => { if (viewDetection && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setAnalysisView(true); } }}><ExternalLink size={11} />Analyze</span>}><DetectionDetailPanel detection={viewDetection} sampleRate={sampleRate} jobId={shown?.job_id} /></DockPanel>
+      <DockPanel title="Detections" className="detections-dock" actions={<label className="confidence-filter" title="Hide candidates below this confidence from the list and spectrogram">
+        <span>Min conf</span><input type="range" min="0" max="1" step="0.01" value={confidenceFilter} onChange={e => setConfidenceFilter(Number(e.target.value))} />
+        <span className="confidence-filter-value">{Math.round(confidenceFilter * 100)}%</span>
+      </label>}>
+        <DetectionsPanel detections={visibleDetections} selectedDetectionId={selected} onSelectDetection={selectAndJump} sampleRate={sampleRate} />
+        <p className="evidence-note">Confidence is a heuristic evidence score, not a probability.{detections.length !== visibleDetections.length && ` ${detections.length - visibleDetections.length} candidate(s) hidden below ${Math.round(confidenceFilter * 100)}% confidence.`}</p>
+      </DockPanel>
+      <DockPanel title="Detection Detail" className="detail-dock" actions={<span className={`analyze-action${viewDetection ? '' : ' disabled'}`} role="button" tabIndex={viewDetection ? 0 : -1}
+        title="Open the focused Analysis page for this candidate" onClick={openAnalysis}
+        onKeyDown={e => { if (viewDetection && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openAnalysis(); } }}><ExternalLink size={11} />Analyze</span>}>
+        <DetectionDetailPanel detection={viewDetection} sampleRate={sampleRate} jobId={shown?.job_id} />
+      </DockPanel>
       <DockPanel title="File Info" className="file-dock"><FileInfoPanel fileInfo={fileInfo} /><p className="evidence-note">{shown.metadata.wav_disambiguation.reason}</p></DockPanel>
       <DockPanel title="Pipeline Log" className="log-dock" defaultOpen={false}><PipelineLogPanel logLines={shown.pipeline_log} /></DockPanel>
-      <DockPanel title="Export" defaultOpen={false}>
-        <div className="export-tabs" role="tablist" aria-label="Export format preview">
-          <button role="tab" aria-selected={exportView === 'json'} onClick={() => setExportView('json')}>JSON</button>
-          <button role="tab" aria-selected={exportView === 'sigmf'} onClick={loadSigmfPreview}>SigMF</button>
-        </div>
-        <div className="export-actions">
-          <button onClick={async () => {try {await navigator.clipboard.writeText(JSON.stringify(exportView === 'sigmf' ? sigmfPreview : shown.detections,null,2));setCopied(true);setTimeout(()=>setCopied(false),1500);}catch {setError('Clipboard unavailable. Use download instead.');}}} disabled={exportView === 'sigmf' && !sigmfPreview}>{copied ? <Check size={12}/> : <Copy size={12}/>}Copy</button>
-          <button onClick={() => exportView === 'sigmf' ? save(sigmfPreview, 'detections.sigmf-meta') : save(shown.detections,'detections.json')} disabled={exportView === 'sigmf' && !sigmfPreview}><Download size={12}/>Download {exportView === 'sigmf' ? '.sigmf-meta' : '.json'}</button>
-        </div>
-        {exportView === 'sigmf' && sigmfLoading ? <p className="export-loading">Fetching SigMF metadata…</p> : <pre>{JSON.stringify(exportView === 'sigmf' ? sigmfPreview : shown.detections,null,2)}</pre>}
-      </DockPanel>
+      <DockPanel title="Export" defaultOpen={false}><ExportPanel key={`${shown.job_id}:${revision}`} jobId={shown.job_id} detections={shown.detections} onError={setError} /></DockPanel>
       <DockPanel title="Fine Classification Accuracy" defaultOpen={false}><AccuracyCurve data={accuracy.data ?? null} loading={accuracy.isPending} /></DockPanel>
-      <DockPanel title="Session History" defaultOpen={false}>
-        {history.length === 0 ? <p className="history-empty">Analyzed files appear here, remembered in this browser.</p> : (
-          <ul className="history-list">
-            {history.map((h) => (
-              <li key={h.job_id}>
-                <button disabled={pending} onClick={() => mutation.mutate({ resume: h.job_id })}>
-                  <span className="history-filename">{h.filename}</span>
-                  <span className="history-meta">{h.sourceKind} · {h.detectionCount} candidate{h.detectionCount === 1 ? '' : 's'} · {new Date(h.timestamp).toLocaleTimeString()}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <p className="history-note">Reload requires the backend job to still exist (~30-minute expiry); an expired job reports so instead of guessing.</p>
-      </DockPanel>
-      <DockPanel title="Pipeline / Roadmap" defaultOpen={false}><div className="roadmap"><p><b>Detect · Estimate · Classify · built</b> → Report</p><p>Classify now includes coarse envelope family, Mth-power carrier refinement, fine PSK classification (BPSK/QPSK only) and symbol-rate estimation, each gated to its validated SNR range with an explicit unknown status otherwise. FM and pulsed candidates never receive a fine label or symbol rate.</p><p>Planned, not built: cyclostationary analysis, deep-learning detection, co-channel separation, frequency-hopping tracking, matched filtering, real-time streaming, and the Report stage.</p><p>Demodulation into decoded audio/data remains planned, not built in this version.</p></div></DockPanel>
-      <div className="sidebar-demos"><button disabled={pending} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending} onClick={() => startDemo('audio')}>Audio demo</button><a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">API contract ↗</a></div>
-    </aside></main>}
-    {shown ? <StatusBar sampleRate={sampleRate} durationSeconds={shown.metadata.duration_seconds} cursorFreq={cursor.frequency} cursorPower={cursor.power} cursorTime={cursor.time} detectionCount={shown.detections.length} thresholdDb={shown.threshold_db} noiseFloorDb={shown.noise_floor_db} selectedDetectionId={selected} /> : <footer className="welcome-status"><span>SIH26147 · Detect Stage</span><span>{pending ? 'Processing capture' : 'Ready to open a capture'} · Offline analysis · Relative symbol recovery only</span></footer>}
-    {shortcutsOpen && <div className="shortcuts-overlay" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" onClick={() => setShortcutsOpen(false)}>
-      <div className="shortcuts-panel" onClick={e => e.stopPropagation()}>
-        <div className="shortcuts-header"><h2>Keyboard shortcuts</h2><button aria-label="Close" onClick={() => setShortcutsOpen(false)}><X size={16} /></button></div>
-        <dl>
-          <div><dt>?</dt><dd>Toggle this shortcuts overlay</dd></div>
-          <div><dt>↑ ↓ ← →</dt><dd>Step through detections, jumping the waterfall to frame each one</dd></div>
-          <div><dt>Space</dt><dd>Toggle Signal Breakdown open/closed</dd></div>
-          <div><dt>Esc</dt><dd>Close this overlay, or deselect the current detection</dd></div>
-          <div><dt>Scroll on waterfall</dt><dd>Zoom, centered on the cursor</dd></div>
-          <div><dt>Drag on waterfall</dt><dd>Pan the spectrogram viewport</dd></div>
-          <div><dt>Click on waterfall</dt><dd>Pin a freq/time/power readout at that point</dd></div>
-          <div><dt>Double-click waterfall</dt><dd>Reset zoom to the full capture</dd></div>
-        </dl>
-        <p className="shortcuts-footnote">Shortcuts are inactive while typing in a text field.</p>
+      <DockPanel title="Session History" defaultOpen={false}><SessionHistoryList history={history} pending={pending} onResume={jobId => mutation.mutate({ resume: jobId })} /></DockPanel>
+      <DockPanel title="Pipeline / Roadmap" defaultOpen={false}><Roadmap /></DockPanel>
+      <div className="sidebar-demos">
+        <button disabled={pending} onClick={() => startDemo('iq')}>IQ demo</button><button disabled={pending} onClick={() => startDemo('audio')}>Audio demo</button>
+        <a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer">API contract ↗</a>
       </div>
-    </div>}
+    </aside></main>}
+    {shown
+      ? <StatusBar sampleRate={sampleRate} durationSeconds={shown.metadata.duration_seconds} cursorFreq={cursor.frequency} cursorPower={cursor.power} cursorTime={cursor.time} detectionCount={shown.detections.length} thresholdDb={shown.threshold_db} noiseFloorDb={shown.noise_floor_db} selectedDetectionId={selected} />
+      : <footer className="welcome-status"><span>SIH26147 · Detect Stage</span><span>{pending ? 'Processing capture' : 'Ready to open a capture'} · Offline analysis · Relative symbol recovery only</span></footer>}
+    {shortcutsOpen && <ShortcutsOverlay onClose={() => setShortcutsOpen(false)} />}
   </div>;
 }

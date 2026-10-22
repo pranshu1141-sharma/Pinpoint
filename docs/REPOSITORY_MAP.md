@@ -91,7 +91,13 @@ The generated RF directory is ignored because it can be reproduced. The smaller 
 |---|---|
 | `frontend/src/main.tsx` | Creates the React root, React Query client, font/style imports, and strict-mode wrapper. |
 | `frontend/src/api.ts` | TypeScript wire types, error-normalizing `request`, display helpers, XHR upload progress, asynchronous polling, and same-tab resume key. |
-| `frontend/src/App.tsx` | Full page composition and state: boot, connectivity, files/settings, analyze/demo mutation, progress, results, selection, exports, all major panels, roadmap, and responsive dashboard content. This is the largest frontend file and the main future refactoring candidate. |
+| `frontend/src/App.tsx` | Page composition and shared state: connectivity, analyze/demo/resume and re-run mutations, selection, cursor, workspace plots and sidebar docks. |
+| `frontend/src/app/upload.ts` | Pure upload validation and `/api/analyze` form building (`tests/upload.test.ts`). |
+| `frontend/src/app/history.ts` | Session history remembered in browser storage (`useSessionHistory`). |
+| `frontend/src/app/useKeyboardShortcuts.ts` | Global shortcuts: `?`, Esc, Space, arrow-key candidate stepping. |
+| `frontend/src/app/Toolbar.tsx`, `CaptureSettingsBar.tsx`, `WelcomeScreen.tsx` | Top toolbar, capture/detector settings, and the empty-state drop zone with demos. |
+| `frontend/src/app/ExportPanel.tsx`, `SidebarPanels.tsx`, `ShortcutsOverlay.tsx` | JSON/SigMF export, session history list and roadmap, keyboard-shortcut overlay. |
+| `frontend/src/bolt/` | Dashboard panels: PSD, waterfall, detections, detail (with measured evidence), file info, analysis and Decode screens, theme (`bolt.css`). |
 | `frontend/src/components/Plots.tsx` | Recharts PSD, generic waveform, and pulse plot components. |
 | `frontend/src/components/Breakdown.tsx` | Layer queries, stepper/autostep, layer animation, WaveSurfer lifecycle, Regions/Timeline/Spectrogram plugins, audio playback, and pulse detail. |
 | `frontend/src/lib/utils.ts` | Re-exports the installed `cn` helper package for component class merging. |
