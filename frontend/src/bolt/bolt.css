@@ -249,6 +249,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,tr
 .decode-card>strong { font:12px var(--font-mono); font-weight:400; color:var(--text); }
 .decode-envelope .plot-title button,.decode-json .plot-title button { display:inline-flex; align-items:center; gap:4px; margin-left:8px; background:transparent; border:1px solid var(--border-strong); border-radius:2px; padding:2px 7px; font-size:10px; color:var(--text-dim); }
 .decode-envelope .plot-title button:hover,.decode-json .plot-title button:hover { border-color:var(--accent); color:var(--accent); }
+.decode-progress-fill.indeterminate { width:30%; animation:decode-sweep 1.1s ease-in-out infinite; }
+@keyframes decode-sweep { 0% {transform:translateX(-100%)} 100% {transform:translateX(340%)} }
+.decode-verdict { display:flex; flex-direction:column; gap:4px; padding:10px 12px; border-radius:4px; border:1px solid var(--border); border-left:3px solid var(--text-faint); background:var(--surface); }
+.decode-verdict.ok { border-left-color:var(--success); }
+.decode-verdict.declined { border-left-color:var(--warning); }
+.decode-verdict strong { font:13px var(--font-mono); color:var(--text); font-weight:500; }
+.decode-verdict span { font:11px/1.6 var(--font-mono); color:var(--text-dim); }
+.decode-stream pre { margin:0; padding:10px 12px; font:11px/1.6 var(--font-mono); max-height:320px; overflow:auto; background:var(--bg); color:var(--accent-strong); white-space:pre; }
 .decode-json pre { margin:0; padding:10px 12px; font:10px/1.7 var(--font-mono); max-height:260px; overflow:auto; background:var(--bg); color:var(--text-dim); }
 .decode-actions { display:flex; gap:8px; justify-content:flex-end; }
 .decode-actions button { display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--border-strong); border-radius:3px; padding:6px 12px; font-size:12px; color:var(--text); }

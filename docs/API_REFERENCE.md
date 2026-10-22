@@ -224,6 +224,12 @@ Returns `audio/wav` for an audio-capable layer. IQ layers return HTTP 404 becaus
 
 Returns a pooled waveform, envelope threshold, threshold description, individual pulse windows, median pulse width, and median PRI. Large-capture threshold text explicitly says it is a maximum block summary.
 
+## Decode
+
+### `POST /api/detections/{job_id}/{detection_id}/decode`
+
+On-demand symbol/bit recovery; never run during analysis. Runs only when the candidate's verify `modulation_label` is a published `BPSK`, `QPSK`, `8PSK`, `FSK2` or `ASK2`; otherwise `decode_status` says why it was not attempted (no published label, with the verify reason; no validated decoder for that label; SNR below the decoder's gate; timing recovery did not lock; segment too short; large disk-backed capture). Returns `decode_label`, `decode_status`, `decoded_symbol_indices` (at most 20,000, or `null`), `decoded_symbol_count`, `decoded_symbols_truncated`, `decode_confidence`, `decode_phase_offset_rad` (PSK only) and `decode_rotation_ambiguity_modulus`. The stream is correct only up to an unknown rotation (PSK, mod the order) or polarity (FSK2/ASK2) and an unknown start offset; there is no framing or message decoding. Results are cached per job. Validated on synthetic signals only; see [DECODING.md](../DECODING.md).
+
 ## Export
 
 ### `GET /api/export/{job_id}?format=json`

@@ -120,6 +120,16 @@ export type Envelope = {
   pulse_width_samples: number | null;
   pri_samples: number | null;
 };
+export type DecodeResult = {
+  decode_label: "bpsk" | "qpsk" | "8psk" | "fsk2" | "ask2" | null;
+  decode_status: string;
+  decoded_symbol_indices: number[] | null;
+  decoded_symbol_count: number | null;
+  decoded_symbols_truncated: boolean;
+  decode_confidence: number | null;
+  decode_phase_offset_rad: number | null;
+  decode_rotation_ambiguity_modulus: number | null;
+};
 export type AccuracyCurvePoint = {
   kind: string;
   snr_db: number;
