@@ -262,6 +262,32 @@ def merge_fragments(bands, mask, smooth, power=None):
     return [(it["comps"][0]["fa"], it["comps"][-1]["fb"], it["rows"]) for it in items]
 
 
+OCCUPIED_FRACTION = 0.95        # published bounds: this share of the candidate's power above the floor
+OCCUPIED_GUARD = 1.6            # ... widened about its centre by this factor, never past the threshold extent
+MIN_REFINE_BINS = 4             # narrower candidates keep their threshold-crossing extent
+
+
+def refine_edges(spectrum, floor, fraction=OCCUPIED_FRACTION, min_bins=MIN_REFINE_BINS):
+    """[i0, i1) bins of `spectrum` holding `fraction` of its power above `floor`, or None.
+
+    A threshold a few dB above the noise catches the spectral skirts of a strong
+    signal, and fragment merging chains those skirts, so threshold-crossing bands
+    run 2-3x the occupied width on real bursts (docs/superpowers/specs/
+    2026-10-23-detect-bounds-design.md). Edges only shrink within the extent; an
+    energy fraction, unlike a level below the peak, does not collapse onto a
+    narrow carrier spike.
+    """
+    excess = np.clip(np.asarray(spectrum, float)-floor, 0, None)
+    total = excess.sum()
+    if len(excess) < min_bins or total <= 0:
+        return None
+    cumulative = np.cumsum(excess)/total
+    tail = (1-fraction)/2
+    i0 = int(np.searchsorted(cumulative, tail, side="right"))
+    i1 = int(np.searchsorted(cumulative, 1-tail, side="left"))+1
+    return min(i0, len(excess)-1), max(min(i1, len(excess)), i0+1)
+
+
 @dataclass
 class DetectionResult:
     response: dict
@@ -307,8 +333,16 @@ def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_thresh
     for fa, fb, rows in merge_fragments(bands, mask, smooth, power):
         time_on = np.any(mask[rows], axis=0)
         ti = np.flatnonzero(time_on)
-        lower = max(0 if real else -fs/2, float(f[fa]-df/2))
-        upper = min(fs/2, float(f[fb-1]+df/2))
+        extent_lower = max(0 if real else -fs/2, float(f[fa]-df/2))
+        extent_upper = min(fs/2, float(f[fb-1]+df/2))
+        refined = refine_edges(power[fa:fb][:, ti].mean(axis=1), floor, OCCUPIED_FRACTION)
+        if refined is None:
+            lower, upper, bounds_method = extent_lower, extent_upper, "threshold extent"
+        else:
+            core_lower, core_upper = float(f[fa+refined[0]]-df/2), float(f[fa+refined[1]-1]+df/2)
+            centre, half = (core_lower+core_upper)/2, OCCUPIED_GUARD*(core_upper-core_lower)/2
+            lower, upper = max(extent_lower, centre-half), min(extent_upper, centre+half)
+            bounds_method = f"occupied {OCCUPIED_FRACTION:.0%} of power above the noise floor"
         start = max(0, int(round(t[ti[0]]*fs-nfft/2)))
         end = min(len(x), int(round(t[ti[-1]]*fs+nfft/2)))
         isolated = isolate_band(x, fs, lower, upper, real)
@@ -333,7 +367,9 @@ def analyze_capture(capture: Capture, margin_db=8, mode="adaptive", fixed_thresh
         evidence_calibrated, evidence_calibration_status = calibrate_confidence(
             "confidence_evidence_based", confidence_evidence_based)
         d = {"id": idx, "start_sample": start, "end_sample": end,
-             "freq_lower_hz": lower, "freq_upper_hz": upper, "confidence": round(confidence, 4),
+             "freq_lower_hz": lower, "freq_upper_hz": upper,
+             "freq_extent_lower_hz": extent_lower, "freq_extent_upper_hz": extent_upper, "bounds_method": bounds_method,
+             "confidence": round(confidence, 4),
              "confidence_calibrated": round(confidence_calibrated, 4) if confidence_calibrated is not None else None,
              "confidence_calibration_status": confidence_calibration_status,
              "confidence_evidence_based": round(confidence_evidence_based, 4),

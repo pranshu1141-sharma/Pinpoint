@@ -407,6 +407,14 @@ def analyze_candidate(capture: Capture, candidate: dict, *, noise_floor=None, es
     """
     if estimator not in ESTIMATORS:
         raise ValueError(f"Unknown estimator {estimator!r}; expected one of {ESTIMATORS}.")
+    if estimator == "legacy" and candidate.get("freq_extent_lower_hz") is not None:
+        # The legacy heuristics were fixture-validated on Detect's threshold-crossing
+        # extent (docs/estimate-classify-validation.json), so they keep analysing it;
+        # the published bounds stay the refined ones.
+        published = {k: candidate[k] for k in ("freq_lower_hz", "freq_upper_hz", "freq_extent_lower_hz", "freq_extent_upper_hz")}
+        extent = {"freq_lower_hz": candidate["freq_extent_lower_hz"], "freq_upper_hz": candidate["freq_extent_upper_hz"],
+                  "freq_extent_lower_hz": None}
+        return {**analyze_candidate(capture, {**candidate, **extent}, noise_floor=noise_floor, estimator=estimator), **published}
     out = estimate_candidate(capture, candidate, noise_floor=noise_floor)
     out = classify_coarse(capture, out)
     out = refine_frequency(capture, out)

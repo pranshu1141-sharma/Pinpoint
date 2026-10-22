@@ -418,3 +418,27 @@ def test_ablation_summary_separates_bad_bounds_from_bad_estimates():
     s = ablation.summarize(rows)
     assert s["correct_given_ok_bounds"] == pytest.approx(1 / 3) and s["ok_bounds"] == pytest.approx(3 / 4)
     assert ablation.compact(rows[0]) == dict(truth="QPSK", label="QPSK", tier="labelled", width_ratio=1.1, n_overlap=1)
+
+
+def test_bounds_stats_use_the_registered_ratio_window_and_count_splits():
+    from experiments.readiness.metrics import bounds_stats
+
+    def row(bands, n_overlap=1, label="BPSK"):
+        return {"truth": {"label": label, "band": (0.0, 100.0)}, "detect": {"bands": bands, "n_overlap": n_overlap}}
+    rows = [row([(0, 100)]), row([(0, 250)]), row([(40, 80)]), row([(0, 49)]), row([(0, 100), (120, 130)], n_overlap=2),
+            row([(500, 600)]), {"truth": {"label": "noise", "band": None}, "detect": {"bands": [], "n_overlap": 0}}]
+    s = bounds_stats(rows)
+    assert s["n"] == 6                                   # noise excluded
+    assert s["ok_bounds"] == 2 / 6                       # the two 1.0x bands; a band missing the truth is not ok
+    assert s["too_wide"] == 1 / 6 and s["too_narrow"] == 2 / 6
+    assert s["fragmented"] == 1 / 6
+
+
+def test_b3_criterion_scores_the_count_and_is_not_applicable_without_data(tmp_path, monkeypatch):
+    from experiments.readiness import fsk_split_probe, scoreboard
+    c = scoreboard.b3_criterion((15, 25))
+    assert c["id"] == "B3" and c["passed"] and c["gens"]["G5"] == {"value": 0.6, "passed": True, "n": 25}
+    assert not scoreboard.b3_criterion((14, 25))["passed"]
+    monkeypatch.setattr(fsk_split_probe, "OUT", tmp_path / "missing.json")
+    missing = scoreboard.b3_criterion(None)
+    assert missing["passed"] is False and missing["gens"]["G5"]["passed"] is None
