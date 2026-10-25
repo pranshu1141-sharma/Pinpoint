@@ -12,7 +12,9 @@ UNKNOWN_CE = "unknown constant-envelope"
 FAMILY = {"BPSK": "PSK", "QPSK": "PSK", "8PSK": "PSK", "QAM16": "QAM16", "FSK2": "FSK", "FSK4": "FSK", "FSK8": UNKNOWN_CE, "ASK2": "ASK",
           "AM": "AM", "FM": "FM", "none": "none"}
 DIGITAL_EXPERTS = ("nrz", "rrc", "lsp", "fsk")
-ALL_EXPERTS = ("nrz", "rrc", "lsp", "fsk", "analog")
+ALL_EXPERTS = ("nrz", "rrc", "lsp", "fsk", "analog", "keyed")
+# rate-free keyed two-level fits (OOK, 2-FSK with free transition times): digital, but they claim no rate
+RATELESS_DIGITAL = ("keyed",)
 
 
 @dataclass(frozen=True)

@@ -17,7 +17,7 @@ import numpy as np
 from scipy import signal
 
 from backend.experimental.estimate_spike import Thresholds, analyze_segment, decide
-from backend.experimental.estimate_spike.hypothesis import DIGITAL_EXPERTS, UNKNOWN_CE
+from backend.experimental.estimate_spike.hypothesis import DIGITAL_EXPERTS, RATELESS_DIGITAL, UNKNOWN_CE
 from .estimate import occupied_windows
 from .ingest import Capture
 
@@ -38,8 +38,8 @@ def thresholds() -> tuple[Thresholds, str, str]:
 
 
 def fm_digital_margin(hypotheses, fm_score: float) -> float:
-    """Per-sample score gap from FM to the best digital hypothesis (inf when none)."""
-    dig = [h.score for h in hypotheses if h.expert in DIGITAL_EXPERTS]
+    """Per-sample score gap from FM to the best digital hypothesis, keyed ones included (inf when none)."""
+    dig = [h.score for h in hypotheses if h.expert in DIGITAL_EXPERTS + RATELESS_DIGITAL]
     return (min(dig) - fm_score) if dig else float("inf")
 
 
