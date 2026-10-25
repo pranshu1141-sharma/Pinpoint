@@ -188,8 +188,17 @@ checklist, tracked as it ships:
 
 ## Remaining work by priority
 
+Release priorities set 2026-10-25, in order. Progress on each is tracked in [LIMITATIONS_AND_ROADMAP.md](LIMITATIONS_AND_ROADMAP.md#release-priorities-research-prototype).
+
+1. **Clean install and demo from a fresh clone.** A new user can clone, install, start both servers and see the bundled demo analysed by following the README alone, on macOS/Linux and Windows.
+2. **Automated CI checks.** Every push and pull request runs the backend tests, the frontend tests and the frontend production build.
+3. **Performance against public RF benchmarks, especially the current failures.** Improve the measured G5 real-benchmark results (RC1 correct labels, RC2 wrong labels) and the impaired-synthetic G4 and Detect-bounds criteria (W1, W2, W4, B1, B2) without loosening any registered threshold.
+4. **Short demo recording.** A real bundled capture going through detection, inspection and export in the dashboard.
+5. **Versioned research-prototype release.** A tagged release whose notes state the current limitations plainly, with numbers taken from `docs/readiness.json`.
+
+Later work, after the release priorities:
+
 1. Collect representative real RF captures with trustworthy annotations and define field metrics before tuning detector thresholds.
-2. Add the optional Tier 1 independent statistical “not noise” test if it improves validated precision/recall.
-3. Profile realistic long captures before deciding whether coarse-to-fine scanning is useful.
-4. Add durable jobs, authentication, multi-worker coordination, configurable retention, and deployment hardening if moving beyond a local demonstration.
-5. Fine classification and gated symbol-rate estimation are implemented and validated on synthetic fixtures for bpsk/qpsk/8psk/ask/fsk (symbol rate: bpsk/qpsk/8psk/ask only), with qam as a best-effort, order-unresolved flag; add real-capture and held-out evidence (only one real file has been tried, against the original bpsk/qpsk path, and it correctly declined to label), extend beyond these constellations if further orders are needed, and validate aggregation before adding downstream estimates to merged large-capture tracks. Report, demodulation and decoding remain separate unimplemented phases.
+2. Profile realistic long captures before deciding whether coarse-to-fine scanning is useful.
+3. Add durable jobs, authentication, multi-worker coordination, configurable retention, and deployment hardening if moving beyond a local demonstration.
+4. Add real-capture and held-out evidence for the fine classification and symbol-rate paths (validated on synthetic fixtures for bpsk/qpsk/8psk/ask/fsk; qam is a best-effort, order-unresolved flag), and validate aggregation before adding downstream estimates to merged large-capture tracks. Report, demodulation and decoding remain separate phases.
