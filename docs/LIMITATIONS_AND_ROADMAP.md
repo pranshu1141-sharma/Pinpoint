@@ -2,6 +2,18 @@
 
 This document records what the current project can support, what remains incomplete, and the order in which later work should be approached. It prevents planned capabilities from being mistaken for shipped behavior.
 
+## Release priorities (research prototype)
+
+Set 2026-10-25. These come before the longer-term roadmap below. Each item lists what "done" means and where it stands.
+
+| # | Priority | Done when | Status |
+|---|---|---|---|
+| 1 | Clean install and demo from a fresh clone | A fresh clone, following only the README, installs, starts the API and dashboard, and shows the bundled demo analysed, on macOS/Linux and Windows. | macOS verified 2026-10-25 from a fresh clone (Node 24; Python 3.11 for the demo run, 3.13 with the lock file for the test suite): install, IQ demo detection, detail panel, JSON/SigMF export. README fixed for macOS's Python 3.9 trap and the demo-on-load claim; `PINPOINT_API_URL` added for a busy port 8000. Windows not yet re-checked. |
+| 2 | Automated CI | Every push and pull request runs the backend tests, the frontend tests and the frontend production build; a failure blocks the check. | Workflow written: backend on Python 3.12 and 3.13 with `backend/requirements-lock.txt` installed first, `npm test` and `npm run build` on Node 22. Python 3.11 dropped from CI and from the supported range (2026-10-25): the lock's numpy 2.5.3 / scipy 1.18.1 do not install there, and the frozen G4 generator hashes only reproduce under them. A stale frontend test (symbol-rate "Not attempted" state lost in WP4) was fixed. Not yet confirmed green on GitHub. |
+| 3 | Public RF benchmark performance, especially current failures | G5 RC1/RC2 and G4/bounds criteria W1, W2, W4, B1, B2 improve on the frozen test split, with thresholds in `experiments/readiness/config.py` unchanged and every run reported in `docs/reports/`. | Not started (current numbers in [READINESS.md](READINESS.md)) |
+| 4 | Short demo recording | A recording of a real bundled capture going through detection, inspection and export, linked from the README. | Not started |
+| 5 | Versioned research-prototype release | A tagged release (version from `backend/_version.py`) whose notes state the measured limitations plainly, using numbers from `docs/readiness.json`. | Not started (an earlier `v0.1.0-beta.1` tag exists) |
+
 ## Measured open issues (readiness scoreboard)
 
 These are the criteria that still fail, or known weaknesses, from `docs/READINESS.md` and the G3 run. Each has a fixed pass/fail threshold (`experiments/readiness/config.py`).

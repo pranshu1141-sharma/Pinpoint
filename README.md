@@ -112,38 +112,48 @@ For a fast audit, read [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md), [`doc
 
 ## Run locally
 
-Requirements: Python 3.11–3.13, Node.js 20.19+ or 22.12+, and npm. Tested here with Python 3.13 and Node 24. Install dependencies once, then run the two servers in separate terminals from the project root.
+Requirements: Python 3.12–3.13, Node.js 22.18+ (20.19+ builds and runs the dashboard; the frontend tests need 22.18+ to run `.ts` files directly), npm, and git. Tested with Python 3.13 and Node 24. Install dependencies once, then run the two servers in separate terminals from the project root.
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
+macOS / Linux:
+
+```bash
+git clone https://github.com/pranshu1141-sharma/Pinpoint.git
+cd Pinpoint
+python3.13 -m venv .venv          # python3.12 also works; macOS's system python3 is 3.9 and will not work
+.venv/bin/python --version        # must print 3.12 or 3.13
+.venv/bin/python -m pip install -r backend/requirements-lock.txt
 npm --prefix frontend ci
 ```
 
-Terminal 1:
+Terminal 1 (API):
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
+```bash
+.venv/bin/python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
 ```
 
-Terminal 2:
+Terminal 2 (dashboard):
 
-```powershell
+```bash
 npm --prefix frontend run dev
 ```
 
-Open [the dashboard](http://127.0.0.1:5173/) and [the interactive API contract](http://127.0.0.1:8000/docs). On macOS/Linux use `.venv/bin/python` in place of `.\.venv\Scripts\python.exe`. The Vite server proxies `/api` to FastAPI. `npm --prefix frontend run build` checks TypeScript and creates the frontend production bundle; it does not bundle the Python server. This is a local full-stack deliverable, not a standalone hosted frontend.
+Windows (PowerShell): the same steps with `python -m venv .venv`, `.\.venv\Scripts\python.exe -m pip install -r backend/requirements-lock.txt`, `npm --prefix frontend ci`, then `.\.venv\Scripts\python.exe -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000` and `npm --prefix frontend run dev`.
 
-The dashboard automatically analyzes the bundled `backend/data/demo/demo.sigmf-data` with its metadata. Nothing is generated in the frontend. The **IQ demo** and **Audio demo** buttons each submit a real bundled file to the same analysis pipeline used for uploads. Fonts are bundled for offline use after installation. If FastAPI is unavailable the dashboard shows **Not connected** and hides computed result panels.
+Open [the dashboard](http://127.0.0.1:5173/) and [the interactive API contract](http://127.0.0.1:8000/docs). The Vite server proxies `/api` to FastAPI. `npm --prefix frontend run build` checks TypeScript and creates the frontend production bundle; it does not bundle the Python server. This is a local full-stack deliverable, not a standalone hosted frontend.
+
+The dashboard opens on a capture-intake screen. **IQ demo** runs the bundled `backend/data/demo/demo.sigmf-data` (with its metadata) and **Audio demo** the bundled `audio_demo.wav`, through the same analysis pipeline used for uploads; nothing is generated in the frontend. A demo run shows detections, the detail panel and Signal Breakdown, and its results export as JSON or SigMF (`/api/export/{job_id}`) or CSV from the detections list. If port 8000 is taken, start the API on another port and run the dashboard with `PINPOINT_API_URL=http://127.0.0.1:<port> npm --prefix frontend run dev`. Fonts are bundled for offline use after installation. If FastAPI is unavailable the dashboard shows **Not connected** and hides computed result panels. If the build reports missing modules after pulling new commits, rerun `npm --prefix frontend ci`.
 
 ## Generate and verify
 
-```powershell
-.\.venv\Scripts\python.exe -m backend.pipeline.synth_gen
-.\.venv\Scripts\python.exe -m pytest backend/tests -q
-.\.venv\Scripts\python.exe -m backend.validate
+```bash
+.venv/bin/python -m backend.pipeline.synth_gen
+.venv/bin/python -m pytest backend/tests -q
+.venv/bin/python -m backend.validate
+npm --prefix frontend test
 npm --prefix frontend run build
 ```
+
+CI (`.github/workflows/tests.yml`) installs `backend/requirements-lock.txt` and runs the backend tests on Python 3.12 and 3.13, and runs the frontend tests and production build on Node 22 for every push and pull request.
 
 The generator writes continuous BPSK, QPSK, and FM at 20, 10, 0, and −5 dB SNR, an eight-pulse capture, pure noise, a mixed demo, and an audio WAV under `backend/data/generated/`. Ground truth is stored in separate `.truth.json` files. The detector never reads ground truth. SNR is total signal power divided by full-band complex noise power; pulsed SNR is measured during the pulse. This differs from narrowband receiver SNR.
 

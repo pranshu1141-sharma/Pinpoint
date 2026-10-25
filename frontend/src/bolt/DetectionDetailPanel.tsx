@@ -73,6 +73,8 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
   const measurement = (value: number | null | undefined, unit: string) =>
     value == null ? unavailable : `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${unit}`;
   const bandwidth99 = measurement(detection.bandwidth_99pct_hz, 'Hz');
+  const symbolRateValue = detection.symbol_rate_hz != null ? measurement(detection.symbol_rate_hz, 'Hz')
+    : detection.symbol_rate_status?.includes('not attempted') ? 'Not attempted' : unavailable;
 
   const tierText: Record<string, string> = {
     labelled: 'Labelled (margin over every rival passed)',
@@ -92,7 +94,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
       color: detection.estimate_tier === 'labelled' ? '#5cb85c' : '#d4d4d4' },
     { key: 'Label needs review', value: detection.label_needs_review == null ? unavailable : detection.label_needs_review ? 'Yes' : 'No',
       color: detection.label_needs_review ? '#cc3c34' : '#d4d4d4' },
-    { key: 'Symbol rate', value: measurement(detection.symbol_rate_hz, 'Hz'),
+    { key: 'Symbol rate', value: symbolRateValue,
       explain: 'Rate of the winning digital hypothesis, published only when the family margin passes and the rate margin over rates ≥5% away passes.' },
     { key: 'Family margin', value: nats(detection.m_fam, th?.m_fam),
       explain: `Score gap to the best hypothesis of another family, in nats per ${th?.margin_unit ?? 'sample'}. A margin, not a probability. ${th?.provenance ?? ''}` },
@@ -107,7 +109,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
     { key: 'Label provenance', value: detection.label_provenance ?? 'legacy (fixture-validated only)', color: '#d4a72c' },
     { key: 'Fine modulation (legacy)', value: detection.fine_modulation_label ?? 'Not reliably estimated',
       explain: 'Legacy heuristics validated only on the shipped synthetic fixtures (48 kHz, 96 samples/symbol, one filter). PSK by phase-cluster spread, ASK/FSK by level clustering, QAM as an order-unresolved flag.' },
-    { key: 'Symbol rate (legacy)', value: detection.symbol_rate_hz == null ? 'Not reliably estimated' : measurement(detection.symbol_rate_hz, 'Hz'),
+    { key: 'Symbol rate (legacy)', value: symbolRateValue,
       explain: 'Lowest spectral peak within 3 dB of the differentiated-and-squared segment’s maximum; fixture-validated only.' },
   ];
 
