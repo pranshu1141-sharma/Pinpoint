@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 200" width="880" height="200">
+  <title>PinPoint</title>
+  <defs>
+    <linearGradient id="pp-fill" x1="64" y1="24" x2="192" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#0E7FC0"/>
+    </linearGradient>
+    <mask id="pp-peak" maskUnits="userSpaceOnUse" x="0" y="0" width="256" height="256">
+      <rect width="256" height="256" fill="#fff"/>
+      <path d="M78 116H104L128 60L152 116H178" fill="none" stroke="#000" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <g transform="translate(20 16) scale(0.66)">
+    <path mask="url(#pp-peak)" fill="url(#pp-fill)" d="M128 244C128 244 46 164 46 102a82 82 0 0 1 164 0c0 62-82 142-82 142Z"/>
+  </g>
+  <text x="212" y="108" fill="#0B0F14" font-family="Inter, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="68" font-weight="700" letter-spacing="-1.5">PinPoint</text>
+  <text x="214" y="146" fill="#57606A" font-family="Inter, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="21" letter-spacing="0.3">Offline RF signal detection &amp; characterisation</text>
+</svg>
