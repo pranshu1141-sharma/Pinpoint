@@ -301,9 +301,11 @@ def test_unknown_family_text_names_impairment_not_a_new_family():
 
 
 # --- G4 per-impairment ablation (WP3b): switches must not change any RNG draw --------------------------------------
-_G4_CASES = (("qpsk", 16, 10, 500001, "c3381df6dada04c5", "53448dab22efa58a"),
-             ("fsk2", 32, 5, 500002, "f8d114627fa92e29", "2644e4b7d205d18b"),
-             ("noise", 16, 0, 500003, "0de0468dd87f19eb", "2daeb1f36095b44b"))
+# clean is hashed at y's complex64 precision: its complex128 last bits differ between the Linux and macOS maths
+# libraries (CI vs local), and that rounding is already what keeps y's hash identical on both.
+_G4_CASES = (("qpsk", 16, 10, 500001, "c3381df6dada04c5", "087ccdf18df24485"),
+             ("fsk2", 32, 5, 500002, "f8d114627fa92e29", "6fff4b4b8b3cfa46"),
+             ("noise", 16, 0, 500003, "0de0468dd87f19eb", "bb9f8df61474d25e"))
 
 
 @pytest.mark.parametrize("kind,sps,snr,seed,y_hash,clean_hash", _G4_CASES)
@@ -312,7 +314,7 @@ def test_g4_default_output_is_bit_identical_to_the_frozen_generator(kind, sps, s
     from experiments.readiness import impaired
     y, clean, _ = impaired.make_capture(kind, snr, sps, seed)
     assert hashlib.sha256(y.tobytes()).hexdigest()[:16] == y_hash
-    assert hashlib.sha256(np.asarray(clean).tobytes()).hexdigest()[:16] == clean_hash
+    assert hashlib.sha256(np.asarray(clean).astype(np.complex64).tobytes()).hexdigest()[:16] == clean_hash
 
 
 def _g4(impairments, kind="qpsk", sps=16, snr=10, seed=500001):
