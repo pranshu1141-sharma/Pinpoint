@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>PinPoint</title>
+  <!-- A spectrum trace: noise-floor ripple, one active peak, and an analyser marker locked on it. -->
+  <defs>
+    <linearGradient id="pp-trace" x1="0" y1="72" x2="0" y2="192" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#67E8F9"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#0E7FC0"/></linearGradient>
+  </defs>
+  <g>
+    <rect width="256" height="256" rx="60" fill="#0B1220"/>
+    <path d="M40 184h14c6 0 8-10 14-10s8 10 14 10h12c14 0 18-104 34-104s20 104 34 104h12c6 0 8-8 14-8s8 8 14 8h14" fill="none" stroke="url(#pp-trace)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M112 36h32l-16 20z" fill="#E6EDF3" stroke="#E6EDF3" stroke-width="6" stroke-linejoin="round"/>
+  </g>
+</svg>

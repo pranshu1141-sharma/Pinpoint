@@ -22,6 +22,7 @@ This directory is the complete technical and project context for the current Pha
 | [Project status](PROJECT_STATUS.md) | The exact completion state of every original requirement. |
 | [Architecture](ARCHITECTURE.md) | The system boundaries, request flow, runtime state, and component relationships. |
 | [Repository map](REPOSITORY_MAP.md) | The responsibility and dependencies of every project-owned file and artifact family. |
+| [Branches](BRANCHES.md) | Which branches are active, and where every merged work-package branch is archived as a tag. |
 | [Backend pipeline](BACKEND_PIPELINE.md) | The DSP sequence, formulas, thresholds, output semantics, and engineering rationale. |
 | [Input formats](INPUT_FORMATS.md) | How IQ, WAV, and SigMF files are interpreted, validated, or rejected. |
 | [API reference](API_REFERENCE.md) | Every endpoint, request parameter, response object, status code, and job state. |
