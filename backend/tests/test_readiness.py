@@ -257,3 +257,19 @@ def test_g5_split_is_frozen_and_by_protocol():
         assert e["allowed_labels"] == ([e["truth"]["label"]] if e["truth"]["label"] else [])
     assert all(len(s) == 1 for s in sides.values())
     assert sides["ais"] == {"test"}
+
+
+_G4_CASES = (
+    ("qpsk", 16, 10, 500001, "c3381df6dada04c5", "69d0e6977011e9c8"),
+    ("fsk2", 32, 5, 500002, "f8d114627fa92e29", "41310f6b642aa0f4"),
+)
+
+
+@pytest.mark.parametrize("kind,sps,snr,seed,y_hash,clean_hash", _G4_CASES)
+def test_g4_default_output_is_bit_identical_to_the_frozen_generator(kind, sps, snr, seed, y_hash, clean_hash):
+    import hashlib
+    from experiments.readiness import impaired
+
+    y, clean, _ = impaired.make_capture(kind, snr, sps, seed)
+    assert hashlib.sha256(y.tobytes()).hexdigest()[:16] == y_hash
+    assert hashlib.sha256(np.asarray(clean).tobytes()).hexdigest()[:16] == clean_hash
