@@ -17,6 +17,7 @@ FS = 200_000.0
 N = 1 << 19                                   # 2.62 s: >= 16 decimated 4,096-sample windows at every rate
 SPS = (8, 16, 32, 64)                         # 25, 12.5, 6.25, 3.125 kBd
 SNRS = (0, 5, 10, 20)
+IMPAIRMENTS = ("multipath", "drift", "phase_noise", "interferer", "colour", "iq", "dc", "clip")
 KINDS_DIGITAL = ("bpsk", "qpsk", "8psk", "qam16", "ask2", "fsk2", "fsk4")
 KINDS_HELD_OUT = ("fsk8", "qam8")
 LABEL = {"bpsk": "BPSK", "qpsk": "QPSK", "8psk": "8PSK", "qam16": "QAM16", "ask2": "ASK2", "fsk2": "FSK2",
@@ -127,8 +128,16 @@ def width_hz(kind, rate, extra):
     return (1 + float(extra["shaping"][3:])) * rate if extra["shaping"].startswith("rrc") else 2 * rate
 
 
-def make_capture(kind, snr_db, sps, seed, n=N, fs=FS):
-    """(x complex64, clean target complex128, truth-extras dict)."""
+def make_capture(kind, snr_db, sps, seed, n=N, fs=FS, impairments=frozenset(IMPAIRMENTS)):
+    """(x complex64, clean target complex128, truth-extras dict).
+
+    `impairments` (default: all eight, the frozen G4) switches each impairment on or off for the WP3b ablation. Every random
+    draw is made whether or not its impairment is applied, so the target symbols, noise and impairment parameters are the same
+    across switch settings and runs are paired. The default output is bit-identical to the pre-ablation generator."""
+    on = set(impairments)
+    unknown = on - set(IMPAIRMENTS)
+    if unknown:
+        raise ValueError(f"unknown impairments {sorted(unknown)}")
     rng = np.random.default_rng(seed)
     t = np.arange(n) / fs
     rate = fs / sps if kind not in ("fm", "noise") else None
@@ -138,14 +147,16 @@ def make_capture(kind, snr_db, sps, seed, n=N, fs=FS):
     if kind != "noise":
         base, extra = _emitter(kind, rng, sps if rate else 16, n, fs)
         info.update(extra)
-        base, info["multipath_taps"] = _multipath(base, rng, sps if rate else 16)
+        mp, info["multipath_taps"] = _multipath(base, rng, sps if rate else 16)
+        base = mp if "multipath" in on else base
         base = base / np.sqrt(np.mean(np.abs(base) ** 2))
         width = width_hz(kind, rate, extra)
         fc = rng.uniform(-0.25, 0.25) * fs
         drift = rng.uniform(-1, 1) * 0.02 * (rate or 1000.0)                     # total drift over the capture, Hz
         linewidth = rng.uniform(0, 1e-3) * (rate or 1000.0)                      # Wiener phase noise, Hz
         phase = np.cumsum(rng.standard_normal(n)) * np.sqrt(2 * np.pi * linewidth / fs)
-        freq = fc + drift * (t / t[-1] - 0.5)
+        phase = phase if "phase_noise" in on else np.zeros(n)
+        freq = fc + (drift if "drift" in on else 0.0) * (t / t[-1] - 0.5)
         carrier = np.exp(1j * (2 * np.pi * np.cumsum(freq) / fs + phase + 2 * np.pi * rng.uniform()))
         clean = base * carrier * 10 ** (snr_db / 20)
         info.update(fc=float(fc), width=float(width), drift_hz=float(drift), linewidth_hz=float(linewidth))
@@ -158,7 +169,7 @@ def make_capture(kind, snr_db, sps, seed, n=N, fs=FS):
         ifc = fc + side * (width / 2 + rng.uniform(0.5, 1.5) * width + iw / 2)
         if abs(ifc) + iw / 2 < 0.48 * fs:
             ipow = rng.uniform(-6, 6)
-            others = ib * np.exp(2j * np.pi * ifc * t) * 10 ** ((snr_db + ipow) / 20)
+            others = ib * np.exp(2j * np.pi * ifc * t) * 10 ** ((snr_db + ipow) / 20) if "interferer" in on else others
             info.update(interferer=dict(kind=i_kind, rate=fs / i_sps, fc=float(ifc), width=float(iw),
                                         rel_power_db=float(ipow)))
         else:
@@ -166,18 +177,22 @@ def make_capture(kind, snr_db, sps, seed, n=N, fs=FS):
     # coloured noise: white through a first-order FIR [1, rho e^{j theta}], unit mean power
     w = (rng.standard_normal(n + 1) + 1j * rng.standard_normal(n + 1)) / np.sqrt(2)
     rho, theta = rng.uniform(0.2, 0.6), rng.uniform(0, 2 * np.pi)
-    noise = (w[1:] + rho * np.exp(1j * theta) * w[:-1]) / np.sqrt(1 + rho ** 2)
+    noise = (w[1:] + rho * np.exp(1j * theta) * w[:-1]) / np.sqrt(1 + rho ** 2) if "colour" in on else w[1:]
     y = clean + others + noise
     # receiver: IQ imbalance y -> mu y + nu conj(y), DC offset, then ADC clipping of I and Q
     g = 10 ** (rng.uniform(0.3, 1.5) / 20)
     phi = np.deg2rad(rng.uniform(1, 5))
     mu, nu = (1 + g * np.exp(-1j * phi)) / 2, (1 - g * np.exp(1j * phi)) / 2
+    if "iq" not in on:
+        mu, nu = 1.0, 0.0
     y = mu * y + nu * np.conj(y)
     ref = np.sqrt(np.mean(np.abs(y) ** 2))
     dc = ref * 10 ** (rng.uniform(-25, -10) / 20) * np.exp(2j * np.pi * rng.uniform())
-    y = y + dc
+    y = y + (dc if "dc" in on else 0.0)
     clip = rng.uniform(2.5, 3.5) * ref / np.sqrt(2)          # per-rail sigma multiples: ~0.05-1.2% clipped
-    y = np.clip(y.real, -clip, clip) + 1j * np.clip(y.imag, -clip, clip)
+    if "clip" in on:
+        y = np.clip(y.real, -clip, clip) + 1j * np.clip(y.imag, -clip, clip)
     info.update(iq_gain_db=float(20 * np.log10(g)), iq_phase_deg=float(np.rad2deg(phi)), dc_db=float(20 * np.log10(abs(dc) / ref)),
-                clip_rel=float(clip / ref), noise_rho=float(rho), clipped_fraction=float(np.mean(np.abs(y.real) >= clip)))
+                clip_rel=float(clip / ref), noise_rho=float(rho), clipped_fraction=float(np.mean(np.abs(y.real) >= clip)) if "clip" in on else 0.0,
+                impairments=sorted(on))
     return y.astype(np.complex64), clean, info

@@ -37,7 +37,7 @@ They are baseband offsets. If SigMF supplies a center frequency, the app retains
 
 ### Does it identify modulation?
 
-Yes, when it can prove it, and it says so when it cannot. The verify estimator rebuilds the candidate under competing hypotheses (BPSK, QPSK, 8PSK, 16-QAM, 2-ASK, 2-FSK, 4-FSK, AM, FM, noise) and publishes a label and symbol rate only when the winner's margin over every rival, in nats, passes a threshold fit on calibration data that never overlaps the test data. Otherwise the output is *unknown family* (structure outside the library) or *not reliably estimated*. The measured rates of correct and wrong labels, on synthetic generators and real recordings, are in [CLAIMS.md](CLAIMS.md) with their conditions; quote those, not a general accuracy. Margins are not probabilities.
+Yes, when it can prove it, and it says so when it cannot. The verify estimator rebuilds the candidate under competing hypotheses (BPSK, QPSK, 8PSK, 16-QAM, 2-ASK, 2-FSK, 4-FSK, AM, FM, noise) and publishes a label and symbol rate only when the winner's margin over every rival, in nats, passes a threshold fit on calibration data that never overlaps the test data. Otherwise the output is *does not fit the clean models (impairment or unknown family)* (measured on real and impaired captures, this tier fires on impaired signals of known families as well as on genuinely unknown ones) or *not reliably estimated*. The measured rates of correct and wrong labels, on synthetic generators and real recordings, are in [CLAIMS.md](CLAIMS.md) with their conditions; quote those, not a general accuracy. Margins are not probabilities.
 
 ### Does the system decode audio from IQ?
 

@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   server: {
     port: Number(process.env.PORT) || 5173,
-    proxy: { "/api": "http://127.0.0.1:8000" },
+    // PINPOINT_API_URL points the dev proxy at an API on another port when 8000 is taken
+    proxy: { "/api": process.env.PINPOINT_API_URL || "http://127.0.0.1:8000" },
   },
 });

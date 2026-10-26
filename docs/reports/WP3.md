@@ -9,8 +9,9 @@ measuring the product as it stands at `8673551` (WP2). Full tables: [`WP3_tables
 - **X1 (docs) fails on a re-run.** It fails only because `CLAIMS.md` and `LIMITATIONS_AND_ROADMAP.md` quote the S1 G2
   wall-clock figure (90.4%), which cannot reproduce exactly. Same effect the WP1 report found. I did not re-sync the docs.
   Overall 17/25 → 16/25 is that and nothing else. A decision is needed (question 3).
+- **A WP3 finding was wrong and is corrected (D, fix 2).** The narrow-candidate story came from a probe that chose the highest-SNR candidate; see D.
 - **My own first hypothesis was wrong.** I expected a missing wide-index FSK family to explain the `unexplained ≈ 0.87`
-  abstentions on FSK2 files. The FSK expert fits its own tone positions, so it is not that. Detect's bounds are the cause (F below).
+  abstentions on FSK2 files. The FSK expert fits its own tone positions, so it is not that. Detect's bounds looked like the cause (see D; that reading was later corrected).
 
 ## What changed
 - `experiments/readiness/diagnose.py` (written in WP2) was run; its docstring no longer claims to write a report.
@@ -55,10 +56,14 @@ Per candidate on G5, pulsed refusal is 454 of 753 (60%); `short_segment` is 10 (
 247 too short, 66 m_fam, 47 unexplained, 12 fm_digital, 11 usage, **89 published: 25 correct, 64 wrong**. The wrong ones are
 `AM` on OOK ×33, `FM` on FSK ×18, `FSK4`/`QPSK` on FSK ×9, `QPSK` on OOK ×3, `QAM16` on QPSK ×1. Lifting alone would wreck RC2.
 
-**D. Detect bounds on FSK2 files** (28 files, tone split of the strongest burst vs the top candidate's bandwidth):
-candidate narrower than half the split on **15**, wider than twice the split on **10**, plausible on 3. Files typically
-carry 3–12 candidates within 3 dB of each other SNR-wise: one FSK signal shattered into per-tone lines or lobes, or
-swallowed by a band 5–12× too wide. The tone split is a rough measure (15th/85th IF percentile inside one burst).
+**D. Detect bounds on FSK2 files (CORRECTED in WP3b; the first version of this paragraph was wrong).** I first reported
+"bounds unusable on ~25 of 28 files, 15 too narrow". That came from a probe that picked each file's highest-`snr_db`
+candidate, which selects weak narrow spectral lines (narrow bands read a high SNR), not the signal. The signal candidate
+(overlaps the strongest burst, contains its centre frequency) exists on all 28 files. Against the occupied width (tone
+split + 2 x symbol rate) on the 27 rated files: **12 plausible (0.5-2x), 14 too wide (7 of them by more than 4x), 1 too
+narrow.** The too-wide ones are mostly 1-2 MS/s captures where the candidate spans about half the capture bandwidth.
+Separately, files carry a median of 6 candidates for one transmission (up to 26), many of them narrow spectral lines that the
+product also analyses and can mislabel. The tone split is a rough measure (15th/85th IF percentile inside one burst).
 
 **E. Oracle experiment** (strongest packet, band derived from the file's own signal and its expected rate, not refused; an
 upper bound, uses truth-derived rate for the band):
@@ -90,7 +95,7 @@ n, a warning rather than a measurement). Thresholds were fit at 4,096 samples on
 | # | Fix | Evidence | Predicted impact | Confidence |
 |---|---|---|---|---|
 | 1 | Analyse each pulsed candidate as packets instead of refusing it, shipped with fixes 2, 4 and 5 | 60% of files' primary; oracle OOK 8/14, 0 wrong | RC1 0% → ≤ 11/41 probed files (≤ 27%; ≤ 13% of all 84 labelled test files if the 37 rate-less OOK files gain nothing). **Cannot reach 50% alone.** RC2 worsens unless 4 and 5 ship together. | Medium (oracle uses truth-derived band) |
-| 2 | Fix Detect bounds: group same-timing narrow candidates into one signal, and reject over-wide bands, before estimation | 25/28 FSK2 files unusable bounds; 5 of the FSK→FM wrong labels come from files whose top candidate is < 0.3× the split | Unlocks nothing by itself (oracle: 3 correct + 7 wrong); prerequisite for 3; removes the lobe-level wrong `FM`/`AM` labels | Medium-high |
+| 2 | Fix Detect bounds: narrow over-wide bands to the occupied width, and suppress or fold narrow spectral-line candidates into the signal that owns them (corrected in WP3b: too wide on 14/27 rated FSK2 files, too narrow on 1; G4 too wide on 27%) | 14/27 FSK2 files > 2x the occupied width; median 6 candidates per transmission | Unlocks little by itself (oracle: 3 correct + 7 wrong); prerequisite for 3; cuts the number of candidates an analyst must read and the wrong labels on weak lines | Medium |
 | 3 | GFSK/GMSK expert (WP5a) so FSK beats FM on shaped FSK | 12/27 oracle FSK2 end as wrong `FM` (5) or `fm_digital` abstain (7); AIS ×2 | ≤ 12/27 FSK2 files (44%) move from abstain/wrong to a chance at correct; every FM-on-burst wrong label goes away | Medium |
 | 4 | Honesty gate for real/impaired data (also: stop calling in-library signals "unknown family"): guard catch-all labels (`QAM16`, `8PSK`, `FSK4`) with a margin over the next lower model; add an `AM`-is-digital check like `fm_digital`; refit on G4 **calibration** seeds only | 4/6 G4 wrong = QAM16; 33 `AM`-on-OOK wrongs if refusal lifted; AUC 0.62 | G4 W1 4.5% → ≈ 1.5% if the QAM16 wrongs go (sample of 6, wide interval); RC2 protection for fix 1 | Medium |
 | 5 | OOK rate: report pulse-width classes, withhold single-rate claims (WP5b) | 3 of 6 published OOK rates wrong (Manchester 2×) | Without it, lifting refusal for OOK fails RC3 (50% wrong rates against ≤ 5%) | High |

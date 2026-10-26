@@ -56,6 +56,23 @@ def _max_samples(root):
     return int(m.group(1)) if m else None
 
 
+# Wall-clock figures cannot reproduce exactly between runs (WP3b). A marker whose path passes through one of these
+# keys may differ from readiness.json by TIMING_TOLERANCE_POINTS percentage points; every other marker is exact.
+# Measured run-to-run spread of S1 on G2 with identical code: 88.8%, 90.4%, 94.0% (a 5.2-point range), so 5 points.
+TIMING_KEYS = ("speed", "throughput")
+TIMING_TOLERANCE_POINTS = 5.0
+
+
+def _within_timing_tolerance(path, want, shown):
+    if not (isinstance(want, float) and 0 <= want <= 1 and shown.endswith("%")
+            and any(part in TIMING_KEYS for part in path.split("."))):
+        return False
+    try:
+        return abs(100 * want - float(shown[:-1])) <= TIMING_TOLERANCE_POINTS
+    except ValueError:
+        return False
+
+
 def lookup(obj, path):
     for part in path.split("."):
         if isinstance(obj, list):
@@ -89,7 +106,7 @@ def check(readiness: dict, root: Path = ROOT):
             want = lookup(readiness, path)
             if want is None:
                 problems.append(f"{name} marker {path}: no such readiness.json value")
-            elif fmt(want) != shown:
+            elif fmt(want) != shown and not _within_timing_tolerance(path, want, shown):
                 problems.append(f"{name} marker {path}: says {shown}, readiness.json has {fmt(want)}")
     status = root / "docs" / "PROJECT_STATUS.md"
     embedded = _block(status.read_text()) if status.exists() else None

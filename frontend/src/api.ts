@@ -4,6 +4,9 @@ export type Detection = {
   end_sample: number;
   freq_lower_hz: number;
   freq_upper_hz: number;
+  freq_extent_lower_hz?: number;
+  freq_extent_upper_hz?: number;
+  bounds_method?: string;
   confidence: number;
   confidence_evidence_based?: number | null;
   confidence_evidence_based_kind?: string | null;

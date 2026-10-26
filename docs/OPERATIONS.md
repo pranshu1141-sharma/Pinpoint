@@ -4,8 +4,8 @@ This project runs as two local processes: a FastAPI analysis service and a Vite 
 
 ## Prerequisites
 
-- Python 3.11–3.13
-- Node.js 20.19+ or 22.12+
+- Python 3.12–3.13 (macOS ships python3 3.9, which is too old; use e.g. `python3.13 -m venv .venv`). The pinned numpy 2.5.3 and scipy 1.18.1 in `requirements-lock.txt` need 3.12+, and the frozen G4 generator hashes in `backend/tests/test_readiness.py` are only reproducible with those versions.
+- Node.js 20.19+ or 22.12+ to build and run the dashboard; 22.18+ to run the frontend tests (`npm --prefix frontend test`)
 - npm
 - Enough free disk for dependencies, generated fixtures, and approximately twice the largest upload during multipart handling
 
@@ -17,7 +17,7 @@ From the project root:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r backend/requirements-lock.txt
 npm --prefix frontend ci
 ```
 
@@ -49,7 +49,7 @@ Use one Uvicorn worker. Jobs, retention, and the compute semaphore are process-l
 
 ## Expected startup behavior
 
-The dashboard initially checks backend health. When connected, it loads the bundled IQ demo unless the browser tab is already tracking a large job. A healthy backend returns `status: connected`, `stage: detect`, and the 2 GiB upload limit.
+The dashboard initially checks backend health. When connected, it shows the capture-intake screen (or resumes a large job the browser tab is already tracking); the **IQ demo** and **Audio demo** buttons run the bundled captures. A healthy backend returns `status: connected`, `stage: detect`, and the 2 GiB upload limit.
 
 If the UI says **Not connected**:
 

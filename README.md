@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/pranshu1141-sharma/Pinpoint/actions/workflows/tests.yml"><img alt="tests" src="https://github.com/pranshu1141-sharma/Pinpoint/actions/workflows/tests.yml/badge.svg"></a>
-  <img alt="Python 3.11–3.13" src="https://img.shields.io/badge/python-3.11%E2%80%933.13-3776AB?logo=python&logoColor=white">
+  <img alt="Python 3.12–3.13" src="https://img.shields.io/badge/python-3.12%E2%80%933.13-3776AB?logo=python&logoColor=white">
   <img alt="Node 20.19+" src="https://img.shields.io/badge/node-20.19%2B-5FA04E?logo=nodedotjs&logoColor=white">
   <img alt="FastAPI" src="https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white">
   <img alt="React + TypeScript" src="https://img.shields.io/badge/UI-React%20%2B%20TypeScript-3178C6?logo=typescript&logoColor=white">
@@ -114,11 +114,12 @@ The verify estimator against the older fixture-validated heuristics on the same 
 
 ## Quick start
 
-Requirements: Python 3.11–3.13, Node.js 20.19+ or 22.12+, and npm. Tested here with Python 3.13 and Node 24.
+Requirements: Python 3.12–3.13, Node.js 22.18+ (20.19+ builds and runs the dashboard; the frontend tests need 22.18+ to run `.ts` files directly), and npm. Tested here with Python 3.13 and Node 24. macOS's system `python3` is 3.9 and will not work; use e.g. `python3.13`.
 
 ```bash
-python -m venv .venv
-.venv/bin/python -m pip install -r backend/requirements.txt
+python3.13 -m venv .venv                                  # python3.12 also works
+.venv/bin/python --version                                # must print 3.12 or 3.13
+.venv/bin/python -m pip install -r backend/requirements-lock.txt
 npm --prefix frontend ci
 ```
 
@@ -134,7 +135,7 @@ npm --prefix frontend run dev
 
 Open [the dashboard](http://127.0.0.1:5173/) and [the interactive API contract](http://127.0.0.1:8000/docs). On Windows use `.\.venv\Scripts\python.exe` in place of `.venv/bin/python`. The Vite server proxies `/api` to FastAPI. `npm --prefix frontend run build` checks TypeScript and creates the frontend production bundle; it does not bundle the Python server. This is a local full-stack deliverable, not a standalone hosted frontend.
 
-The dashboard automatically analyzes the bundled `backend/data/demo/demo.sigmf-data` with its metadata. Nothing is generated in the frontend. The **IQ demo** and **Audio demo** buttons each submit a real bundled file to the same analysis pipeline used for uploads. Fonts are bundled for offline use after installation. If FastAPI is unavailable the dashboard shows **Not connected** and hides computed result panels.
+The dashboard opens on a capture-intake screen. **IQ demo** runs the bundled `backend/data/demo/demo.sigmf-data` (with its metadata) and **Audio demo** the bundled `audio_demo.wav`, through the same analysis pipeline used for uploads; nothing is generated in the frontend. Results export as JSON or SigMF (`/api/export/{job_id}`) or as CSV from the detections list. If port 8000 is taken, start the API on another port and run the dashboard with `PINPOINT_API_URL=http://127.0.0.1:<port> npm --prefix frontend run dev`. If the build reports missing modules after pulling new commits, rerun `npm --prefix frontend ci`. Fonts are bundled for offline use after installation. If FastAPI is unavailable the dashboard shows **Not connected** and hides computed result panels.
 
 ### Generate and verify
 
@@ -144,6 +145,8 @@ The dashboard automatically analyzes the bundled `backend/data/demo/demo.sigmf-d
 .venv/bin/python -m backend.validate               # validation report
 npm --prefix frontend run build && npm --prefix frontend test
 ```
+
+CI (`.github/workflows/tests.yml`) installs `backend/requirements-lock.txt` and runs the backend tests on Python 3.12 and 3.13 (the lock's numpy 2.5.3 / scipy 1.18.1 need 3.12+), and runs the frontend build and tests on Node 24, for every push and pull request.
 
 The generator writes continuous BPSK, QPSK, and FM at 20, 10, 0, and −5 dB SNR, an eight-pulse capture, pure noise, a mixed demo, and an audio WAV under `backend/data/generated/`. Ground truth is stored in separate `.truth.json` files. The detector never reads ground truth. SNR is total signal power divided by full-band complex noise power; pulsed SNR is measured during the pulse. This differs from narrowband receiver SNR.
 

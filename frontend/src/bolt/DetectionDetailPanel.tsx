@@ -75,10 +75,12 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
   const measurement = (value: number | null | undefined, unit: string) =>
     value == null ? unavailable : `${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${unit}`;
   const bandwidth99 = measurement(detection.bandwidth_99pct_hz, 'Hz');
+  const symbolRateValue = detection.symbol_rate_hz != null ? measurement(detection.symbol_rate_hz, 'Hz')
+    : detection.symbol_rate_status?.includes('not attempted') ? 'Not attempted' : unavailable;
 
   const tierText: Record<string, string> = {
     labelled: 'Labelled (margin over every rival passed)',
-    unknown_family: 'Unknown family — structure outside the library; no label published',
+    unknown_family: 'Does not fit the clean models — impairment or an unknown family; no label published',
     abstain: 'Abstained — margins below thresholds; nothing published',
   };
   const nats = (v: number | null | undefined, th?: number) =>
@@ -86,7 +88,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
   const th = detection.verify_thresholds;
   const verifyRows: Row[] = [
     { key: 'Modulation', value: detection.modulation_label
-        ?? (detection.estimate_tier === 'unknown_family' ? (detection.verify_family ?? 'Unknown family') : 'Not reliably estimated'),
+        ?? (detection.estimate_tier === 'unknown_family' ? (detection.verify_family ?? 'Does not fit the clean models (impairment or unknown family)') : 'Not reliably estimated'),
       evidence: detection.modulation_label ? 'label' : undefined,
       explain: 'Propose → verify: the segment is rebuilt under every hypothesis (PSK/QAM with several pulse models, 2/4-FSK, AM/FM, noise); the lowest description length wins. A label is published only when its margin over every rival family passes a threshold fit on a cross-generator calibration split.' },
     { key: 'Estimate tier', value: !detection.estimate_tier ? unavailable
@@ -95,7 +97,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
       color: detection.estimate_tier === 'labelled' ? '#5cb85c' : '#d4d4d4' },
     { key: 'Label needs review', value: detection.label_needs_review == null ? unavailable : detection.label_needs_review ? 'Yes' : 'No',
       color: detection.label_needs_review ? '#cc3c34' : '#d4d4d4' },
-    { key: 'Symbol rate', value: measurement(detection.symbol_rate_hz, 'Hz'),
+    { key: 'Symbol rate', value: symbolRateValue,
       evidence: detection.symbol_rate_hz != null ? 'rate' : undefined,
       explain: 'Rate of the winning digital hypothesis, published only when the family margin passes and the rate margin over rates ≥5% away passes.' },
     { key: 'Family margin', value: nats(detection.m_fam, th?.m_fam),
@@ -111,7 +113,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
     { key: 'Label provenance', value: detection.label_provenance ?? 'legacy (fixture-validated only)', color: '#d4a72c' },
     { key: 'Fine modulation (legacy)', value: detection.fine_modulation_label ?? 'Not reliably estimated',
       explain: 'Legacy heuristics validated only on the shipped synthetic fixtures (48 kHz, 96 samples/symbol, one filter). PSK by phase-cluster spread, ASK/FSK by level clustering, QAM as an order-unresolved flag.' },
-    { key: 'Symbol rate (legacy)', value: detection.symbol_rate_hz == null ? 'Not reliably estimated' : measurement(detection.symbol_rate_hz, 'Hz'),
+    { key: 'Symbol rate (legacy)', value: symbolRateValue,
       explain: 'Lowest spectral peak within 3 dB of the differentiated-and-squared segment’s maximum; fixture-validated only.' },
   ];
 
@@ -128,7 +130,12 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
     { key: 'Midpoint (Detect)', value: formatFreq(centerFreq),
       explain: 'Midpoint of the Detect-stage frequency band, before any downstream refinement.' },
     { key: 'Width (Detect)', value: formatFreq(bandwidth) },
-    { key: 'Edges (Detect)', value: `${formatFreq(detection.freq_lower_hz)} to ${formatFreq(detection.freq_upper_hz)} (baseband)` },
+    { key: 'Edges (Detect)', value: `${formatFreq(detection.freq_lower_hz)} to ${formatFreq(detection.freq_upper_hz)} (baseband)` ,
+      explain: detection.bounds_method ? `Edges: ${detection.bounds_method}.` : undefined },
+    ...(detection.freq_extent_lower_hz != null && detection.freq_extent_upper_hz != null
+      && (detection.freq_extent_lower_hz !== detection.freq_lower_hz || detection.freq_extent_upper_hz !== detection.freq_upper_hz) ? [
+      { key: 'Extent (threshold)', value: `${formatFreq(detection.freq_extent_lower_hz)} to ${formatFreq(detection.freq_extent_upper_hz)}`,
+        explain: 'Where the time-frequency mask crossed the adaptive threshold. At high SNR this includes spectral skirts, so the published edges hold 95% of the candidate\'s power above the noise floor (widened 1.6x about its centre, never past this extent).' }] : []),
     { key: 'Center (Estimate)', value: measurement(detection.center_frequency_hz, 'Hz'),
       explain: 'Power-weighted spectral centroid of the isolated segment’s Welch PSD.' },
     { key: 'Center (Refined)', value: measurement(detection.center_frequency_refined_hz, 'Hz'),

@@ -40,6 +40,15 @@ class Thresholds:
     # total recorded duration. <= 1 keeps pace with one receiver recording continuously.
     throughput_rtf_max: float = 1.0        # T1
 
+    # --- WP4a bounds (registered 2026-09-29, before B1-B3 were first measured on test data) ---
+    # A detection's band is usable when its width is within [lo, hi] x the true occupied width.
+    bounds_ratio_lo: float = 0.5
+    bounds_ratio_hi: float = 2.0
+    bounds_ok_min_g4: float = 0.85         # B1: >= 85% of G4 test emitter captures (truth: the generator's occupied width)
+    g4_fragmentation_max: float = 0.05     # B2: <= 5% of G4 test emitter captures split into several detections (as D2)
+    bounds_ok_min_g5: float = 0.60         # B3: >= 60% of rated G5 FSK2 test files (truth: tone split + 2 x expected rate,
+                                           #     measured as fsk_split_probe.py does; HEAD baseline 12 of 27)
+
 
 THRESHOLDS = Thresholds()
 

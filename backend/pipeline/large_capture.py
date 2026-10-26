@@ -138,7 +138,7 @@ _NULL_DOWNSTREAM_FIELDS = {
     "unexplained": None, "estimate_tier": "abstain", "label_needs_review": True,
     "verify_status": _TRACK_TOO_LONG_STATUS, "label_provenance": None, "verify_best_hypothesis": None,
     "verify_segment": None, "verify_elapsed_ms": None, "verify_thresholds": None,
-    "verify_model_snr_db": None, "snr_method": None, "verify_carrier_hz": None,
+    "verify_model_snr_db": None, "snr_method": None, "verify_carrier_hz": None, "verify_inband_share": None,
 }
 _FAILED_STATUS = "not reliably estimated (the bounded re-read could not be analysed)"
 
@@ -430,6 +430,10 @@ def analyze_disk_capture(capture, margin_db=8, mode="adaptive", fixed_threshold_
                 target["end_sample"] = max(target["end_sample"], b)
                 target["freq_lower_hz"] = min(target["freq_lower_hz"], d["freq_lower_hz"])
                 target["freq_upper_hz"] = max(target["freq_upper_hz"], d["freq_upper_hz"])
+                target["freq_extent_lower_hz"] = min(target["freq_extent_lower_hz"], d["freq_extent_lower_hz"])
+                target["freq_extent_upper_hz"] = max(target["freq_extent_upper_hz"], d["freq_extent_upper_hz"])
+                if d["bounds_method"] != target["bounds_method"]:
+                    target["bounds_method"] = "mixed across blocks (union of per-block bounds)"
                 # Use the least confident observed block: long captures must not
                 # hide a weak interval behind stronger portions of the same band.
                 target["confidence"] = min(target["confidence"], d["confidence"])

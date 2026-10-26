@@ -196,40 +196,41 @@ Published if lifted: 25 correct, 64 wrong (truth, label): {('QPSK', 'QAM16'): 1,
 
 Longest burst: median 1796 samples, minimum 341. Verify needs >= 2000 raw samples.
 
-## F. Detect bounds on FSK2 files: candidate bandwidth / tone split of the file's strongest burst
+## F. Detect bounds on FSK2 files: signal candidate bandwidth vs occupied width (tone split + 2 x symbol rate)
 
-| file | tone split kHz | top candidate bw kHz | ratio | candidates within 3 dB SNR |
-|---|---|---|---|---|
-| rtl433_DeltaDore_X3D_g004_868_95M_1000k | 169.1 | 2.9 | 0.02 | 5 |
-| rtl433_EcoEye_01_g033_432_5M_250k | 120.7 | 3.2 | 0.03 | 12 |
-| rtl433_Elantra2012TPMS_g001_315M_250k | 60.4 | 8.8 | 0.15 | 3 |
-| rtl433_IKEA_Sparsnas_01_g001_867_95M_250k | 40.8 | 118.2 | 2.89 | 1 |
-| rtl433_Jansite_TPMS_01_FL_08_22_433_92M_250k | 35.3 | 1.2 | 0.03 | 10 |
-| rtl433_Jeep_TPMS_g031_433_92M_250k | 80.5 | 135.0 | 1.68 | 1 |
-| rtl433_Nissan_TPMS_01_g001_315M_250k | 85.8 | 143.8 | 1.68 | 1 |
-| rtl433_Oregon_WMR500_01_g028_868_2M_1000k | 44.8 | 2.9 | 0.07 | 10 |
-| rtl433_TFA_Marbella_30_3238_06_g001_868M_100 | 80.5 | 22.5 | 0.28 | 5 |
-| rtl433_Toyota_TPMS_03_others_g001_314_98M_25 | 84.3 | 0.7 | 0.01 | 3 |
-| rtl433_arad_ms_meter_g001_916_2M_1024k | 155.7 | 69.0 | 0.44 | 5 |
-| rtl433_cavius_g001_869_67M_250k | 18.8 | 99.4 | 5.29 | 4 |
-| rtl433_chamberlain_cwpirc_01_g007_915M_1000k | 45.6 | 11.7 | 0.26 | 6 |
-| rtl433_elster_01_elster_t2_cleartext_nbrtabl | 169.8 | 8.0 | 0.05 | 10 |
-| rtl433_fineoffset_ws90_01_g001_915M_1000k | 79.5 | 475.6 | 5.98 | 2 |
-| rtl433_govee_h5112_g001_912_375M_250k | 41.6 | 129.2 | 3.11 | 6 |
-| rtl433_inkbird_IBS_P01R_g001_433_92M_250k | 22.0 | 1.7 | 0.08 | 3 |
-| rtl433_lacrosse_ltv_LTV_WR1_g165_915M_1000k | 84.7 | 673.8 | 7.95 | 4 |
-| rtl433_lacrosse_ws6868_01_g002_868_3M_1000k | 63.8 | 436.5 | 6.85 | 1 |
-| rtl433_olympia_9571_door_open_4ddf3b_868_4M_ | 81.3 | 944.0 | 11.61 | 6 |
-| rtl433_sharp_spc775_sharp_1_917_2M_250k | 29.9 | 0.7 | 0.02 | 5 |
-| rtl433_steelmate_TPMS_03_leak_433_92M_250k | 34.8 | 1.7 | 0.05 | 3 |
-| rtl433_tfa_14_1504_v2_194C_433_92M_250k | 69.4 | 121.1 | 1.75 | 1 |
-| rtl433_thermopro_211b_01_g002_915_1M_1000k | 76.5 | 8.8 | 0.11 | 3 |
-| rtl433_thermopro_tp86xb_01_g001_915M_1000k | 63.6 | 473.6 | 7.45 | 2 |
-| rtl433_tpms_mercedes_benz_01_g030_433_92M_25 | 70.0 | 168.2 | 2.40 | 1 |
-| rtl433_tpms_sefis_m3_01_g001_433_92M_1024k | 54.6 | 4.0 | 0.07 | 9 |
-| rtl433_watts_vision_01_g001_868_25M_1000k | 36.7 | 450.2 | 12.28 | 1 |
+Signal candidate = the one overlapping the strongest burst in time and containing its centre frequency (corrected in WP3b; the first WP3 version used the highest-`snr_db` candidate, which picks weak spectral lines).
 
-28 files: candidate narrower than half the split on 15; between half and twice the split on 3; wider than twice the split on 10.
+| file | tone split kHz | candidate bw kHz | split + 2 rate kHz | ratio | candidates | narrow lines |
+|---|---|---|---|---|---|---|
+| rtl433_EcoEye_01_g033_432_5M_250k | 120.7 | 43.7 | 130.7 | 0.33 | 14 | 8 |
+| rtl433_steelmate_TPMS_03_leak_433_92M_250k | 34.8 | 49.8 | 74.8 | 0.67 | 5 | 4 |
+| rtl433_IKEA_Sparsnas_01_g001_867_95M_250k | 40.8 | 118.2 | 114.9 | 1.03 | 1 | 0 |
+| rtl433_Jansite_TPMS_01_FL_08_22_433_92M_250k | 35.3 | 77.9 | 73.8 | 1.06 | 16 | 9 |
+| rtl433_tpms_mercedes_benz_01_g030_433_92M_25 | 70.0 | 168.2 | 150.0 | 1.12 | 2 | 0 |
+| rtl433_Jeep_TPMS_g031_433_92M_250k | 80.5 | 135.0 | 118.9 | 1.14 | 2 | 0 |
+| rtl433_Elantra2012TPMS_g001_315M_250k | 60.4 | 137.5 | 101.2 | 1.36 | 6 | 2 |
+| rtl433_Nissan_TPMS_01_g001_315M_250k | 85.8 | 143.8 | 102.5 | 1.40 | 6 | 2 |
+| rtl433_Toyota_TPMS_03_others_g001_314_98M_25 | 84.3 | 161.9 | 104.3 | 1.55 | 11 | 10 |
+| rtl433_arad_ms_meter_g001_916_2M_1024k | 155.7 | 621.0 | 393.8 | 1.58 | 5 | 0 |
+| rtl433_tfa_14_1504_v2_194C_433_92M_250k | 69.4 | 121.1 | 74.9 | 1.62 | 10 | 4 |
+| rtl433_inkbird_IBS_P01R_g001_433_92M_250k | 22.0 | 69.1 | 42.0 | 1.64 | 26 | 25 |
+| rtl433_elster_01_elster_t2_cleartext_nbrtabl | 169.8 | 870.0 | 455.5 | 1.91 | 16 | 0 |
+| rtl433_govee_h5112_g001_912_375M_250k | 41.6 | 129.2 | 61.6 | 2.10 | 8 | 3 |
+| rtl433_DeltaDore_X3D_g004_868_95M_1000k | 169.1 | 602.5 | 249.1 | 2.42 | 10 | 6 |
+| rtl433_tpms_sefis_m3_01_g001_433_92M_1024k | 54.6 | 251.0 | 93.1 | 2.70 | 10 | 1 |
+| rtl433_Oregon_WMR500_01_g028_868_2M_1000k | 44.8 | 361.3 | 121.7 | 2.97 | 13 | 2 |
+| rtl433_chamberlain_cwpirc_01_g007_915M_1000k | 45.6 | 391.6 | 125.6 | 3.12 | 10 | 1 |
+| rtl433_cavius_g001_869_67M_250k | 18.8 | 99.4 | 28.5 | 3.49 | 13 | 6 |
+| rtl433_watts_vision_01_g001_868_25M_1000k | 36.7 | 450.2 | 113.6 | 3.96 | 1 | 0 |
+| rtl433_fineoffset_ws90_01_g001_915M_1000k | 79.5 | 475.6 | 114.0 | 4.17 | 2 | 0 |
+| rtl433_lacrosse_ws6868_01_g002_868_3M_1000k | 63.8 | 436.5 | 98.2 | 4.44 | 1 | 0 |
+| rtl433_thermopro_211b_01_g002_915_1M_1000k | 76.5 | 466.8 | 95.5 | 4.89 | 3 | 0 |
+| rtl433_TFA_Marbella_30_3238_06_g001_868M_100 | 80.5 | 556.6 | 99.6 | 5.59 | 5 | 0 |
+| rtl433_thermopro_tp86xb_01_g001_915M_1000k | 63.6 | 473.6 | 82.8 | 5.72 | 4 | 0 |
+| rtl433_lacrosse_ltv_LTV_WR1_g165_915M_1000k | 84.7 | 673.8 | 103.9 | 6.48 | 6 | 0 |
+| rtl433_olympia_9571_door_open_4ddf3b_868_4M_ | 81.3 | 944.0 | 86.8 | 10.88 | 9 | 0 |
+
+27 rated FSK2 files: narrower than half the occupied width on 1; 0.5-2x on 12; wider than 2x on 14 (wider than 4x on 7). Median candidates per file 6; median narrow (< 3 kHz) line candidates 1.
 
 ## G. Oracle experiment: strongest packet, sane band, not refused (upper bound, not a product path)
 

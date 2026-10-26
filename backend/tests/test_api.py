@@ -375,7 +375,7 @@ def test_decode_endpoint_decodes_a_published_ask2_candidate():
 
 
 def test_decode_endpoint_declines_an_unpublished_label_and_404s_a_missing_candidate():
-    body = _upload("fsk")  # verify publishes no label for this generator
+    body = _upload("pulsed")  # pulsed bursts are still refused, so verify publishes no label
     d = body["detections"][0]
     assert d["modulation_label"] is None
     out = client.post(f"/api/detections/{body['job_id']}/0/decode").json()
@@ -384,6 +384,11 @@ def test_decode_endpoint_declines_an_unpublished_label_and_404s_a_missing_candid
     assert client.post(f"/api/detections/{body['job_id']}/99/decode").status_code == 404
     assert client.post("/api/detections/nope/0/decode").status_code == 404
 
+
+
+def test_shipped_4fsk_fixture_is_labelled_fsk4():
+    # FM must also beat the keyed two-level fits, so the fixture's true 4-FSK fit wins (it abstained before)
+    assert _upload("fsk")["detections"][0]["modulation_label"] == "FSK4"
 
 def test_decode_endpoint_truncates_long_streams(monkeypatch):
     body = _upload("ask")

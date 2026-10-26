@@ -15,13 +15,14 @@ Symbol rate               ██████████  100%  (2/2 criteria)  
 Confidence/abstention     ██████░░░░  67%  (2/3 criteria)  [G1 ✓ G2 ✗ G3 – G4 – G5 –]
 Speed                     ░░░░░░░░░░   0%  (0/1 criteria)  [G1 ✓ G2 ✗ G3 – G4 – G5 –]
 Impaired synthetic (G4)   ██░░░░░░░░  25%  (1/4 criteria)  [G1 – G2 – G3 – G4 ✗ G5 –]
+Detect bounds             ███░░░░░░░  33%  (1/3 criteria)  [G1 – G2 – G3 – G4 ✗ G5 ✓]
 Real benchmark (G5)       ███░░░░░░░  33%  (1/3 criteria)  [G1 – G2 – G3 – G4 – G5 ✗]
 Throughput                ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 – G4 – G5 ✓]
 Real data (G3)            ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
 Automation                ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
 Docs                      ██████████  100%  (1/1 criteria)  [G1 – G2 – G3 ✓ G4 – G5 –]
 --------------------
-Overall                   ██████░░░░  68%  (17/25 criteria)
+Overall                   ██████░░░░  64%  (18/28 criteria)
 ```
 <!-- readiness:end -->
 
@@ -93,7 +94,7 @@ Tier 2 remains excluded. Later stages now have the following independently quali
 | Matched filtering | Intentionally out of scope |
 | Real-time streaming detection | Intentionally out of scope |
 | Estimate stage | Complete for the tested IQ contract and synchronous API/detail integration: center, both bandwidth definitions and full-band SNR; explicit unknown states. Synthetic center/SNR acceptance passes 12/12. No theoretical fixture half-power bandwidth is supplied by the generator. Async integration is not built. |
-| Modulation classification | Default: verify estimator (propose → verify, MDL margins) — BPSK/QPSK/8PSK/16-QAM/2-ASK/2-FSK/4-FSK/AM/FM with *unknown family* and abstention tiers; measured on synthetic G1/G2 in [CLAIMS.md](CLAIMS.md). Legacy heuristics (`estimator=legacy`): coarse family plus fine bpsk/qpsk/8psk/ask/fsk, qam order-unresolved, fixture-validated only. |
+| Modulation classification | Default: verify estimator (propose → verify, MDL margins) — BPSK/QPSK/8PSK/16-QAM/2-ASK/2-FSK/4-FSK/AM/FM with *does not fit the clean models* and abstention tiers; measured on synthetic G1/G2 in [CLAIMS.md](CLAIMS.md). Legacy heuristics (`estimator=legacy`): coarse family plus fine bpsk/qpsk/8psk/ask/fsk, qam order-unresolved, fixture-validated only. |
 | Symbol rate | Default: verify estimator (published only when family and rate margins pass; measured in CLAIMS.md). Legacy (`estimator=legacy`): implemented and gated — estimated only with a confirmed bpsk/qpsk/8psk/ask fine label and measured SNR ≥4.5 dB; legacy estimator: validated 30/30 on the synth_gen fixtures (48 kHz, 96 samples/symbol, one filter) within 5% of the generator's 500 Hz truth across bpsk/qpsk × {20,10,5} dB × five seeds (8PSK/ASK measured <0.05% error at 20/10 dB, same nonlinearity). FSK is excluded (~99% measured error — its information is carried in frequency, not amplitude/phase transitions); QAM is excluded (no confirmed order, no symbol-timing recovery). Explicit null with reason below the gate or for excluded labels; accuracy below 4.5 dB SNR is unverified. |
 | Estimate v5 propose→verify (MDL) | **Integrated as the default label/rate estimator** through `backend/pipeline/verify_estimator.py` (see the Downstream IQ analysis row and [CLAIMS.md](CLAIMS.md)); the original spike evaluation is kept in [ESTIMATE_SPIKE.md](ESTIMATE_SPIKE.md). |
 | FM/AM/PSK demodulation | Planned, not built |
@@ -187,8 +188,17 @@ checklist, tracked as it ships:
 
 ## Remaining work by priority
 
+Release priorities set 2026-10-25, in order. Progress on each is tracked in [LIMITATIONS_AND_ROADMAP.md](LIMITATIONS_AND_ROADMAP.md#release-priorities-research-prototype).
+
+1. **Clean install and demo from a fresh clone.** A new user can clone, install, start both servers and see the bundled demo analysed by following the README alone, on macOS/Linux and Windows.
+2. **Automated CI checks.** Every push and pull request runs the backend tests, the frontend tests and the frontend production build.
+3. **Performance against public RF benchmarks, especially the current failures.** Improve the measured G5 real-benchmark results (RC1 correct labels, RC2 wrong labels) and the impaired-synthetic G4 and Detect-bounds criteria (W1, W2, W4, B1, B2) without loosening any registered threshold.
+4. **Short demo recording.** A real bundled capture going through detection, inspection and export in the dashboard.
+5. **Versioned research-prototype release.** A tagged release whose notes state the current limitations plainly, with numbers taken from `docs/readiness.json`.
+
+Later work, after the release priorities:
+
 1. Collect representative real RF captures with trustworthy annotations and define field metrics before tuning detector thresholds.
-2. Add the optional Tier 1 independent statistical “not noise” test if it improves validated precision/recall.
-3. Profile realistic long captures before deciding whether coarse-to-fine scanning is useful.
-4. Add durable jobs, authentication, multi-worker coordination, configurable retention, and deployment hardening if moving beyond a local demonstration.
-5. Fine classification and gated symbol-rate estimation are implemented and validated on synthetic fixtures for bpsk/qpsk/8psk/ask/fsk (symbol rate: bpsk/qpsk/8psk/ask only), with qam as a best-effort, order-unresolved flag; add real-capture and held-out evidence (only one real file has been tried, against the original bpsk/qpsk path, and it correctly declined to label), extend beyond these constellations if further orders are needed, and validate aggregation before adding downstream estimates to merged large-capture tracks. Report, demodulation and decoding remain separate unimplemented phases.
+2. Profile realistic long captures before deciding whether coarse-to-fine scanning is useful.
+3. Add durable jobs, authentication, multi-worker coordination, configurable retention, and deployment hardening if moving beyond a local demonstration.
+4. Add real-capture and held-out evidence for the fine classification and symbol-rate paths (validated on synthetic fixtures for bpsk/qpsk/8psk/ask/fsk; qam is a best-effort, order-unresolved flag), and validate aggregation before adding downstream estimates to merged large-capture tracks. Report, demodulation and decoding remain separate phases.

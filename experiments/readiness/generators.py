@@ -205,8 +205,10 @@ def _smoothed_nrz_bw3(sps: int, fs: float) -> float:
     return 2 * int(np.argmax(spec < spec[0] / 2)) * fs / nf
 
 
-def g4_capture(kind: str, sps: int, snr_db: float, seed: int) -> Capture:
-    x, clean, info = impaired.make_capture(kind, snr_db, sps, seed)
+def g4_capture(kind: str, sps: int, snr_db: float, seed: int, impairments=None) -> Capture:
+    """`impairments` (default: all eight, the frozen G4) is only for the WP3b ablation."""
+    x, clean, info = impaired.make_capture(kind, snr_db, sps, seed,
+                                           **({} if impairments is None else dict(impairments=frozenset(impairments))))
     fs = impaired.FS
     label = impaired.LABEL[kind]
     if kind == "noise":

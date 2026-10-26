@@ -8,6 +8,7 @@ from .config import DEFAULT, SpikeConfig
 from .dsp import carrier_estimate, derotate, noise_variance, rate_band
 from .expert_analog import AnalogExpert, null_hypothesis
 from .expert_fsk import FskExpert
+from .expert_keyed import KeyedExpert
 from .experts_psk import LsPulsePskExpert, NrzPskExpert, RrcPskExpert
 from .features import router_features
 from .hypothesis import ALL_EXPERTS, Hypothesis
@@ -132,6 +133,8 @@ def analyze_segment(x: np.ndarray, fs: float, cfg: SpikeConfig = DEFAULT,
                 fits = tm(name, lambda: [expert.fit(x, xc, fs, r) for r in pfin])
                 hyps += [h for h in fits if h is not None]
         analog = [tm("analog", lambda: AnalogExpert(cfg).fit(x, fs))] if "analog" in experts else []
+        if "keyed" in experts:
+            hyps += tm("keyed", lambda: KeyedExpert(cfg).fit(x, fs))
         return carrier, xc, pprops, pfin, hyps, analog, local
 
     if cfg.threads > 1:

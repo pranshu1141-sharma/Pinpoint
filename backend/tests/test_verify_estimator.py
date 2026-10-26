@@ -106,3 +106,32 @@ def test_rate_is_not_published_when_the_label_is_withheld():
     assert not g["label"] and not g["rate"]
     g = gate(_decision(unexplained=0.5), 1.0, th, "sample", 4096, 16000.0)
     assert not g["label"] and not g["rate"]
+
+
+def test_a_label_needs_most_of_the_analysed_power_inside_the_candidate_band(monkeypatch):
+    """A short window cannot be decimated (MIN_SAMPLES), so its segment keeps the whole capture band: an empty
+    narrow candidate 23 kHz from a strong QPSK signal would otherwise be labelled after that signal."""
+    from backend.pipeline import verify_estimator as ve
+    x, _ = make_signal("qpsk", 15, duration=0.5, seed=3, frequency=8000)
+    c = _cap(x, 48000)
+    d, ds = _primary(c, 7000, 9000)
+    own = classify.analyze_candidate(c, d, noise_floor=ds.noise_floor)
+    assert own["modulation_label"] == "QPSK" and own["verify_inband_share"] >= ve.MIN_INBAND_SHARE
+    empty = {**d, "freq_lower_hz": -15000.0, "freq_upper_hz": -14600.0, "start_sample": 1000, "end_sample": 4000,
+             "pulse_windows": []}
+    monkeypatch.setattr(ve, "MIN_INBAND_SHARE", 0.0)
+    assert classify.analyze_candidate(c, empty, noise_floor=ds.noise_floor)["modulation_label"] == "FM"
+    monkeypatch.setattr(ve, "MIN_INBAND_SHARE", 0.5)
+    out = classify.analyze_candidate(c, empty, noise_floor=ds.noise_floor)
+    assert out["modulation_label"] is None and out["symbol_rate_hz"] is None and out["estimate_tier"] == "abstain"
+    assert out["verify_inband_share"] < 0.01 and "inside the candidate band" in out["verify_status"]
+
+
+def test_inband_share_measures_power_inside_the_half_width():
+    from backend.pipeline.verify_estimator import inband_share
+    fs, n = 48000.0, 4096
+    t = np.arange(n) / fs
+    tone = lambda f: np.exp(2j * np.pi * f * t)
+    assert inband_share(tone(500), fs, 2000) > 0.95
+    assert inband_share(tone(9000), fs, 2000) < 0.01
+    assert inband_share(tone(500) + tone(9000), fs, 2000) == pytest.approx(0.5, abs=0.05)
