@@ -4,6 +4,7 @@
     python -m experiments.readiness.pulsed_dev report      # file-level RC1/RC2 on calibration, product vs variants
     python -m experiments.readiness.pulsed_dev collect-bursts   # + per-burst and joined-burst tables (pulsed_dev_bursts/)
     python -m experiments.readiness.pulsed_dev report-bursts    # RC1/RC2 on calibration for each multi-burst rule
+    python -m experiments.readiness.pulsed_dev report-inband    # RC1/RC2 when labels need power inside the candidate band
 
 G5 *calibration* files only; the test split is never read here (scored once by the scoreboard).
 `collect` runs each file once through the batch-CLI path (backend.cli.analyze_file) and keeps, for every
@@ -72,6 +73,8 @@ class Recorder:
             target = _burst(capture, candidate)
             rec["burst_samples"] = target["end_sample"] - target["start_sample"]
         seg, reason = ve.candidate_segment(capture, target)
+        if seg is not None:
+            rec["inband_share"] = ve.inband_share(seg[0], seg[1], ve.candidate_width(capture, candidate))
         if seg is None:
             rec["skip"] = reason
         elif "_raw" in out and not candidate.get("is_pulsed"):
@@ -319,12 +322,49 @@ def report_bursts():
                   f"{dict(collections.Counter(l for _, l in s['wrongs']))}")
 
 
+INBAND_SWEEP = (0.0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+
+
+def report_inband():
+    """RC1/RC2 when a label is withheld unless the candidate's own band holds >= s of the analysed segment's power."""
+    files = [f for f in load() if "error" not in f]
+    shares = {"correct": [], "wrong": []}
+    for f in files:
+        for c in f["calls"]:
+            if "table" in c and not (c["pulsed"] and redecide(c["table"])[0] in ANALOG):
+                lab = redecide(c["table"])[0]
+                if lab:
+                    ok = any(label_matches(lab, a) for a in f["allowed"])
+                    shares["correct" if ok else "wrong"].append(c.get("inband_share", np.nan))
+    for k, v in shares.items():
+        print(f"in-band share of {k} labels (n={len(v)}): percentiles 10/25/50/75/90 = "
+              f"{np.round(np.nanpercentile(v, [10, 25, 50, 75, 90]), 3)}")
+    for name, use_pulsed in (("product (pulsed refused)", False), ("pulsed analysed, no AM/FM on bursts", True)):
+        print(name)
+        for s in INBAND_SWEEP:
+            have = correct = wrong = 0
+            for f in files:
+                labels = []
+                for c in f["calls"]:
+                    if "table" not in c or (c["pulsed"] and not use_pulsed):
+                        continue
+                    lab = redecide(c["table"])[0]
+                    if lab and not (c["pulsed"] and lab in ANALOG) and c.get("inband_share", 0.0) >= s:
+                        labels.append(lab)
+                ok = [l for l in labels if any(label_matches(l, a) for a in f["allowed"])]
+                have += bool(f["allowed"])
+                correct += bool(f["allowed"]) and bool(ok)
+                wrong += len(ok) < len(labels)
+            print(f"   share >= {s:4.2f}: RC1 {correct / have:6.1%} ({correct}/{have})   RC2 {wrong / len(files):6.1%} ({wrong}/{len(files)})")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["collect", "collect-bursts", "report", "report-bursts"])
+    ap.add_argument("cmd", choices=["collect", "collect-bursts", "report", "report-bursts", "report-inband"])
     ap.add_argument("--only", nargs="*")
     a = ap.parse_args(argv)
-    {"collect": collect, "collect-bursts": collect_bursts, "report-bursts": lambda _: report_bursts()}.get(a.cmd, lambda _: report())(a.only)
+    {"collect": collect, "collect-bursts": collect_bursts, "report-bursts": lambda _: report_bursts(),
+     "report-inband": lambda _: report_inband()}.get(a.cmd, lambda _: report())(a.only)
 
 
 if __name__ == "__main__":

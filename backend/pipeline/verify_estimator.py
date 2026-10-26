@@ -24,6 +24,10 @@ from .ingest import Capture
 OVERSAMPLE = 4          # decimated rate ~ OVERSAMPLE x the candidate bandwidth (plan: 4-8x)
 MAX_SAMPLES = 4096      # window cap after decimation
 MIN_SAMPLES = 2000      # the estimator's minimum segment
+# A label describes the candidate's band, so most of the analysed power must be inside it. A short segment is
+# decimated (and so band-limited) only as far as MIN_SAMPLES allows; on real captures the rest of the capture
+# bandwidth, with other emitters, then dominates (readiness step 2). Fixed by principle (a majority), not fit.
+MIN_INBAND_SHARE = 0.5
 LINEAR_LABELS = {"BPSK", "QPSK", "8PSK", "QAM16", "ASK2"}
 THRESHOLDS_FILE = Path(__file__).resolve().parents[2] / "docs" / "verify-thresholds.json"
 
@@ -89,6 +93,17 @@ def tier_family(tier: str, family: str):
     return None
 
 
+def inband_share(x: np.ndarray, fs: float, width: float) -> float:
+    """Share of a segment's power inside |f| <= width / 2 (the segment is mixed to the band centre)."""
+    f, p = signal.welch(x, fs, nperseg=min(256, len(x)), return_onesided=False, detrend=False)
+    return float(p[np.abs(f) <= width / 2].sum() / max(p.sum(), 1e-300))
+
+
+def candidate_width(capture: Capture, candidate: dict) -> float:
+    """The candidate's band width as the segment builder uses it: at least one Detect bin."""
+    return max(float(candidate["freq_upper_hz"]) - float(candidate["freq_lower_hz"]), float(capture.sample_rate) / 1024)
+
+
 def candidate_segment(capture: Capture, candidate: dict):
     """(baseband segment, decimated rate) for the candidate, or (None, reason)."""
     fs = float(capture.sample_rate)
@@ -97,7 +112,7 @@ def candidate_segment(capture: Capture, candidate: dict):
         return None, "no occupied samples"
     a, b = max(windows, key=lambda w: w[1] - w[0])
     lo, hi = float(candidate["freq_lower_hz"]), float(candidate["freq_upper_hz"])
-    width = max(hi - lo, fs / 1024)
+    width = candidate_width(capture, candidate)
     centre = (lo + hi) / 2
     n = b - a
     decim = max(1, int(fs // (OVERSAMPLE * width)))
@@ -123,7 +138,7 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
     out = {"estimator": "verify", "modulation_label": None, "verify_family": None, "symbol_rate_hz": None,
            "m_fam": None, "m_rate": None, "unexplained": None, "estimate_tier": "abstain",
            "label_needs_review": True, "verify_best_hypothesis": None, "verify_segment": None,
-           "verify_elapsed_ms": None, "verify_model_snr_db": None, "verify_carrier_hz": None,
+           "verify_elapsed_ms": None, "verify_model_snr_db": None, "verify_carrier_hz": None, "verify_inband_share": None,
            "verify_thresholds": {**th.__dict__, "margin_unit": unit, "provenance": provenance},
            "verify_status": "not reliably estimated"}
     if capture.metadata.get("source_kind") != "iq":
@@ -145,6 +160,12 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
     best = min(r.hypotheses, key=lambda h: h.score)
     g = gate(d, usage, th, unit, len(x), fs, fm_digital_margin(r.hypotheses, best.score),
              label_margin(r.hypotheses, best))
+    share = inband_share(x, fs, candidate_width(capture, candidate))
+    status = tier_status(g["tier"])
+    if g["label"] and share < MIN_INBAND_SHARE:
+        g = {**g, "label": False, "rate": False, "tier": "abstain"}
+        status = (f"not reliably estimated (only {share:.0%} of the analysed power is inside the candidate band; "
+                  "the fit describes signal outside it)")
     out.update(
         modulation_label=d.label if g["label"] else None,
         verify_family=tier_family(g["tier"], d.family),
@@ -158,7 +179,7 @@ def verify_candidate(capture: Capture, candidate: dict, *, return_raw: bool = Fa
         # the M-th power carrier (relative to the band centre the segment was mixed to) is only
         # meaningful for a published linear label
         verify_carrier_hz=float(centre + r.carrier_hz) if g["label"] and d.label in LINEAR_LABELS else None,
-        verify_status=tier_status(g["tier"]))
+        verify_inband_share=round(share, 4), verify_status=status)
     if return_raw:
         out["_raw"] = (r, d)
     return out

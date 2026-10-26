@@ -392,7 +392,7 @@ _LEGACY_FIELDS = ("fine_modulation_label", "fine_modulation_confidence", "fine_m
 _VERIFY_NOT_RUN = {"verify_family": None, "m_fam": None, "m_rate": None, "unexplained": None,
                    "estimate_tier": None, "label_needs_review": None, "verify_best_hypothesis": None,
                    "verify_segment": None, "verify_elapsed_ms": None, "verify_thresholds": None,
-                   "verify_model_snr_db": None, "verify_carrier_hz": None,
+                   "verify_model_snr_db": None, "verify_carrier_hz": None, "verify_inband_share": None,
                    "verify_status": "not run (estimator=legacy)"}
 
 
