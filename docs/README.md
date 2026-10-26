@@ -12,7 +12,7 @@ This directory is the complete technical and project context for the current Pha
 - Product type: offline radio-capture signal detector and inspection dashboard
 - Primary purpose: find candidate regions where energy consistent with a signal exists in time and frequency
 - Modulation: for each complex-IQ candidate the verify estimator (propose → verify, MDL margins) publishes a modulation label (BPSK, QPSK, 8PSK, 16-QAM, 2-ASK, 2-FSK, 4-FSK, AM, FM) and a symbol rate only when its margin over every rival hypothesis passes a threshold fit on calibration data; otherwise it says *does not fit the clean models (impairment or unknown family)* or *not reliably estimated*. Measured coverage and error rates, with their conditions, are in [CLAIMS.md](CLAIMS.md)
-- Explicit non-purpose: this version does not demodulate IQ to audio, decode data (a gated M-PSK symbol-recovery module exists but is not wired in), track frequency hopping, or identify a specific transmitter
+- Explicit non-purpose: this version does not demodulate IQ to audio, decode messages or frames (on-demand relative symbol/bit recovery exists for published BPSK/QPSK/8PSK/FSK2/ASK2 labels; see DECODING.md), track frequency hopping, or identify a specific transmitter
 - Documentation audit date: 2026-09-10
 
 ## Reading order
@@ -22,6 +22,7 @@ This directory is the complete technical and project context for the current Pha
 | [Project status](PROJECT_STATUS.md) | The exact completion state of every original requirement. |
 | [Architecture](ARCHITECTURE.md) | The system boundaries, request flow, runtime state, and component relationships. |
 | [Repository map](REPOSITORY_MAP.md) | The responsibility and dependencies of every project-owned file and artifact family. |
+| [Branches](BRANCHES.md) | Which branches are active, and where every merged work-package branch is archived as a tag. |
 | [Backend pipeline](BACKEND_PIPELINE.md) | The DSP sequence, formulas, thresholds, output semantics, and engineering rationale. |
 | [Input formats](INPUT_FORMATS.md) | How IQ, WAV, and SigMF files are interpreted, validated, or rejected. |
 | [API reference](API_REFERENCE.md) | Every endpoint, request parameter, response object, status code, and job state. |

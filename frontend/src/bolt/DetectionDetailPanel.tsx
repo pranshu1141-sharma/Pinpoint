@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, Info } from 'lucide-react';
 import type { Detection } from './types';
 import { formatFreq, formatTime, formatSamples, formatConfidence } from './format';
 import { request, type SymbolRateDiagnostic } from '../api';
+import { EvidenceLine, type EvidenceKind } from './Evidence';
 
 interface DetectionDetailPanelProps {
   detection: Detection | null;
@@ -17,6 +18,7 @@ type Row = {
   color?: string;
   explain?: string;
   unreliable?: boolean;
+  evidence?: EvidenceKind;
 };
 
 const UNRELIABLE_PATTERN = /not reliably|not attempted|no phase|insufficient|unresolved/i;
@@ -87,6 +89,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
   const verifyRows: Row[] = [
     { key: 'Modulation', value: detection.modulation_label
         ?? (detection.estimate_tier === 'unknown_family' ? (detection.verify_family ?? 'Does not fit the clean models (impairment or unknown family)') : 'Not reliably estimated'),
+      evidence: detection.modulation_label ? 'label' : undefined,
       explain: 'Propose → verify: the segment is rebuilt under every hypothesis (PSK/QAM with several pulse models, 2/4-FSK, AM/FM, noise); the lowest description length wins. A label is published only when its margin over every rival family passes a threshold fit on a cross-generator calibration split.' },
     { key: 'Estimate tier', value: !detection.estimate_tier ? unavailable
         : detection.estimate_tier === 'abstain' && detection.verify_status ? `Abstained — ${detection.verify_status}; nothing published`
@@ -95,6 +98,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
     { key: 'Label needs review', value: detection.label_needs_review == null ? unavailable : detection.label_needs_review ? 'Yes' : 'No',
       color: detection.label_needs_review ? '#cc3c34' : '#d4d4d4' },
     { key: 'Symbol rate', value: symbolRateValue,
+      evidence: detection.symbol_rate_hz != null ? 'rate' : undefined,
       explain: 'Rate of the winning digital hypothesis, published only when the family margin passes and the rate margin over rates ≥5% away passes.' },
     { key: 'Family margin', value: nats(detection.m_fam, th?.m_fam),
       explain: `Score gap to the best hypothesis of another family, in nats per ${th?.margin_unit ?? 'sample'}. A margin, not a probability. ${th?.provenance ?? ''}` },
@@ -196,6 +200,7 @@ export function DetectionDetailPanel({ detection, sampleRate, jobId }: Detection
                         <Info size={11} />
                       </button>
                     )}
+                    {row.evidence && <EvidenceLine kind={row.evidence} />}
                   </td>
                 </tr>
                 {row.explain && open && (

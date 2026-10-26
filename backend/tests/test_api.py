@@ -347,3 +347,105 @@ def test_demo_defaults_to_the_verify_estimator_and_keeps_legacy_under_the_flag()
     assert legacy["estimator"] == "legacy"
     assert all(d["label_provenance"] == "legacy (fixture-validated only)" for d in legacy["detections"])
     assert client.post("/api/demo?kind=iq&estimator=bogus").status_code == 422
+
+
+def _upload(kind, snr_db=20, duration=2.0):
+    x, _ = make_signal(kind, snr_db=snr_db, duration=duration, seed=3)
+    r = client.post("/api/analyze", files={"file": (f"{kind}.iq", x.astype("<c8").tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le"})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_decode_endpoint_decodes_a_published_ask2_candidate():
+    body = _upload("ask")
+    idx = next(i for i, d in enumerate(body["detections"]) if d["modulation_label"] == "ASK2")
+    out = client.post(f"/api/detections/{body['job_id']}/{idx}/decode").json()
+    assert out["decode_label"] == "ask2"
+    assert out["decode_status"].startswith("decoded")
+    assert "unknown polarity" in out["decode_status"]
+    assert out["decoded_symbol_count"] == len(out["decoded_symbol_indices"]) > 400
+    assert set(out["decoded_symbol_indices"]) <= {0, 1}
+    assert out["decode_rotation_ambiguity_modulus"] == 2
+    assert out["decoded_symbols_truncated"] is False
+    assert out["decode_span"] == {"start_sample": body["detections"][idx]["start_sample"],
+                                  "end_sample": body["detections"][idx]["end_sample"]}
+    # deterministic, and served from the job's cache the second time
+    assert client.post(f"/api/detections/{body['job_id']}/{idx}/decode").json() == out
+
+
+def test_decode_endpoint_declines_an_unpublished_label_and_404s_a_missing_candidate():
+    body = _upload("pulsed")  # pulsed bursts are still refused, so verify publishes no label
+    d = body["detections"][0]
+    assert d["modulation_label"] is None
+    out = client.post(f"/api/detections/{body['job_id']}/0/decode").json()
+    assert out["decoded_symbol_indices"] is None
+    assert out["decode_status"] == f"not attempted (no published modulation label: {d['verify_status']})"
+    assert client.post(f"/api/detections/{body['job_id']}/99/decode").status_code == 404
+    assert client.post("/api/detections/nope/0/decode").status_code == 404
+
+
+
+def test_shipped_4fsk_fixture_is_labelled_fsk4():
+    # FM must also beat the keyed two-level fits, so the fixture's true 4-FSK fit wins (it abstained before)
+    assert _upload("fsk")["detections"][0]["modulation_label"] == "FSK4"
+
+def test_decode_endpoint_truncates_long_streams(monkeypatch):
+    body = _upload("ask")
+    monkeypatch.setattr(main, "DECODE_MAX_SYMBOLS", 100)
+    idx = next(i for i, d in enumerate(body["detections"]) if d["modulation_label"] == "ASK2")
+    out = client.post(f"/api/detections/{body['job_id']}/{idx}/decode").json()
+    assert len(out["decoded_symbol_indices"]) == 100
+    assert out["decoded_symbol_count"] > 100
+    assert out["decoded_symbols_truncated"] is True
+
+
+def test_decode_endpoint_decodes_a_track_of_a_large_disk_backed_upload(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "UPLOADS", tmp_path)
+    x, _ = make_signal("bpsk", 20, duration=10, seed=3)
+    assert x.nbytes > main.LARGE_FILE_BYTES
+    r = client.post("/api/analyze", files={"file": ("big.iq", x.astype("<c8").tobytes())},
+                    data={"sample_rate": FS, "datatype": "cf32_le"})
+    assert r.status_code == 202, r.text
+    job = r.json()["job_id"]
+    deadline = time.monotonic()+60
+    while time.monotonic() < deadline:
+        state = client.get(f"/api/jobs/{job}").json()
+        if state["status"] in ("complete", "failed"):
+            break
+        time.sleep(.05)
+    assert state["status"] == "complete", state
+    try:
+        idx, d = next((i, d) for i, d in enumerate(state["result"]["detections"]) if d["modulation_label"] == "BPSK")
+        out = client.post(f"/api/detections/{job}/{idx}/decode").json()
+        assert out["decode_status"].startswith("decoded"), out["decode_status"]
+        assert out["decode_label"] == "bpsk"
+        assert out["decoded_symbol_count"] == 2000
+        assert out["decode_span"] == {"start_sample": d["start_sample"], "end_sample": d["end_sample"]}
+    finally:
+        main.discard_job(job)
+
+
+def test_readiness_evidence_projects_the_measured_scoreboard():
+    raw = json.loads((main.DOCS / "readiness.json").read_text())
+    ev = client.get("/api/readiness").json()
+    assert ev["estimator"] == raw["product"] == "verify"
+    assert ev["measured"] == {"commit": raw["meta"]["commit"], "date": raw["meta"]["date"]}
+    s = raw["stats"]["verify"]
+    assert ev["label"]["G2"] == {"correct": s["G2"]["label"]["published_correct_in_library"],
+                                 "wrong": s["G2"]["label"]["published_wrong"],
+                                 "n": s["G2"]["label"]["n"], "n_correct": s["G2"]["label"]["n_in_library"]}
+    assert ev["rate"]["G4"]["wrong"] == s["G4"]["rate"]["published_wrong"]
+    g5 = raw["meta"]["g5"]
+    assert ev["label"]["G5"] == {"correct": g5["correct"], "wrong": g5["wrong"],
+                                 "n": g5["n_test"], "n_correct": g5["n_with_label"]}
+    assert ev["rate"]["G5"] == {"correct": g5["rate_correct"], "wrong": g5["rate_wrong"],
+                                "n": g5["n_rate_scored"], "n_correct": g5["n_rate_scored"]}
+    assert set(ev["label"]) == set(ev["rate"]) == {"G1", "G2", "G4", "G5"}
+
+
+def test_readiness_evidence_is_503_when_the_scoreboard_is_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(main, "DOCS", tmp_path)
+    r = client.get("/api/readiness")
+    assert r.status_code == 503
+    assert "readiness" in r.json()["detail"]

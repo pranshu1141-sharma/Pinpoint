@@ -1,41 +1,177 @@
-# SIH26147 — PinPoint
-
-![tests](https://github.com/pranshu1141-sharma/Pinpoint/actions/workflows/tests.yml/badge.svg)
-
-An offline RF capture detector and dashboard for the Smart India Hackathon NTRO software track. It locates candidate time/frequency regions, measures pulse timing and per-candidate parameters (centre frequency, −3 dB/99% bandwidth, SNR), and **estimates modulation label and symbol rate for each IQ candidate** in synchronous uploads, demos, async large uploads, the API, detail table and JSON export. A label or rate is published only when its margin passes a threshold fit on a cross-generator calibration split; otherwise the output says *unknown family* or *not reliably estimated*. Everything is validated on synthetic generators only; see the measured [readiness scoreboard](docs/READINESS.md) and the conditioned [claims table](docs/CLAIMS.md). No FM/AM demodulation exists; a gated M-PSK symbol-recovery module (`backend/pipeline/decode.py`, [DECODING.md](DECODING.md)) exists but is not wired into the API or dashboard. See [integration verification](docs/INTEGRATION_VALIDATION.md).
-
-## Screenshots
-
-The dashboard runs the bundled IQ capture through the real Detect pipeline and keeps the complete investigation workflow in one offline workspace.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/pinpoint-banner-dark.svg">
+    <img src="docs/assets/brand/pinpoint-banner-light.svg" alt="PinPoint" width="560">
+  </picture>
+</p>
 
 <p align="center">
-  <img src="docs/screenshots/pinpoint-welcome-dashboard.png" alt="PinPoint dashboard welcome screen with IQ and audio demo actions" width="100%">
+  <b>Find where a signal is, measure what it is, and say so only when the evidence holds.</b><br>
+  An offline RF capture detector and analysis dashboard, built for Smart India Hackathon problem <b>SIH26147</b> (NTRO, software track).
 </p>
-<p align="center"><em>Capture intake: open IQ, WAV or SigMF data, or launch a bundled demo.</em></p>
+
+<p align="center">
+  <a href="https://github.com/pranshu1141-sharma/Pinpoint/actions/workflows/tests.yml"><img alt="tests" src="https://github.com/pranshu1141-sharma/Pinpoint/actions/workflows/tests.yml/badge.svg"></a>
+  <img alt="Python 3.12–3.13" src="https://img.shields.io/badge/python-3.12%E2%80%933.13-3776AB?logo=python&logoColor=white">
+  <img alt="Node 20.19+" src="https://img.shields.io/badge/node-20.19%2B-5FA04E?logo=nodedotjs&logoColor=white">
+  <img alt="FastAPI" src="https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white">
+  <img alt="React + TypeScript" src="https://img.shields.io/badge/UI-React%20%2B%20TypeScript-3178C6?logo=typescript&logoColor=white">
+  <img alt="SigMF" src="https://img.shields.io/badge/format-SigMF%20%C2%B7%20IQ%20%C2%B7%20WAV-22D3EE">
+  <a href="https://github.com/pranshu1141-sharma/Pinpoint/releases/tag/v0.1.0-beta.1"><img alt="release" src="https://img.shields.io/badge/release-v0.1.0--beta.1-0E7FC0"></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#measured-results">Results</a> ·
+  <a href="#command-line">CLI</a> ·
+  <a href="#reference">Reference</a> ·
+  <a href="docs/README.md">Docs</a>
+</p>
+
+---
+
+PinPoint takes a raw capture (complex IQ, SigMF or WAV), finds candidate regions in time and frequency, measures pulse timing and per-candidate parameters (centre frequency, −3 dB / 99 % bandwidth, SNR), and **estimates modulation label and symbol rate for each IQ candidate** in synchronous uploads, demos, async large uploads, the API, the detail table and JSON export. A label or rate is published only when its margin passes a threshold fit on a cross-generator calibration split; otherwise the output says *unknown family* or *not reliably estimated*.
+
+> [!NOTE]
+> Everything is validated on synthetic generators only; see the measured [readiness scoreboard](docs/READINESS.md) and the conditioned [claims table](docs/CLAIMS.md). No FM/AM demodulation exists. On-demand symbol/bit recovery (`POST /api/detections/{job_id}/{id}/decode`, the dashboard's Decode screen) runs only for a candidate whose verify label is a published BPSK/QPSK/8PSK/FSK2/ASK2, and returns a stream that is correct only up to an unknown rotation/polarity and start offset — no framing or message decoding, synthetic-validated only ([DECODING.md](DECODING.md)). See [integration verification](docs/INTEGRATION_VALIDATION.md).
+
+## Highlights
+
+| Capability | What it does |
+|---|---|
+| **Blind detection** | Welch noise floor + adaptive CFAR-style threshold over a 1,024-point spectrogram; candidates carry time/frequency extents and individual pulse windows. |
+| **Parameter estimation** | Centre frequency, −3 dB and 99 % occupied bandwidth, SNR, pulse width and PRI — every value in honest units (dB re 1 unit²/Hz, never dBm). |
+| **Modulation & symbol rate** | A propose → verify (MDL) estimator that rebuilds each segment under competing hypotheses and abstains unless the winner clearly beats every rival. |
+| **Large captures** | 1–2 GiB uploads scanned in bounded memory: disk-backed reads, 524,288-sample blocks, background jobs with real progress. |
+| **Inspectable evidence** | Signal Breakdown layers, PSD / waterfall views, a replayed pipeline log, and JSON / SigMF export with validated annotations. |
+| **Batch & terminal** | `pinpoint analyze / watch / summary / validate` — deterministic, parallel, and pipe-friendly (`--json`). |
+
+## The dashboard
+
+The dashboard runs the bundled IQ capture through the real Detect pipeline and keeps the complete investigation workflow in one offline workspace.
 
 <p align="center">
   <img src="docs/screenshots/pinpoint-analysis-dashboard.png" alt="PinPoint dashboard showing PSD, waterfall, detections and signal breakdown" width="100%">
 </p>
 <p align="center"><em>Detect workspace: PSD, adaptive threshold, waterfall, candidate list, confidence and signal breakdown.</em></p>
 
-<p align="center">
-  <img src="docs/screenshots/pinpoint-settings-dashboard.png" alt="PinPoint dashboard detector settings above an analyzed capture" width="100%">
-</p>
-<p align="center"><em>Detector controls: tune adaptive margin and switch between adaptive and fixed-debug analysis.</em></p>
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/pinpoint-welcome-dashboard.png" alt="PinPoint dashboard welcome screen with IQ and audio demo actions"></td>
+    <td width="50%"><img src="docs/screenshots/pinpoint-settings-dashboard.png" alt="PinPoint dashboard detector settings above an analyzed capture"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Capture intake: open IQ, WAV or SigMF data, or launch a bundled demo.</em></td>
+    <td align="center"><em>Detector controls: tune adaptive margin and switch between adaptive and fixed-debug analysis.</em></td>
+  </tr>
+</table>
 
-## Modulation label and symbol rate (verify estimator, default)
+## How it works
 
-`analyze_candidate(..., estimator="verify")` (API: `estimator=verify`, the default) takes one Detect candidate, isolates its band, mixes it to the band centre, decimates to ~4× the band and caps the window at 4,096 samples. The propose → verify (MDL) estimator in `backend/experimental/estimate_spike/` then rebuilds the segment under competing hypotheses — BPSK/QPSK/8PSK/16-QAM/unipolar 2-ASK with flat, RRC and least-squares pulses; 2/4-FSK; AM/FM; noise — and publishes the winner only when its margin over every rival family, over every other label (e.g. QPSK vs 8PSK) and, for FM, over every digital hypothesis passes the thresholds; a symbol rate is published only beside a published label, using the thresholds in `docs/verify-thresholds.json`. Margins are nats, not probabilities. An 8-level FSK probe and an alphabet-usage test turn structure outside the library into *unknown family* rather than a wrong label. The older fixture-validated heuristics remain available with `estimator=legacy` and are marked `legacy (fixture-validated only)`. Measured on held-out synthetic data (not field performance): see [docs/CLAIMS.md](docs/CLAIMS.md). Reproduce with `python -m experiments.readiness.calibrate` (thresholds, calibration seeds only) and `python -m experiments.readiness.scoreboard` (test seeds).
-
-## Batch analysis (offline CLI)
-
-```bash
-.venv/bin/python -m backend.cli analyze path/to/captures --out results/
+```mermaid
+flowchart LR
+    A["Capture<br/><sub>IQ · SigMF · WAV</sub>"] --> B["Ingest &amp; validate<br/><sub>rate, datatype, IQ vs audio</sub>"]
+    B --> C["Detect<br/><sub>Welch floor · spectrogram<br/>adaptive threshold</sub>"]
+    C --> D["Estimate<br/><sub>centre freq · BW · SNR<br/>pulse width · PRI</sub>"]
+    D --> E["Verify (MDL)<br/><sub>label + symbol rate<br/>or abstain</sub>"]
+    E --> F["Decode<br/><sub>on demand, published<br/>labels only</sub>"]
+    E --> G["Outputs<br/><sub>dashboard · API<br/>JSON · SigMF · CLI</sub>"]
 ```
 
-Analyses a file or every capture in a folder (`.sigmf-data` + `.sigmf-meta`, `.wav`, or raw `.iq` with `--sample-rate` and `--datatype`) through the same pipeline as the API and writes one JSON and one SigMF meta per file plus `summary.csv`, rows needing review first. Deterministic (no timings in the files); exit status 2 if any input is malformed or ambiguous (still listed in the summary). `--estimator legacy` selects the fixture-validated heuristics.
+Here is the detector on the bundled demo capture (`backend/data/demo/`): a 10 dB BPSK carrier, a 3 dB FM signal and a 14 dB pulse train in 4 s of 48 kS/s IQ. All three are found; the pulsed candidate carries its 16 measured burst windows.
 
-## Terminal usage (`pinpoint`)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/charts/demo-waterfall-dark.png">
+  <img src="docs/assets/charts/demo-waterfall-light.png" alt="Spectrogram of the demo capture with three detection boxes and pulse-window ticks" width="100%">
+</picture>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/charts/demo-psd-dark.svg">
+  <img src="docs/assets/charts/demo-psd-light.svg" alt="Welch PSD of the demo capture with noise floor and threshold lines and the three detected bands shaded" width="100%">
+</picture>
+
+<sub>Both figures are rendered from a real pipeline run by <code>python -m experiments.readme_figures</code>.</sub>
+
+## Measured results
+
+Pre-registered pass/fail criteria, scored on held-out seeds by `python -m experiments.readiness.scoreboard`. G1 = spike corpus, G2 = widened shipped fixtures, G3 = public recordings, G4 = impaired synthetic, G5 = real benchmark. Full table with sample sizes: [docs/READINESS.md](docs/READINESS.md); every number with its conditions: [docs/CLAIMS.md](docs/CLAIMS.md).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/charts/readiness-dark.svg">
+  <img src="docs/assets/charts/readiness-light.svg" alt="Horizontal bars showing the fraction of readiness criteria passed per phase, 17 of 25 overall" width="100%">
+</picture>
+
+The verify estimator against the older fixture-validated heuristics on the same corpora — it publishes far more correct labels and rates while keeping wrong ones under the 3 % ceiling:
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/charts/estimator-compare-dark.svg">
+  <img src="docs/assets/charts/estimator-compare-light.svg" alt="Grouped bars comparing verify and legacy estimators on label and rate correctness for G1 and G2" width="100%">
+</picture>
+
+> [!IMPORTANT]
+> The open gaps are real: impaired synthetic captures (G4) and the real benchmark (G5) do not yet meet their label criteria, and speed misses its target on G2. These are tracked in [docs/LIMITATIONS_AND_ROADMAP.md](docs/LIMITATIONS_AND_ROADMAP.md).
+
+## Quick start
+
+Requirements: Python 3.12–3.13, Node.js 22.18+ (20.19+ builds and runs the dashboard; the frontend tests need 22.18+ to run `.ts` files directly), and npm. Tested here with Python 3.13 and Node 24. macOS's system `python3` is 3.9 and will not work; use e.g. `python3.13`.
+
+```bash
+python3.13 -m venv .venv                                  # python3.12 also works
+.venv/bin/python --version                                # must print 3.12 or 3.13
+.venv/bin/python -m pip install -r backend/requirements-lock.txt
+npm --prefix frontend ci
+```
+
+Then run the two servers in separate terminals from the project root:
+
+```bash
+# terminal 1 — API
+.venv/bin/python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
+
+# terminal 2 — dashboard
+npm --prefix frontend run dev
+```
+
+Open [the dashboard](http://127.0.0.1:5173/) and [the interactive API contract](http://127.0.0.1:8000/docs). On Windows use `.\.venv\Scripts\python.exe` in place of `.venv/bin/python`. The Vite server proxies `/api` to FastAPI. `npm --prefix frontend run build` checks TypeScript and creates the frontend production bundle; it does not bundle the Python server. This is a local full-stack deliverable, not a standalone hosted frontend.
+
+The dashboard opens on a capture-intake screen. **IQ demo** runs the bundled `backend/data/demo/demo.sigmf-data` (with its metadata) and **Audio demo** the bundled `audio_demo.wav`, through the same analysis pipeline used for uploads; nothing is generated in the frontend. Results export as JSON or SigMF (`/api/export/{job_id}`) or as CSV from the detections list. If port 8000 is taken, start the API on another port and run the dashboard with `PINPOINT_API_URL=http://127.0.0.1:<port> npm --prefix frontend run dev`. If the build reports missing modules after pulling new commits, rerun `npm --prefix frontend ci`. Fonts are bundled for offline use after installation. If FastAPI is unavailable the dashboard shows **Not connected** and hides computed result panels.
+
+### Generate and verify
+
+```bash
+.venv/bin/python -m backend.pipeline.synth_gen     # synthetic fixtures + ground truth
+.venv/bin/python -m pytest backend/tests -q        # backend test suite
+.venv/bin/python -m backend.validate               # validation report
+npm --prefix frontend run build && npm --prefix frontend test
+```
+
+CI (`.github/workflows/tests.yml`) installs `backend/requirements-lock.txt` and runs the backend tests on Python 3.12 and 3.13 (the lock's numpy 2.5.3 / scipy 1.18.1 need 3.12+), and runs the frontend build and tests on Node 24, for every push and pull request.
+
+The generator writes continuous BPSK, QPSK, and FM at 20, 10, 0, and −5 dB SNR, an eight-pulse capture, pure noise, a mixed demo, and an audio WAV under `backend/data/generated/`. Ground truth is stored in separate `.truth.json` files. The detector never reads ground truth. SNR is total signal power divided by full-band complex noise power; pulsed SNR is measured during the pulse. This differs from narrowband receiver SNR.
+
+The included suite checks detection recall and frequency/time bounds for all 12 continuous fixtures; pulse width, PRI and pulse count; ten independent noise seeds; a 40 dB input-amplitude power shift; agreement with the fixed-threshold debug detector; 20–300 ms isolated bursts with no invented PRI; continuous signals not mislabeled as pulses; malformed input; WAV ambiguity; real upload/API/clip contracts; bounded spectrogram dimensions; and validated SigMF export. See `backend/validation-report.json` for measurements from an actual pipeline run. These are synthetic checks, not field-performance claims or proof of a specified probability of false alarm.
+
+## Command line
+
+```bash
+pip install -e .           # core: numpy, scipy, sigmf
+pip install -e ".[server]" # + FastAPI/uvicorn, if you also want the dashboard API
+```
+
+| Command | What it does |
+|---|---|
+| `pinpoint analyze captures/ --out results/` | Analyse a file or folder; one JSON + SigMF meta per file plus `summary.csv`, rows needing review first. |
+| `pinpoint analyze captures/ --json` | Per-detection JSON Lines on stdout, for piping into `jq`. |
+| `pinpoint analyze captures/ --out results/ --jobs 4` | One worker per file; byte-identical to `--jobs 1`, just faster. |
+| `pinpoint watch incoming/ --out results/` | Poll a folder and analyse each capture once it stops growing. |
+| `pinpoint summary results/` | Terminal table from an existing `summary.csv`. |
+| `pinpoint validate results/` | Validate every written `.sigmf-meta` with the `sigmf` library. |
+
+`python -m backend.cli analyze path/to/captures --out results/` is the equivalent module form. It analyses a file or every capture in a folder (`.sigmf-data` + `.sigmf-meta`, `.wav`, or raw `.iq` with `--sample-rate` and `--datatype`) through the same pipeline as the API. Deterministic (no timings in the files); exit status 2 if any input is malformed or ambiguous (still listed in the summary). `--estimator legacy` selects the fixture-validated heuristics.
+
+<details>
+<summary><b>Full terminal reference: exit codes, every subcommand and flag</b></summary>
 
 Install once (editable, so code changes take effect immediately):
 
@@ -104,62 +240,16 @@ pinpoint --version
 and `watch` (the two subcommands that actually run analysis); `summary` and `validate` don't
 accept them. They work the same way as they do on `python -m backend.cli analyze`.
 
-## Complete project documentation
+</details>
 
-The structured documentation starts at [`docs/README.md`](docs/README.md). It includes requirement-by-requirement completion status, architecture, every authored file and artifact family, detector formulas, input rules, the full API contract, dashboard behavior, Signal Breakdown provenance, 1 GiB processing evidence, tests, operations, limitations, roadmap, judge-defense answers, and a glossary.
+## Modulation label and symbol rate
 
-For a fast audit, read [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and [`docs/LIMITATIONS_AND_ROADMAP.md`](docs/LIMITATIONS_AND_ROADMAP.md). The documentation distinguishes **complete**, **partial**, **planned**, and **not built** behavior and treats source/tests/measured artifacts as the authority when implementation changes.
+`analyze_candidate(..., estimator="verify")` (API: `estimator=verify`, the default) takes one Detect candidate, isolates its band, mixes it to the band centre, decimates to ~4× the band and caps the window at 4,096 samples. The propose → verify (MDL) estimator in `backend/experimental/estimate_spike/` then rebuilds the segment under competing hypotheses — BPSK/QPSK/8PSK/16-QAM/unipolar 2-ASK with flat, RRC and least-squares pulses; 2/4-FSK; AM/FM; noise — and publishes the winner only when its margin over every rival family, over every other label (e.g. QPSK vs 8PSK) and, for FM, over every digital hypothesis passes the thresholds; a symbol rate is published only beside a published label, using the thresholds in `docs/verify-thresholds.json`. Margins are nats, not probabilities. An 8-level FSK probe and an alphabet-usage test turn structure outside the library into *unknown family* rather than a wrong label. The older fixture-validated heuristics remain available with `estimator=legacy` and are marked `legacy (fixture-validated only)`. Measured on held-out synthetic data (not field performance): see [docs/CLAIMS.md](docs/CLAIMS.md). Reproduce with `python -m experiments.readiness.calibrate` (thresholds, calibration seeds only) and `python -m experiments.readiness.scoreboard` (test seeds).
 
-## Run locally
+## Reference
 
-Requirements: Python 3.12–3.13, Node.js 22.18+ (20.19+ builds and runs the dashboard; the frontend tests need 22.18+ to run `.ts` files directly), npm, and git. Tested with Python 3.13 and Node 24. Install dependencies once, then run the two servers in separate terminals from the project root.
-
-macOS / Linux:
-
-```bash
-git clone https://github.com/pranshu1141-sharma/Pinpoint.git
-cd Pinpoint
-python3.13 -m venv .venv          # python3.12 also works; macOS's system python3 is 3.9 and will not work
-.venv/bin/python --version        # must print 3.12 or 3.13
-.venv/bin/python -m pip install -r backend/requirements-lock.txt
-npm --prefix frontend ci
-```
-
-Terminal 1 (API):
-
-```bash
-.venv/bin/python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
-```
-
-Terminal 2 (dashboard):
-
-```bash
-npm --prefix frontend run dev
-```
-
-Windows (PowerShell): the same steps with `python -m venv .venv`, `.\.venv\Scripts\python.exe -m pip install -r backend/requirements-lock.txt`, `npm --prefix frontend ci`, then `.\.venv\Scripts\python.exe -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000` and `npm --prefix frontend run dev`.
-
-Open [the dashboard](http://127.0.0.1:5173/) and [the interactive API contract](http://127.0.0.1:8000/docs). The Vite server proxies `/api` to FastAPI. `npm --prefix frontend run build` checks TypeScript and creates the frontend production bundle; it does not bundle the Python server. This is a local full-stack deliverable, not a standalone hosted frontend.
-
-The dashboard opens on a capture-intake screen. **IQ demo** runs the bundled `backend/data/demo/demo.sigmf-data` (with its metadata) and **Audio demo** the bundled `audio_demo.wav`, through the same analysis pipeline used for uploads; nothing is generated in the frontend. A demo run shows detections, the detail panel and Signal Breakdown, and its results export as JSON or SigMF (`/api/export/{job_id}`) or CSV from the detections list. If port 8000 is taken, start the API on another port and run the dashboard with `PINPOINT_API_URL=http://127.0.0.1:<port> npm --prefix frontend run dev`. Fonts are bundled for offline use after installation. If FastAPI is unavailable the dashboard shows **Not connected** and hides computed result panels. If the build reports missing modules after pulling new commits, rerun `npm --prefix frontend ci`.
-
-## Generate and verify
-
-```bash
-.venv/bin/python -m backend.pipeline.synth_gen
-.venv/bin/python -m pytest backend/tests -q
-.venv/bin/python -m backend.validate
-npm --prefix frontend test
-npm --prefix frontend run build
-```
-
-CI (`.github/workflows/tests.yml`) installs `backend/requirements-lock.txt` and runs the backend tests on Python 3.12 and 3.13, and runs the frontend tests and production build on Node 22 for every push and pull request.
-
-The generator writes continuous BPSK, QPSK, and FM at 20, 10, 0, and −5 dB SNR, an eight-pulse capture, pure noise, a mixed demo, and an audio WAV under `backend/data/generated/`. Ground truth is stored in separate `.truth.json` files. The detector never reads ground truth. SNR is total signal power divided by full-band complex noise power; pulsed SNR is measured during the pulse. This differs from narrowband receiver SNR.
-
-The included suite checks detection recall and frequency/time bounds for all 12 continuous fixtures; pulse width, PRI and pulse count; ten independent noise seeds; a 40 dB input-amplitude power shift; agreement with the fixed-threshold debug detector; 20–300 ms isolated bursts with no invented PRI; continuous signals not mislabeled as pulses; malformed input; WAV ambiguity; real upload/API/clip contracts; bounded spectrogram dimensions; and validated SigMF export. See `backend/validation-report.json` for measurements from an actual pipeline run. These are synthetic checks, not field-performance claims or proof of a specified probability of false alarm.
-
-## Inputs and error policy
+<details>
+<summary><b>Inputs and error policy</b></summary>
 
 | Input | Required information | Handling |
 |---|---|---|
@@ -180,7 +270,10 @@ Signal Breakdown on large captures reads a bounded window around the candidate o
 
 For an opt-in real 1 GiB upload/integration check, run `.\.venv\Scripts\python.exe -m backend.tests.run_gib_check --backend-pid <running-python-process-id>` on Windows while both servers run. It writes a full file in temporary storage, uploads it through Vite/FastAPI, verifies bursts at a block boundary, the middle and the tail, checks final sample coverage and layers, and records peak backend working set in `backend/large-file-validation.json`. The test source file is deleted on exit; its server upload follows normal job retention.
 
-## Detector and units
+</details>
+
+<details>
+<summary><b>Detector and units</b></summary>
 
 1. **Welch noise floor:** Hann windows, 1,024 samples, 50% overlap, PSD scaling in sample-unit²/Hz. A frequency median estimates noise without letting a minority of occupied bins dominate the estimate.
 2. **Time-frequency scan:** `scipy.signal.spectrogram`, 1,024-point Hann windows and 256-sample hop. IQ is two-sided and FFT-shifted; audio is one-sided. No DC subtraction silently erases a zero-frequency candidate.
@@ -191,13 +284,16 @@ For an opt-in real 1 GiB upload/integration check, run `.\.venv\Scripts\python.e
 
 Power is **dB re 1 sample-unit²/Hz**, never dBm: no gain, impedance, antenna, or ADC calibration was supplied. Frequency bounds in analysis JSON are **baseband offsets**, even when an RF center is known. Start samples are inclusive and end samples are exclusive. Frequency resolution is `sample_rate / 1024`, hop is `256 / sample_rate` seconds, and energy edges are window-smeared before envelope refinement.
 
-### Practical limits to explain to judges
+#### Practical limits to explain to judges
 
 The median noise assumption works best with roughly stationary noise and fewer than half the frequency bins occupied. Strongly colored/time-varying noise or a nearly full-band signal can bias it. Small captures use one capture-level noise estimate; disk-backed captures estimate noise separately in each overlapping block. Neither path uses local per-cell CFAR reference cells. It cannot guarantee finding every weak, sub-resolution, overlapping, or nonstationary signal. Narrow single-bin features and very short pulses may be removed by the speckle rules. The 257-tap isolation filter and 1 ms envelope smoothing limit pulse-edge precision. Pulse width/PRI describe an aggregate train in a band; independent co-channel emitters are not separated.
 
 Tier 0 is built. Tier 1 confidence/review is built. Statistical non-Gaussianity checks are not built. Coarse-to-fine scanning is not built; the bounded test captures do not justify that optimization. All six Tier 2 features remain visibly labeled **planned, not built**, with no implementation behind them.
 
-## Signal Breakdown
+</details>
+
+<details>
+<summary><b>Signal Breakdown</b></summary>
 
 For real audio: raw channel → FIR-isolated band → soft spectral gate using the computed noise density → pulse-window gate when applicable → candidate interval only. Each clip is real processed audio, capped at eight seconds and resampled to 48 kHz for browser playback. A common headroom scale preserves relative loudness across layers. WaveSurfer v7 uses Regions, Timeline, and Spectrogram plugins on those returned WAV clips.
 
@@ -205,7 +301,10 @@ For IQ: baseband magnitude → FIR-isolated/frequency-shifted/polyphase-decimate
 
 Waveforms are peak-pooled previews of the actual layer arrays. The waterfall is maximum-power-pooled to a bounded viewport with explicit frequency/time cell edges; it is not a live radio stream. PSD and pulse plots use Recharts. The console replays actual completed backend logs and labels that replay honestly. Motion animates loading/selection and real-valued readouts. Reduced-motion preferences disable CSS motion and numeric tweening.
 
-## API
+</details>
+
+<details>
+<summary><b>HTTP API</b></summary>
 
 | Endpoint | Result |
 |---|---|
@@ -222,7 +321,10 @@ Waveforms are peak-pooled previews of the actual layer arrays. The waterfall is 
 
 The required detection fields are retained with additional `id`, `pulse_windows`, and `threshold_excess_db`. SigMF export converts baseband bounds to absolute frequency if a center exists; otherwise the reference is zero. Confidence/review/method are serialized in `core:comment`, avoiding an unregistered extension. For WAV imports the exported datatype describes the normalized internal sample representation, so do not attach this metadata to the original WAV or unconverted PCM bytes.
 
-## Panel-to-problem-statement mapping
+</details>
+
+<details>
+<summary><b>Panel-to-problem-statement mapping</b></summary>
 
 | Dashboard panel | SIH26147 Detect requirement it demonstrates |
 |---|---|
@@ -236,8 +338,43 @@ The required detection fields are retained with additional `id`, `pulse_windows`
 | JSON/SigMF export | Make sample/frequency annotations reusable for subsequent analysis. |
 | Four-stage architecture and roadmap | Distinguish the implemented Detect stage from planned Estimate, Classify, Report and Tier 2 work. |
 
-## Structure and reference acknowledgments
+</details>
 
-`backend/pipeline/`: generator, ingest, SigMF, detection, isolation layers. `backend/api/`: FastAPI and bounded session cache. `backend/tests/`: synthetic and real API tests. `frontend/src/`: React/TypeScript interface with React Query, Motion, canvas, Recharts and WaveSurfer. SCIFICN panel/badge/alert source was installed through the shadcn registry; the shared theme was adapted to cyan-on-black and locally bundled fonts.
+## Repository layout
+
+```text
+Pinpoint/
+├── backend/
+│   ├── pipeline/        ingest, SigMF I/O, detect, estimate, verify estimator, decode, synth generator
+│   ├── api/             FastAPI app and bounded session/job cache
+│   ├── experimental/    estimate spike (propose → verify) research code
+│   ├── tests/           synthetic, API and readiness tests
+│   └── data/demo/       bundled IQ + audio demo captures with ground truth
+├── frontend/            React + TypeScript dashboard (React Query, Motion, Recharts, WaveSurfer)
+├── experiments/         readiness scoreboard, estimate/reference spikes, decode bake-off, README figures
+├── docs/                full documentation, readiness/claims, reports, screenshots, brand + chart assets
+├── artifacts/           recorded experiment outputs and early emblem studies
+├── reference-review/    design references and presentation outline
+├── bolt/                earlier Qt-Fusion-styled frontend prototype
+├── test-audio/          audio test pack and measured results
+├── DECODING.md          symbol/bit recovery design and limits
+└── VALIDATION.md        phase-by-phase validation ledger
+```
+
+The theme (`frontend/src/bolt/bolt.css`, Tailwind 4) is near-black with a single cyan accent and locally bundled fonts.
+
+## Documentation
+
+The structured documentation starts at [`docs/README.md`](docs/README.md). It includes requirement-by-requirement completion status, architecture, every authored file and artifact family, detector formulas, input rules, the full API contract, dashboard behavior, Signal Breakdown provenance, 1 GiB processing evidence, tests, operations, limitations, roadmap, judge-defense answers, and a glossary.
+
+For a fast audit, read [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md), [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and [`docs/LIMITATIONS_AND_ROADMAP.md`](docs/LIMITATIONS_AND_ROADMAP.md). The documentation distinguishes **complete**, **partial**, **planned**, and **not built** behavior and treats source/tests/measured artifacts as the authority when implementation changes.
+
+## Project history
+
+Development ran as a series of numbered work packages (WP0–WP10, readiness steps, decode tracks), each on its own branch. Every finished branch is merged into `main`; their tips are preserved as `archive/<branch>` tags so past experiments stay checkout-able without cluttering the branch list. See [docs/BRANCHES.md](docs/BRANCHES.md) for the full map.
+
+## Acknowledgements
 
 Studied references: [IQEngine](https://github.com/IQEngine/IQEngine) for the frequency/time workspace and linked annotations; [NASA Eyes](https://science.nasa.gov/eyes/) for data-led motion; [SCIFICN/UI](https://github.com/baxy5/scificn-ui) for panel composition and terminal typography. Method/API references: [SciPy spectrogram](https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.spectrogram.html), [SigMF](https://sigmf.readthedocs.io/en/latest/), [WaveSurfer v7](https://wavesurfer.xyz/docs/). No reference screenshots or fabricated RF data are embedded in the frontend.
+
+<p align="center"><img src="docs/assets/brand/pinpoint-mark.svg" alt="" width="40"></p>

@@ -16,8 +16,9 @@ from backend.pipeline.detect import analyze_capture, db
 from backend.pipeline.classify import analyze_candidate, symbol_rate_diagnostic
 from backend.pipeline.layers import build_layers, waveform
 from backend.pipeline.sigmf_io import export_metadata
+from backend.pipeline.decode import decode_published
 from backend.pipeline.large_capture import (open_disk_capture, analyze_disk_capture, build_disk_layers,
-                                            DiskSamples, AnalysisCancelled)
+                                            DiskSamples, AnalysisCancelled, decode_disk_track)
 
 app = FastAPI(title="SIH26147 · Detect", version="1.0.0", description="Offline detection; per-candidate parameter estimates; modulation label and symbol rate from the verify (MDL) estimator by default, legacy heuristics with estimator=legacy.")
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
@@ -33,6 +34,7 @@ JOBS = OrderedDict()
 LOCK = RLock()
 COMPUTE = BoundedSemaphore(1)
 TTL_SECONDS = 1800
+DECODE_MAX_SYMBOLS = 20000
 
 
 def discard_job(job_id):
@@ -370,6 +372,33 @@ def symbol_rate_diagnostic_endpoint(job_id: str, detection_id: int):
     return symbol_rate_diagnostic(job["capture"], ds[detection_id])
 
 
+@app.post("/api/detections/{job_id}/{detection_id}/decode")
+def decode_endpoint(job_id: str, detection_id: int):
+    """On-demand symbol/bit recovery from the candidate's published verify label.
+    Never runs during analysis; the stream is relative (see DECODING.md)."""
+    job = get_job(job_id)
+    ds = job["result"].response["detections"]
+    if detection_id < 0 or detection_id >= len(ds):
+        raise HTTPException(404, "Candidate not found.")
+    with LOCK:
+        cached = job.setdefault("decodes", {}).get(detection_id)
+    if cached is not None:
+        return cached
+    d = ds[detection_id]
+    if isinstance(job["capture"].iq, DiskSamples):
+        out = decode_disk_track(job["capture"], d)
+    else:
+        out = {**decode_published(job["capture"], d),
+               "decode_span": {"start_sample": d["start_sample"], "end_sample": d["end_sample"]}}
+    indices = out["decoded_symbol_indices"]
+    out["decoded_symbols_truncated"] = indices is not None and len(indices) > DECODE_MAX_SYMBOLS
+    if out["decoded_symbols_truncated"]:
+        out["decoded_symbol_indices"] = indices[:DECODE_MAX_SYMBOLS]
+    with LOCK:
+        job["decodes"][detection_id] = out
+    return out
+
+
 @app.get("/api/export/{job_id}")
 def export(job_id: str, format: str = Query("json", pattern="^(json|sigmf)$")):
     job = get_job(job_id)
@@ -398,3 +427,27 @@ def fine_classification_accuracy():
              for (kind, snr), b in sorted(buckets.items())]
     return {"source": "docs/estimate-classify-validation.json", "measure": "fine-classification phase-cluster rule pass rate",
             "curve": curve}
+
+
+@app.get("/api/readiness")
+def readiness_evidence():
+    """Measured label and symbol-rate evidence for the product estimator, projected from
+    docs/readiness.json (held-out synthetic G1/G2, impaired synthetic G4, real benchmark G5).
+    `correct` is a fraction of `n_correct` eligible captures, `wrong` of all `n` captures."""
+    path = DOCS / "readiness.json"
+    if not path.exists():
+        raise HTTPException(503, "Readiness evidence file (docs/readiness.json) is missing.")
+    raw = json.loads(path.read_text())
+    stats, g5 = raw["stats"][raw["product"]], raw["meta"]["g5"]
+    out = {"estimator": raw["product"], "source": "docs/readiness.json",
+           "measured": {"commit": raw["meta"]["commit"], "date": raw["meta"]["date"]}, "label": {}, "rate": {}}
+    for g in ("G1", "G2", "G4"):
+        label, rate = stats[g]["label"], stats[g]["rate"]
+        out["label"][g] = {"correct": label["published_correct_in_library"], "wrong": label["published_wrong"],
+                           "n": label["n"], "n_correct": label["n_in_library"]}
+        out["rate"][g] = {"correct": rate["published_correct_digital"], "wrong": rate["published_wrong"],
+                          "n": rate["n"], "n_correct": rate["n_digital"]}
+    out["label"]["G5"] = {"correct": g5["correct"], "wrong": g5["wrong"], "n": g5["n_test"], "n_correct": g5["n_with_label"]}
+    out["rate"]["G5"] = {"correct": g5["rate_correct"], "wrong": g5["rate_wrong"],
+                         "n": g5["n_rate_scored"], "n_correct": g5["n_rate_scored"]}
+    return out

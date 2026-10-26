@@ -1,67 +1,111 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, ArrowLeft, Check, Copy, Download } from 'lucide-react';
-import { request, type Analysis, type Envelope } from '../api';
+import { request, type Analysis, type DecodeResult, type Envelope } from '../api';
 import type { Detection } from './types';
 import { PulsePlot } from '../components/Plots';
-import { formatFreq, formatTime, formatSamples, formatConfidence } from './format';
+import { formatFreq, formatSamples } from './format';
+import { EvidenceLine } from './Evidence';
 
-function buildLog(analysis: Analysis, detection: Detection): string[] {
-  const base = analysis.pipeline_log.slice(-6);
-  return [
-    ...base,
-    `decode: candidate C${Number(detection.id) + 1} selected for symbol readout`,
-    `decode: modulation family = ${detection.modulation_family ?? 'unresolved'}`,
-    `decode: fine label = ${detection.fine_modulation_label ?? detection.fine_modulation_status ?? 'not reliably classified'}`,
-    detection.symbol_rate_hz != null
-      ? `decode: symbol rate = ${detection.symbol_rate_hz.toFixed(2)} Hz`
-      : `decode: symbol rate — ${detection.symbol_rate_status ?? 'not attempted'}`,
-    'decode: assembling summary from Detect/Estimate/Classify results',
-  ];
+// Rendering 20,000 spans is slow and unreadable; the download carries every returned symbol.
+const DISPLAY_LIMIT = 4096;
+const ROW = 64;
+
+export function formatSymbolRows(indices: number[], limit = DISPLAY_LIMIT): string[] {
+  const rows: string[] = [];
+  const shown = indices.slice(0, limit);
+  for (let i = 0; i < shown.length; i += ROW) {
+    const row = shown.slice(i, i + ROW).join('');
+    rows.push(`${String(i).padStart(6, ' ')}  ${row.replace(/(.{8})(?=.)/g, '$1 ')}`);
+  }
+  return rows;
+}
+
+export function decodeSummary(detection: Detection, result: DecodeResult) {
+  return {
+    candidate: `C${Number(detection.id) + 1}`,
+    modulation_label: detection.modulation_label ?? null,
+    verify_status: detection.verify_status ?? null,
+    symbol_rate_hz: detection.symbol_rate_hz ?? null,
+    center_frequency_hz: detection.center_frequency_refined_hz ?? detection.center_frequency_hz ?? null,
+    freq_lower_hz: detection.freq_lower_hz,
+    freq_upper_hz: detection.freq_upper_hz,
+    start_sample: detection.start_sample,
+    end_sample: detection.end_sample,
+    ...result,
+  };
+}
+
+export function DecodeResultView({ detection, result }: { detection: Detection; result: DecodeResult }) {
+  const decoded = result.decoded_symbol_indices !== null;
+  const indices = result.decoded_symbol_indices ?? [];
+  const returned = indices.length;
+  const modulus = result.decode_rotation_ambiguity_modulus;
+  const unit = result.decode_label === 'fsk2' || result.decode_label === 'ask2' ? 'bits' : 'symbols';
+  const preview = { ...decodeSummary(detection, result),
+    decoded_symbol_indices: decoded ? `[${returned} values — use Download]` : null };
+
+  return (
+    <>
+      <div className={`decode-verdict ${decoded ? 'ok' : 'declined'}`}>
+        <strong>{decoded ? `Decoded ${result.decoded_symbol_count?.toLocaleString()} ${unit}` : 'Not decoded'}</strong>
+        <span>{result.decode_status}</span>
+      </div>
+      <div className="decode-cards">
+        <div className="decode-card"><span>Published label</span><strong>{detection.modulation_label ?? detection.verify_status ?? 'not reliably estimated'}</strong></div>
+        <div className="decode-card"><span>Decoder</span><strong>{result.decode_label?.toUpperCase() ?? 'none'}</strong></div>
+        <div className="decode-card"><span>Symbol rate</span><strong>{detection.symbol_rate_hz != null ? `${detection.symbol_rate_hz.toFixed(2)} Hz` : (detection.symbol_rate_status ?? 'not published')}</strong></div>
+        <div className="decode-card"><span>Decode confidence</span><strong>{result.decode_confidence != null ? result.decode_confidence.toFixed(3) : '—'}</strong></div>
+        <div className="decode-card"><span>Ambiguity</span><strong>{modulus != null ? `rotation mod ${modulus} + start offset` : '—'}</strong></div>
+        <div className="decode-card"><span>Frequency bounds</span><strong>{formatFreq(detection.freq_lower_hz)} – {formatFreq(detection.freq_upper_hz)}</strong></div>
+        <div className="decode-card"><span>Samples</span><strong>{formatSamples(detection.start_sample)} – {formatSamples(detection.end_sample)}</strong></div>
+        {result.decode_span && (result.decode_span.start_sample !== detection.start_sample || result.decode_span.end_sample !== detection.end_sample) && (
+          <div className="decode-card"><span>Decoded window</span><strong>{formatSamples(result.decode_span.start_sample)} – {formatSamples(result.decode_span.end_sample)}</strong></div>
+        )}
+      </div>
+      {decoded && (
+        <div className="wave-panel decode-stream">
+          <div className="plot-title">Recovered {unit}
+            <span>{Math.min(returned, DISPLAY_LIMIT).toLocaleString()} of {result.decoded_symbol_count?.toLocaleString()} shown{result.decoded_symbols_truncated ? ` · download holds the first ${returned.toLocaleString()}` : ''}</span>
+          </div>
+          <pre>{formatSymbolRows(indices).join('\n')}</pre>
+        </div>
+      )}
+      <div className="wave-panel decode-json">
+        <div className="plot-title">Decode result — JSON</div>
+        <pre>{JSON.stringify(preview, null, 2)}</pre>
+      </div>
+    </>
+  );
 }
 
 export function DecodeScreen({ analysis, detection, sampleRate, onBack }: {
   analysis: Analysis; detection: Detection; sampleRate: number; onBack: () => void;
 }) {
-  const log = useRef(buildLog(analysis, detection)).current;
-  const [shown, setShown] = useState(0);
   const [copied, setCopied] = useState(false);
-  const done = shown >= log.length;
+  const decode = useQuery({
+    queryKey: ['decode', analysis.job_id, detection.id],
+    queryFn: () => request<DecodeResult>(`/api/detections/${analysis.job_id}/${detection.id}/decode`, { method: 'POST' }),
+    staleTime: Infinity,
+    retry: false,
+  });
   const envelope = useQuery({
     queryKey: ['envelope', analysis.job_id, detection.id],
     queryFn: () => request<Envelope>(`/api/detections/${analysis.job_id}/${detection.id}/envelope`),
-    enabled: !!detection.is_pulsed && done,
+    enabled: !!detection.is_pulsed,
   });
-
-  useEffect(() => {
-    if (done) return;
-    const t = setTimeout(() => setShown((v) => v + 1), 320);
-    return () => clearTimeout(t);
-  }, [shown, done]);
-
-  const summary = {
-    candidate: `C${Number(detection.id) + 1}`,
-    modulation_family: detection.modulation_family,
-    fine_modulation_label: detection.fine_modulation_label,
-    fine_modulation_status: detection.fine_modulation_status,
-    symbol_rate_hz: detection.symbol_rate_hz,
-    symbol_rate_status: detection.symbol_rate_status,
-    confidence: detection.confidence,
-    center_frequency_hz: detection.center_frequency_refined_hz ?? detection.center_frequency_hz,
-    freq_lower_hz: detection.freq_lower_hz,
-    freq_upper_hz: detection.freq_upper_hz,
-    start_sample: detection.start_sample,
-    end_sample: detection.end_sample,
-    is_pulsed: detection.is_pulsed,
-    pulse_width_samples: detection.pulse_width_samples,
-    pri_samples: detection.pri_samples,
-  };
+  const summaryText = decode.data ? JSON.stringify(decodeSummary(detection, decode.data), null, 2) : '';
 
   function save() {
-    const url = URL.createObjectURL(new Blob([JSON.stringify(summary, null, 2)], { type: 'application/json' }));
+    const url = URL.createObjectURL(new Blob([summaryText], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url; a.download = `${analysis.job_id}-C${Number(detection.id) + 1}-decode.json`; a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function copy() {
+    try { await navigator.clipboard.writeText(summaryText); setCopied(true); setTimeout(() => setCopied(false), 1500); }
+    catch { /* clipboard unavailable */ }
   }
 
   return (
@@ -70,46 +114,32 @@ export function DecodeScreen({ analysis, detection, sampleRate, onBack }: {
         <button onClick={onBack}><ArrowLeft size={13} />Back to Analysis</button>
         <span>Decode — C{Number(detection.id) + 1}</span>
       </div>
-      <div className="scope-note"><AlertTriangle size={12} /><span>Mock preview: assembles existing Detect/Estimate/Classify results. Real demodulation is not implemented in this version.</span></div>
+      <div className="scope-note"><AlertTriangle size={12} /><span>Symbol/bit recovery only, from the verify estimator's published label. The stream is relative: correct up to an unknown rotation (or polarity) and an unknown start offset. No framing, protocol or message decoding. Validated on synthetic signals only.</span></div>
 
-      {!done ? (
+      {decode.isPending ? (
         <div className="decode-loading">
-          <div className="decode-status">Decoding candidate C{Number(detection.id) + 1}…</div>
-          <div className="decode-progress"><div className="decode-progress-fill" style={{ width: `${(shown / log.length) * 100}%` }} /></div>
-          <div className="decode-console">
-            {log.slice(0, shown).map((line, i) => <div key={i} className="decode-console-line">{line}</div>)}
-            <div className="decode-console-cursor">▋</div>
-          </div>
+          <div className="decode-status">Recovering symbol timing for C{Number(detection.id) + 1}…</div>
+          <div className="decode-progress"><div className="decode-progress-fill indeterminate" /></div>
+        </div>
+      ) : decode.isError ? (
+        <div className="decode-output">
+          <div className="decode-verdict declined"><strong>Decode request failed</strong><span>{decode.error.message}</span></div>
+          <div className="decode-actions"><button onClick={() => decode.refetch()}>Retry</button></div>
         </div>
       ) : (
         <div className="decode-output">
-          <div className="decode-cards">
-            <div className="decode-card"><span>Modulation</span><strong>{summary.fine_modulation_label ?? summary.fine_modulation_status ?? 'not reliably classified'}</strong></div>
-            <div className="decode-card"><span>Symbol Rate</span><strong>{summary.symbol_rate_hz != null ? `${summary.symbol_rate_hz.toFixed(2)} Hz` : (summary.symbol_rate_status ?? 'not attempted')}</strong></div>
-            <div className="decode-card"><span>Confidence</span><strong>{formatConfidence(summary.confidence)}</strong></div>
-            <div className="decode-card"><span>Center Frequency</span><strong>{summary.center_frequency_hz != null ? formatFreq(summary.center_frequency_hz) : 'n/a'}</strong></div>
-            <div className="decode-card"><span>Frequency Bounds</span><strong>{formatFreq(summary.freq_lower_hz)} – {formatFreq(summary.freq_upper_hz)}</strong></div>
-            <div className="decode-card"><span>Samples</span><strong>{formatSamples(summary.start_sample)} – {formatSamples(summary.end_sample)}</strong></div>
-            {detection.is_pulsed && <div className="decode-card"><span>Pulse Width / PRI</span><strong>{detection.pulse_width_samples ?? '—'} / {detection.pri_samples ?? '—'} samples</strong></div>}
-          </div>
-
+          <DecodeResultView detection={detection} result={decode.data} />
+          {decode.data.decoded_symbol_indices !== null && <EvidenceLine kind="decode" />}
+          {detection.modulation_label && <EvidenceLine kind="label" />}
           {detection.is_pulsed && envelope.data && (
             <div className="wave-panel decode-envelope">
               <div className="plot-title">Envelope<span>PW {formatSamples(detection.pulse_width_samples ?? 0)} · PRI {formatSamples(detection.pri_samples ?? 0)}</span></div>
               <PulsePlot data={envelope.data} detection={detection} rate={sampleRate} />
             </div>
           )}
-
-          <div className="wave-panel decode-json">
-            <div className="plot-title">Decode Summary — JSON
-              <button onClick={async () => { try { await navigator.clipboard.writeText(JSON.stringify(summary, null, 2)); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* clipboard unavailable */ } }}>{copied ? <Check size={11} /> : <Copy size={11} />}Copy</button>
-              <button onClick={save}><Download size={11} />Download</button>
-            </div>
-            <pre>{JSON.stringify(summary, null, 2)}</pre>
-          </div>
-
           <div className="decode-actions">
             <button onClick={onBack}><ArrowLeft size={13} />Back to Analysis</button>
+            <button onClick={copy}>{copied ? <Check size={13} /> : <Copy size={13} />}Copy JSON</button>
             <button className="primary" onClick={save}><Download size={13} />Export decode.json</button>
           </div>
         </div>

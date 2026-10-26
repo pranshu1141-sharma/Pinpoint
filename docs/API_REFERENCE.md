@@ -224,6 +224,18 @@ Returns `audio/wav` for an audio-capable layer. IQ layers return HTTP 404 becaus
 
 Returns a pooled waveform, envelope threshold, threshold description, individual pulse windows, median pulse width, and median PRI. Large-capture threshold text explicitly says it is a maximum block summary.
 
+## Decode
+
+### `POST /api/detections/{job_id}/{detection_id}/decode`
+
+On-demand symbol/bit recovery; never run during analysis. Runs only when the candidate's verify `modulation_label` is a published `BPSK`, `QPSK`, `8PSK`, `FSK2` or `ASK2`; otherwise `decode_status` says why it was not attempted (no published label, with the verify reason; no validated decoder for that label; SNR below the decoder's gate; timing recovery did not lock; segment too short; for a long large-capture track, no sampled span carrying the label). Returns `decode_label`, `decode_status`, `decoded_symbol_indices` (at most 20,000, or `null`), `decoded_symbol_count`, `decoded_symbols_truncated`, `decode_confidence`, `decode_phase_offset_rad` (PSK only) and `decode_rotation_ambiguity_modulus` and `decode_span` (the global samples read). Large disk-backed uploads are decoded from one bounded re-read: the whole track when it fits the read budget (60 s, at most 2,000,000 samples), otherwise a full-budget window starting at the first sampled span that itself published the label. The stream is correct only up to an unknown rotation (PSK, mod the order) or polarity (FSK2/ASK2) and an unknown start offset; there is no framing or message decoding. Results are cached per job. Validated on synthetic signals only; see [DECODING.md](../DECODING.md).
+
+## Measured evidence
+
+### `GET /api/readiness`
+
+The product estimator's measured label and symbol-rate evidence, projected from `docs/readiness.json` (written by `python -m experiments.readiness.scoreboard`): for G1/G2 (held-out synthetic), G4 (impaired synthetic) and G5 (real benchmark), `correct` (fraction of `n_correct` eligible captures) and `wrong` (fraction of all `n`), plus `estimator`, `source` and `measured` (commit, date). The dashboard shows it beside every published label and rate. It is scoreboard evidence, not a probability for the capture being viewed. `503` when the file is missing.
+
 ## Export
 
 ### `GET /api/export/{job_id}?format=json`

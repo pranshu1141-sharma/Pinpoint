@@ -1,5 +1,5 @@
 # Component provenance
 
-SCIFICN/UI panel, badge, and alert components were installed with the shadcn CLI from `https://www.scificn.dev/r/{name}.json` on 2026-09-09. The base theme comes from [baxy5/scificn-ui](https://github.com/baxy5/scificn-ui), with local font imports and application token overrides. Refer to that repository for its license terms.
+SCIFICN/UI panel, badge and alert components and its base theme ([baxy5/scificn-ui](https://github.com/baxy5/scificn-ui)) were installed with the shadcn CLI on 2026-09-09 and removed on 2026-10-23: nothing in the dashboard imported them.
 
 Font files are distributed by their respective @fontsource packages, with license files retained in those packages. Other dependencies and their versions are recorded in `package-lock.json`.

@@ -4,7 +4,7 @@ This guide gives concise, technically accurate answers for a demonstration or re
 
 ## Thirty-second project explanation
 
-SIH26147 Detect is an offline RF/audio capture triage system. It validates the recording format, estimates a noise floor, scans time and frequency for energy above that floor, groups evidence into candidate regions, measures pulse timing, and exposes every major intermediate representation for operator review. It accepts captures up to 2 GiB with bounded-memory block processing. For each IQ candidate it measures centre frequency, bandwidth and SNR, and names the modulation and symbol rate only when a model-comparison margin proves them; otherwise it abstains and flags the candidate for review. It does not decode content.
+SIH26147 Detect is an offline RF/audio capture triage system. It validates the recording format, estimates a noise floor, scans time and frequency for energy above that floor, groups evidence into candidate regions, measures pulse timing, and exposes every major intermediate representation for operator review. It accepts captures up to 2 GiB with bounded-memory block processing. For each IQ candidate it measures centre frequency, bandwidth and SNR, and names the modulation and symbol rate only when a model-comparison margin proves them; otherwise it abstains and flags the candidate for review. It does not decode content: on request it recovers a relative symbol/bit stream for a published BPSK/QPSK/8PSK/FSK2/ASK2 label (unknown rotation/polarity and start offset, no framing), validated on synthetic signals only.
 
 ## What to demonstrate
 

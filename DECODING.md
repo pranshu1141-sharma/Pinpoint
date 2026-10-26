@@ -133,10 +133,8 @@ structural end-to-end gating/status test for `decode_candidate`.
   known transmitted bits has been run through `decode.py`.
 - **Bit-level output / Gray coding**: Phase 1 stops at integer symbol
   indices. Mapping those to bits is Phase 2.
-- **API/frontend/doc integration**: `decode_candidate` is not wired into
-  `classify.analyze_candidate` or any API response yet, and the project's
-  existing "no decoding" documentation has not been updated. Both are
-  Phase 3, tracked below, not done in this pass.
+- **API/frontend/doc integration**: done on demand, not inline — see
+  Phase 3 below.
 
 ## Phase 2 — Bit-level output (not started)
 
@@ -171,7 +169,28 @@ passes with the new fields added (no downstream field silently changes
 shape); every touched doc's decoding-related claim matches what Phase 1/2
 actually measured, with no broader claim than the evidence supports.
 
-**Status.** Not started. No code or doc changes for this phase exist yet.
+**Status: done, on demand rather than inline.** Decoding never runs inside
+`analyze_candidate` (it would slow every analysis and bloat every response).
+`decode.decode_published` gates on the verify estimator's *published*
+`modulation_label` (BPSK/QPSK/8PSK/FSK2/ASK2 → the decoders above; anything
+else, or no published label, is declined with the reason), and
+`POST /api/detections/{job_id}/{detection_id}/decode` runs it when the user
+opens the dashboard's Decode screen. The response returns at most 20,000
+symbols (`decoded_symbols_truncated` says when more were recovered). Large
+disk-backed captures are decoded from one bounded re-read
+(`large_capture.decode_disk_track`): the whole track when it fits the read
+budget, otherwise a full-budget window starting at the first sampled span
+that itself published the label (`decode_span` reports the samples read). The JSON/SigMF export does not carry
+decoded symbols.
+
+Wiring it in exposed a gap the Phase 1 tests could not: they passed the exact
+symbol rate, but verify's rate is ~1e-4 accurate, and Gardner's
+`lock_indicator` (a constant timing offset) rejected every such PSK candidate
+although the loop tracked the offset with unchanged SER. `decode.tracking_locked`
+accepts a steady, bounded linear drift instead (residual about the fit < 0.013
+symbol; measured <= 0.0101 for |rate error| <= 3e-4 and >= 0.0167 at 1e-3,
+where SER is 25-50%), tested in `backend/tests/test_decode.py`
+(`rate_error` tests). `lock_indicator` itself is unchanged (`qam_order` uses it).
 
 ## Phase 4 — QAM symbol decode / analog AM-FM demod to audio (not started, stretch)
 
