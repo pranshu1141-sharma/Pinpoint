@@ -21,6 +21,7 @@
 </p>
 
 <p align="center">
+  <a href="#demo">Demo</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#measured-results">Results</a> ·
@@ -35,6 +36,14 @@ PinPoint takes a raw capture (complex IQ, SigMF or WAV), finds candidate regions
 
 > [!NOTE]
 > Everything is validated on synthetic generators only; see the measured [readiness scoreboard](docs/READINESS.md) and the conditioned [claims table](docs/CLAIMS.md). No FM/AM demodulation exists. On-demand symbol/bit recovery (`POST /api/detections/{job_id}/{id}/decode`, the dashboard's Decode screen) runs only for a candidate whose verify label is a published BPSK/QPSK/8PSK/FSK2/ASK2, and returns a stream that is correct only up to an unknown rotation/polarity and start offset — no framing or message decoding, synthetic-validated only ([DECODING.md](DECODING.md)). See [integration verification](docs/INTEGRATION_VALIDATION.md).
+
+## Demo
+
+<p align="center">
+  <a href="https://youtu.be/gHmLRU7b8K8"><img src="https://img.youtube.com/vi/gHmLRU7b8K8/maxresdefault.jpg" alt="PinPoint demo video (49 s): detect, measure, validate, classify, report" width="720"></a>
+</p>
+
+A 49-second overview ([watch on YouTube](https://youtu.be/gHmLRU7b8K8)): detection, per-signal measurement, validation against synthetic ground truth, modulation classification with abstention, and SigMF export into existing tools.
 
 ## Highlights
 
